@@ -1,8 +1,82 @@
+import dotenv from "dotenv";
+import { Sequelize } from "sequelize";
 import bcrypt from "bcrypt";
 import multer from "multer";
 import crypto from "crypto";
 
+import Schemas from "../model/schema/schema.js";
+
 import staticPathName from "../model/staticPathName.js";
+
+export const connectToDataBase = async () => {
+  dotenv.config();
+  const { DB_NAME, DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT } = process.env;
+
+  const sequelize = new Sequelize(DB_NAME, DB_USERNAME, DB_PASSWORD, {
+    host: DB_HOST,
+    port: DB_PORT,
+    dialect: "mysql",
+  });
+
+  try {
+    await sequelize.authenticate();
+    // console.log('Connection has been established successfully.');
+    return sequelize;
+  } catch (error) {
+    console.error("Unable to connect to the database:", error);
+    return false;
+  }
+};
+
+export const createSchema = (sequelize, data) => {
+  const { name, cols, option } = data;
+  const table = sequelize.define(name, cols, option);
+  return table;
+};
+
+export const createConnectMiddleware = (tableName, schema) => {
+  return async (req, res, next) => {
+    const { sequelize } = req.app;
+    try {
+      const Table = createSchema(sequelize, schema);
+      await Table.sync();
+      req.app[tableName] = Table;
+    } catch (error) {
+      return res.response(500);
+    }
+    next();
+  };
+};
+
+export const createBulkConnectMiddleware = (tableNames) => {
+  if (!Array.isArray(tableNames))
+    throw new Error(
+      "createBulkConnectMiddleware must accept array type input."
+    );
+  const schemas = tableNames.map((tableName) => Schemas[`${tableName}Schema`]);
+  const noSchemaId = schemas.findIndex((schema) => schema === undefined);
+
+  if (noSchemaId !== -1)
+    throw new Error(`Schema not found: ${tableNames[noSchemaId]}`);
+
+  return async (req, res, next) => {
+    const { sequelize } = req.app;
+    try {
+      schemas.forEach((schema, index) => {
+        const Table = createSchema(sequelize, schema);
+        req.app[tableNames[index]] = Table;
+      });
+      await sequelize.sync();
+    } catch (error) {
+      return res.response(500);
+    }
+    next();
+  };
+};
+
+export const getConnectMiddleware = (name) =>
+  Schemas[`${name}Schema`] &&
+  createConnectMiddleware(name, Schemas[`${name}Schema`]);
 
 export const goHash = (() => {
   const saltRound = 10;
@@ -182,10 +256,16 @@ export const transFilePath = (path) => {
   return path.replace(staticPathName, "");
 };
 
-export const queryParam2False = (target) => !(target === undefined || target === "false");
+export const queryParam2False = (target) =>
+  !(target === undefined || target === "false");
 
 export const filePathAppend = (path) => `${staticPathName}/${path}`;
 
 export const toArray = (target) => (Array.isArray(target) ? target : [target]);
 
-export const formatTime = (time) => time?.toISOString()?.replace(/T/, " ")?.replace(/\..+/, "")?.replace(/-/g, "/");
+export const formatTime = (time) =>
+  time
+    ?.toISOString()
+    ?.replace(/T/, " ")
+    ?.replace(/\..+/, "")
+    ?.replace(/-/g, "/");

@@ -8,39 +8,24 @@ import multer from "multer";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 
-import { goHash } from "./model/helper.js";
-import getUserPermission from "./controller/getUserPermission.js";
+import { createSchema, goHash, connectToDataBase } from "./model/helper.js";
+// import getUserPermission from "./controller/getUserPermission.js";
 
-import { Routers } from "./routes.js";
+import { createCRUDRoutes } from "./CRUDroutes.js";
 
-const {
-  SeriesRouter,
-  EmployeeRouter,
-  EnvironmentRouter,
-  ColorSchemeRouter,
-  MaterialRouter,
-  DesignRouter,
-  SupplierRouter,
-  StockRouter,
-  ColorNameRouter,
-  CombinationRouter,
-  AccountRouter,
-  RoleRouter,
-  PermissionRouter,
-} = Routers;
+import {
+  connectDbMiddleWare,
+  responseMiddleware,
+  authenticationMiddleware,
+  resetAuthentication,
+  addUserMiddleware,
+  notFoundResponse,
+  establishAssociation,
+} from "./middleware/middleware.js";
 
-import connectDbMiddleWare from "./middleware/connectDbMiddleware.js";
-import responseMiddleware from "./middleware/responseMiddleware.js";
-import authenticationMiddleware from "./middleware/authenticationMiddleware.js";
-import authResetMiddleware from "./middleware/authResetMiddleware.js";
-import addUserMiddleware from "./middleware/addUser.js";
-import notFoundResponse from "./middleware/404reponse.js";
-import establishAssociation from "./middleware/establishAssociation.js";
 import staticPathName from "./model/staticPathName.js";
 
-import connectToDataBase from "./model/connectToDatabase.js";
 import Schemas from "./model/schema/schema.js";
-import createSchema from "./model/createSchema.js";
 
 dotenv.config();
 
@@ -60,7 +45,7 @@ app.get("/version", async (req, res) =>
   res.response(200, `Current version: ${versionText}`)
 );
 
-app.post("/sendmail", multer().none(), async (req, res) => {
+false && app.post("/sendmail", multer().none(), async (req, res) => {
   const { UserSchema, MailAuthCodeSchema } = Schemas;
 
   const sequelize = await connectToDataBase();
@@ -154,7 +139,7 @@ app.post("/sendmail", multer().none(), async (req, res) => {
   }
 });
 
-app.post("/authcodecheck", multer().none(), async (req, res) => {
+false && app.post("/authcodecheck", multer().none(), async (req, res) => {
   try {
     const { auth_code } = req.body;
 
@@ -212,135 +197,148 @@ app.get("/alter-tables", async (req, res) => {
   }
 });
 
-app.use(establishAssociation);
-
-app.post("/login-front", async function (req, res) {
+app.get("/sync-tables", async (req, res) => {
   try {
-    const { account, password } = req.body;
-
-    const { user: User, employee: Employee } = req.app.sequelize.models;
-
-    const user = await User.findOne({
-      where: {
-        account,
-      },
-    });
-
-    if (!user) return res.response(404, "帳號錯誤");
-
-    // check employee enable
-    const employee = await Employee.findOne({
-      where: {
-        user_id: user.id,
-        enable: true,
-      },
-    });
-
-    if (!employee && account !== "admin")
-      return res.response(401, "Not enable.");
-
-    const isPasswordCorrect = bcrypt.compareSync(password, user.password);
-    if (!isPasswordCorrect) return res.response(403, "密碼錯誤");
-
-    const permission = await getUserPermission(req, user);
-    if (permission === false) return res.response(500);
-    if (permission === "NoPermission") return res.response(401, "NoPermission");
-    if (!permission.front?.modify && !permission.front?.view)
-      return res.response(401, "NoPermission");
-
-    const payload = {
-      user_account: account,
-      user_password: password,
-    };
-    const exp =
-      Math.floor(Date.now() / 1000) +
-      (parseInt(process.env.EXPIRE_TIME) || 3600);
-    const token = jwt.sign({ payload, exp }, "front_secret_key");
-
-    res.response(200, {
-      id: user.id,
-      name: user.name,
-      token: token,
-      token_type: "bearer",
-      permission,
-      _exp: exp,
-    });
-  } catch (error) {
-    console.log(error);
-    res.response(500, { error });
+    const { sequelize } = req.app;
+    Object.values(Schemas).forEach(
+      (schema) => createSchema(sequelize, schema)
+    );
+    await sequelize.sync();
+    res.response(200);
+  } catch {
+    res.response(500);
   }
 });
 
-app.post("/login", async function (req, res) {
-  try {
-    const { account, password } = req.body;
+// app.use(establishAssociation);
 
-    const { user: User, employee: Employee } = req.app.sequelize.models;
+// app.post("/login-front", async function (req, res) {
+//   try {
+//     const { account, password } = req.body;
 
-    const user = await User.findOne({
-      where: {
-        account,
-      },
-    });
+//     const { user: User, employee: Employee } = req.app.sequelize.models;
 
-    if (!user) return res.response(404, "帳號錯誤");
+//     const user = await User.findOne({
+//       where: {
+//         account,
+//       },
+//     });
 
-    // check employee enable
-    const employee = await Employee.findOne({
-      where: {
-        user_id: user.id,
-        enable: true,
-      },
-    });
-    
-    if (!employee && account !== "admin")
-      return res.response(401, "Not enable.");
+//     if (!user) return res.response(404, "帳號錯誤");
 
-    const isPasswordCorrect = bcrypt.compareSync(password, user.password);
-    if (!isPasswordCorrect) return res.response(403, "密碼錯誤");
+//     // check employee enable
+//     const employee = await Employee.findOne({
+//       where: {
+//         user_id: user.id,
+//         enable: true,
+//       },
+//     });
 
-    const permission = await getUserPermission(req, user);
-    if (permission === false) return res.response(500);
-    if (permission === "NoPermission") return res.response(401, "NoPermission");
-    if (
-      !permission.back?.modify &&
-      !permission.back?.view &&
-      !permission.stock?.modify &&
-      !permission.stock?.view &&
-      !permission.environment?.modify &&
-      !permission.environment?.view &&
-      !permission.account?.modify &&
-      !permission.account?.view
-    )
-      return res.response(401, "NoPermission");
+//     if (!employee && account !== "admin")
+//       return res.response(401, "Not enable.");
 
-    const payload = {
-      user_account: account,
-      user_password: password,
-    };
-    const exp =
-      Math.floor(Date.now() / 1000) +
-      (parseInt(process.env.EXPIRE_TIME) || 3600);
-    const token = jwt.sign({ payload, exp }, "my_secret_key");
+//     const isPasswordCorrect = bcrypt.compareSync(password, user.password);
+//     if (!isPasswordCorrect) return res.response(403, "密碼錯誤");
 
-    res.response(200, {
-      id: user.id,
-      name: user.name,
-      token: token,
-      token_type: "bearer",
-      permission,
-      _exp: exp,
-    });
-  } catch (error) {
-    console.log(error);
-    res.response(500, { error });
-  }
-});
+//     const permission = await getUserPermission(req, user);
+//     if (permission === false) return res.response(500);
+//     if (permission === "NoPermission") return res.response(401, "NoPermission");
+//     if (!permission.front?.modify && !permission.front?.view)
+//       return res.response(401, "NoPermission");
 
-app.post(
+//     const payload = {
+//       user_account: account,
+//       user_password: password,
+//     };
+//     const exp =
+//       Math.floor(Date.now() / 1000) +
+//       (parseInt(process.env.EXPIRE_TIME) || 3600);
+//     const token = jwt.sign({ payload, exp }, "front_secret_key");
+
+//     res.response(200, {
+//       id: user.id,
+//       name: user.name,
+//       token: token,
+//       token_type: "bearer",
+//       permission,
+//       _exp: exp,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.response(500, { error });
+//   }
+// });
+
+// app.post("/login", async function (req, res) {
+//   try {
+//     const { account, password } = req.body;
+
+//     const { user: User, employee: Employee } = req.app.sequelize.models;
+
+//     const user = await User.findOne({
+//       where: {
+//         account,
+//       },
+//     });
+
+//     if (!user) return res.response(404, "帳號錯誤");
+
+//     // check employee enable
+//     const employee = await Employee.findOne({
+//       where: {
+//         user_id: user.id,
+//         enable: true,
+//       },
+//     });
+
+//     if (!employee && account !== "admin")
+//       return res.response(401, "Not enable.");
+
+//     const isPasswordCorrect = bcrypt.compareSync(password, user.password);
+//     if (!isPasswordCorrect) return res.response(403, "密碼錯誤");
+
+//     const permission = await getUserPermission(req, user);
+//     if (permission === false) return res.response(500);
+//     if (permission === "NoPermission") return res.response(401, "NoPermission");
+//     if (
+//       !permission.back?.modify &&
+//       !permission.back?.view &&
+//       !permission.stock?.modify &&
+//       !permission.stock?.view &&
+//       !permission.environment?.modify &&
+//       !permission.environment?.view &&
+//       !permission.account?.modify &&
+//       !permission.account?.view
+//     )
+//       return res.response(401, "NoPermission");
+
+//     const payload = {
+//       user_account: account,
+//       user_password: password,
+//     };
+//     const exp =
+//       Math.floor(Date.now() / 1000) +
+//       (parseInt(process.env.EXPIRE_TIME) || 3600);
+//     const token = jwt.sign({ payload, exp }, "my_secret_key");
+
+//     res.response(200, {
+//       id: user.id,
+//       name: user.name,
+//       token: token,
+//       token_type: "bearer",
+//       permission,
+//       _exp: exp,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.response(500, { error });
+//   }
+// });
+
+false && app.post(
   "/resetpassword",
   multer().none(),
-  authResetMiddleware,
+  resetAuthentication,
   addUserMiddleware,
   async (req, res) => {
     const { user: User, employee: Employee } = req.app.sequelize.models;
@@ -370,7 +368,7 @@ app.post(
   }
 );
 
-app.post("/check-email", multer().none(), async (req, res) => {
+false && app.post("/check-email", multer().none(), async (req, res) => {
   try {
     const { user: User } = req.app.sequelize.models;
     const result = await User.findOne({
@@ -386,25 +384,13 @@ app.post("/check-email", multer().none(), async (req, res) => {
 });
 
 // jwt token authentication
-app.use(authenticationMiddleware);
+// app.use(authenticationMiddleware);
 
-app.use(addUserMiddleware);
+// app.use(addUserMiddleware);
 
-app.use("/employee", EmployeeRouter);
-app.use("/series", SeriesRouter);
-app.use("/environment", EnvironmentRouter);
-app.use("/color-scheme", ColorSchemeRouter);
-app.use("/material", MaterialRouter);
-app.use("/design", DesignRouter);
-app.use("/supplier", SupplierRouter);
-app.use("/stock", StockRouter);
-app.use("/color-name", ColorNameRouter);
-app.use("/combination", CombinationRouter);
-app.use("/account", AccountRouter);
-app.use("/role", RoleRouter);
-app.use("/permission", PermissionRouter);
+createCRUDRoutes(app);
 
-app.post("/logout", async function (req, res) {
+false && app.post("/logout", async function (req, res) {
   try {
     res.response(200, "登出成功");
   } catch (error) {
