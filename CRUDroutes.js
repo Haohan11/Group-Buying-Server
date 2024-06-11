@@ -8,7 +8,16 @@ const routerConfig = [
     path: "/test",
     controllerName: "Test",
     middlewares: {
-      read: ["Test"]
+      read: [
+        "Test",
+        "Company",
+        "CompanyInvoice",
+        "ContactType",
+        "Setting",
+        "Country",
+        "City",
+        "Lang",
+      ],
     },
   },
 ];
@@ -18,11 +27,11 @@ const createRouter = ({ path, middlewares, controllerName }) => {
   const controller = getController(controllerName);
 
   [
-     ["create", "post"] ,
-     ["read", "get"] ,
-     ["update", "put"] ,
-     ["delete", "delete"] ,
-  ].forEach(([ action, method ]) => {
+    ["create", "post"],
+    ["read", "get"],
+    ["update", "put"],
+    ["delete", "delete"],
+  ].forEach(([action, method]) => {
     if (!controller?.[action]) return;
     try {
       const connectMiddleware = createBulkConnectMiddleware(
