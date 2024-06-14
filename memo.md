@@ -16,8 +16,14 @@ export const TestSchema = {
     tableName: "test",
   },
 };
-with replace LONGTEXT to TEXT("long"), ignore `name`, `description`, `create_id`, `create_name`, `modify_id`, `modify_name` cols, and also ignore `id` cols if its format is like this: {
+with replace LONGTEXT to TEXT("long"), 
+remove `name`, `code`, `sorting` cols,
+ignore `description`, `create_id`, `create_name`, `modify_id`, `modify_name` in cols, 
+and also ignore `id` cols if its format is like this: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
-}
+},
+add `allowNull: false` property for those dont have nullable().
+remove `allowNull` for those who have nullable(). 
+add comment for table if it's exist.
