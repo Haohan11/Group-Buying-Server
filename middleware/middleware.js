@@ -5,7 +5,7 @@ import {
   customResponse,
   createSchema,
   connectToDataBase,
-  createConnectMiddleware,
+  createBulkConnectMiddleware,
 } from "../model/helper.js";
 
 export const responseMiddleware = (req, res, next) => {
@@ -96,18 +96,6 @@ export const connectDbMiddleWare = async (req, res, next) => {
   req.app.sequelize = sequelize;
   next();
 };
-
-export const allConnectMiddleware = Object.entries(Schemas).reduce(
-  (dict, [schemaName, schema]) => {
-    const connectName = schemaName.replace("Schema", "");
-    dict[`connect${connectName}`] = createConnectMiddleware(
-      connectName,
-      schema
-    );
-    return dict;
-  },
-  {}
-);
 
 export const establishAssociation = async (req, res, next) => {
   const { sequelize } = req.app;

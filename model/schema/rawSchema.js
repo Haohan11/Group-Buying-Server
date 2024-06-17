@@ -19,26 +19,10 @@ import { goHashSync } from "../helper.js";
  */
 
 //--------- regular Schemas below ---
-export const TestSchema = {
-  name: "test",
-  cols: {
-    test: {
-      type: DataTypes.INTEGER,
-      defaultValue: 1,
-    },
-  },
-  option: {
-    tableName: "test",
-  },
-};
 
 export const CompanySchema = {
   name: "company",
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-    },
     uniform_number: {
       type: DataTypes.STRING(20),
       comment: "統編",
@@ -69,10 +53,6 @@ export const CompanyInvoiceSchema = {
       type: DataTypes.STRING(36),
       comment: "公司id",
       allowNull: false,
-      references: {
-        model: "company",
-        key: "id",
-      },
     },
     uniform_number: {
       type: DataTypes.STRING(20),
@@ -116,10 +96,6 @@ export const ContactTypeSchema = {
 export const SettingSchema = {
   name: "setting",
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-    },
     value: {
       type: DataTypes.TEXT("long"),
       comment: "值",
@@ -133,11 +109,6 @@ export const SettingSchema = {
 export const CountrySchema = {
   name: "country",
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-      comment: "國籍ID",
-    },
     short_name: {
       type: DataTypes.STRING(100),
       comment: "簡稱",
@@ -186,11 +157,6 @@ export const LangSchema = {
 export const CurrenciesSchema = {
   name: "currencies",
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-      comment: "幣別ID",
-    },
     country_id: {
       type: DataTypes.STRING(36),
       index: true,
@@ -206,11 +172,6 @@ export const CurrenciesSchema = {
 export const PaymentTypeSchema = {
   name: "payment_type",
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-      comment: "付款方式ID",
-    },
   },
   option: {
     tableName: "payment_type",
@@ -235,10 +196,6 @@ export const PaymentSchema = {
 export const departmentSchema = {
   name: "department",
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-    },
     company_id: {
       type: DataTypes.STRING(36),
       comment: "隸屬公司",
@@ -246,7 +203,6 @@ export const departmentSchema = {
     parent: {
       type: DataTypes.STRING(36),
       index: true,
-      allowNull: true,
       comment: "父類別ID",
     },
   },
@@ -281,10 +237,6 @@ export const GetNoSchema = {
 export const CodeTypeSchema = {
   name: "code_type",
   cols: {
-    id: {
-      type: DataTypes.STRING(50),
-      primaryKey: true,
-    },
     description: {
       type: DataTypes.TEXT("long"),
       comment: "單號說明",
@@ -331,10 +283,6 @@ export const countyDistrictSchema = {
 export const SexSchema = {
   name: "sex",
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-    },
   },
   option: {
     tableName: "sex",
@@ -365,10 +313,6 @@ export const CareerSchema = {
 export const TagTypeSchema = {
   name: "tag_type",
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-    },
     color: {
       type: DataTypes.STRING(10),
       comment: '顏色',
@@ -491,10 +435,6 @@ export const PermissionTypeSchema = {
 export const SupplierTypeSchema = {
   name: 'supplier_type',
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-    },
   },
   option: {
     tableName: 'supplier_type',
@@ -651,10 +591,6 @@ export const SupplierMetaSchema = {
 export const StockBrandSchema = {
   name: "stock_brand",
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-    },
     company_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
@@ -670,10 +606,6 @@ export const StockBrandSchema = {
 export const StockCategorySchema = {
   name: "stock_category",
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-    },
     company_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
@@ -748,11 +680,6 @@ export const StockUnitSchema = {
 export const TaxTypeSchema = {
   name: "tax_type",
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-      allowNull: false,
-    },
     country_id: {
       type: DataTypes.STRING(36),
       comment: '國別',
@@ -1250,6 +1177,85 @@ export const InventoryLogSchema = {
   option: {
     tableName: "inventory_log",
     comment: "商品庫存異動紀錄",
+  },
+};
+
+export const IndexItemTypeSchema = {
+  name: "index_item_type",
+  cols: {
+    title: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    }
+  },
+  option: {
+    tableName: "index_item_type",
+    comment: "首頁項目類別",
+  },
+};
+
+export const IndexItemSchema = {
+  name: "index_item",
+  cols: {
+    parent: {
+      type: DataTypes.STRING(36),
+      comment: "父類別ID",
+    },
+    index_item_type_id: {
+      type: DataTypes.STRING(36),
+      allowNull: false,
+      comment: "項目類別ID",
+    },
+    route: {
+      type: DataTypes.STRING(100),
+      comment: "路徑名稱",
+    },
+    file_name: {
+      type: DataTypes.STRING(100),
+      comment: "檔案名稱",
+    },
+    table_name: {
+      type: DataTypes.STRING(100),
+      comment: "資料表名稱",
+    },
+    icon: {
+      type: DataTypes.TEXT("long"),
+      comment: "前面顯示的icon",
+    },
+    is_enable: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+      comment: "是否已啟用",
+    },
+    is_create: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      allowNull: false,
+      comment: "是否能建立",
+    },
+    is_read: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      allowNull: false,
+      comment: "是否能讀取",
+    },
+    is_update: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      allowNull: false,
+      comment: "是否能修改",
+    },
+    is_delete: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      allowNull: false,
+      comment: "是否能刪除",
+    },
+  },
+  option: {
+    tableName: "index_item",
+    comment: "首頁項目",
   },
 };
 
