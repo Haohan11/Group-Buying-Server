@@ -388,7 +388,7 @@ app.get("/all-tables", authenticationMiddleware, async (req, res) => {
 
 app.get(
   "/create-index-item",
-  createBulkConnectMiddleware(["IndexItem", "IndexItemType"]),
+  createBulkConnectMiddleware(["IndexItem", "IndexItemType"], { alter: true }),
   async (req, res) => {
     const author = {
       create_id: "admin",
@@ -399,27 +399,76 @@ app.get(
     const { IndexItem, IndexItemType } = req.app;
 
     try {
+      await IndexItemType.destroy({
+        truncate: true,
+      });
+      await IndexItem.destroy({
+        truncate: true,
+      });
       await Promise.all(
-        Object.entries(indexItemsData).map(async ([moduleName, items]) => {
+        indexItemsData.map(async ({ name, icon, route, indexItems }) => {
           const { id: typeId } = await IndexItemType.create({
-            name: moduleName,
+            name,
+            icon,
+            route,
             ...author,
           });
 
-          await Promise.all(
-            items.map(async (item) => {
-              await IndexItem.create({
-                name: item.name,
-                table_name: item.tableName,
-                index_item_type_id: typeId,
-                ...author,
-              });
-            })
-          );
+          const insertData = indexItems.map((item) => ({
+            name: item.name,
+            route: item.route,
+            table_name: item.tableName,
+            index_item_type_id: typeId,
+            ...author,
+          }));
+
+          await IndexItem.bulkCreate(insertData);
         })
       );
 
       res.response(200);
+    } catch (error) {
+      console.log(error);
+      res.response(500);
+    }
+  }
+);
+
+app.get(
+  "/get-index-item",
+  createBulkConnectMiddleware(["IndexItem", "IndexItemType"]),
+  async (req, res) => {
+    const { IndexItem, IndexItemType } = req.app;
+
+    try {
+      const indexItemTypes = await IndexItemType.findAll({
+        attributes: ["id", "name", "icon", "route"],
+      });
+
+      const list = await Promise.all(
+        indexItemTypes.map(async ({ id, name, icon, route }) => {
+          const indexItems = await IndexItem.findAll({
+            attributes: ["id", "name", "route", "table_name"],
+            where: {
+              index_item_type_id: id,
+            },
+          });
+          return {
+            id,
+            name,
+            icon,
+            route,
+            indexItems: indexItems.map((item) => ({
+              id: item.id,
+              name: item.name,
+              route: item.route,
+              tableName: item.table_name,
+            })),
+          };
+        })
+      );
+
+      res.response(200, list);
     } catch (error) {
       console.log(error);
       res.response(500);

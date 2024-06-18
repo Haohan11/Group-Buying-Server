@@ -49,7 +49,7 @@ export const createConnectMiddleware = (tableName, schema) => {
   };
 };
 
-export const createBulkConnectMiddleware = (tableNames) => {
+export const createBulkConnectMiddleware = (tableNames, syncOption) => {
   if (!Array.isArray(tableNames))
     throw new Error(
       "createBulkConnectMiddleware must accept array type input."
@@ -67,7 +67,7 @@ export const createBulkConnectMiddleware = (tableNames) => {
         const Table = createSchema(sequelize, schema);
         req.app[tableNames[index]] = Table;
       });
-      await sequelize.sync();
+      await sequelize.sync(syncOption);
     } catch (error) {
       return res.response(500);
     }

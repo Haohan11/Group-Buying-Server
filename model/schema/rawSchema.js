@@ -1183,9 +1183,13 @@ export const InventoryLogSchema = {
 export const IndexItemTypeSchema = {
   name: "index_item_type",
   cols: {
-    title: {
+    route: {
       type: DataTypes.STRING(100),
-      allowNull: false,
+      comment: "父層路徑",
+    },
+    icon: {
+      type: DataTypes.STRING(36),
+      comment: "前面顯示的icon",
     }
   },
   option: {
