@@ -120,6 +120,74 @@ const controllers = [
       ],
     },
   },
+  {
+    path: "role-price",
+    actions: {
+      read: [
+        async (req, res) =>
+          res.response(200, "Mock role-price route.", {
+            total: 1,
+            totalPages: 1,
+            list: [
+              {
+                id: 1,
+                name: "一般會員",
+                price: 1000,
+              },
+              {
+                id: 2,
+                name: "VIP",
+                price: 750,
+              },
+              {
+                id: 3,
+                name: "VVIP",
+                price: 700,
+              },
+              {
+                id: 4,
+                name: "MEGA-VIP",
+                price: 500,
+              },
+            ],
+          }),
+      ],
+    },
+  },
+  {
+    path: "grade-price",
+    actions: {
+      read: [
+        async (req, res) =>
+          res.response(200, "Mock role-price route.", {
+            total: 1,
+            totalPages: 1,
+            list: [
+              {
+                id: 1,
+                name: "UR",
+                price: 1200,
+              },
+              {
+                id: 2,
+                name: "R",
+                price: 1000,
+              },
+              {
+                id: 3,
+                name: "SR",
+                price: 900,
+              },
+              {
+                id: 4,
+                name: "SSR",
+                price: 850,
+              },
+            ],
+          }),
+      ],
+    },
+  },
 ];
 
 export { controllers };
