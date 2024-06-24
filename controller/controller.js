@@ -1,3 +1,122 @@
+import multer from "multer";
+import {
+  authenticationMiddleware,
+  addUserMiddleware,
+} from "../middleware/middleware.js";
+
+import { Op } from "sequelize";
+import { queryParam2False, getPage } from "../model/helper.js";
+
+const generalCreate = (tableName) => {
+  return async (req, res) => {
+    const Table = req.app[tableName];
+    const data = { ...req.body, ...req._author };
+
+    try {
+      await Table.create(data);
+      res.response(200, "Success create stock brand.");
+    } catch (error) {
+      console.log(error);
+      return error.name === "SequelizeValidationError"
+        ? res.response(401, `Invalid ${error.errors[0].path}.`)
+        : res.response(500);
+    }
+  };
+};
+
+const generalRead = (tableName, option = {}) => {
+  const { queryAttribute = [], searchAttribute = [] } = option;
+  return async (req, res) => {
+    const Table = req.app[tableName];
+    queryAttribute.includes("create_time") ||
+      queryAttribute.push("create_time");
+
+    const keywordArray = searchAttribute.map((item) => ({
+      [item]: { [Op.like]: `%${req.query.keyword}%` },
+    }));
+
+    const opArray = keywordArray.filter((item) =>
+      queryAttribute.includes(Object.keys(item)[0])
+    );
+
+    const onlyEnable = queryParam2False(req.query.onlyEnable);
+    const onlyDisable = queryParam2False(req.query.onlyDisable);
+
+    const whereOption = {
+      where: {
+        ...(onlyEnable && { enable: true }),
+        ...(onlyDisable && { enable: false }),
+        ...(req.query.keyword && {
+          [Op.or]: opArray,
+        }),
+      },
+    };
+
+    const createSort =
+      req.query.sort === undefined ||
+      req.query.sort === "undefined" ||
+      req.query.sort === ""
+        ? []
+        : ["create_time", req.query.sort];
+    const nameSort =
+      req.query.item === undefined ||
+      req.query.item === "undefined" ||
+      req.query.item === ""
+        ? []
+        : ["name", req.query.item];
+
+    const sortArray = [createSort, nameSort];
+
+    const filterArray = sortArray.filter((item) =>
+      queryAttribute.includes(item[0])
+    );
+
+    try {
+      const total = await Table.count(whereOption);
+      const { start, size, begin, totalPages } = getPage({
+        total,
+        ...req.query,
+      });
+
+      const list = await Table.findAll({
+        offset: begin,
+        limit: size,
+        attributes: queryAttribute,
+        ...whereOption,
+        ...(filterArray.length > 0 && { order: filterArray }),
+      });
+
+      return res.response(200, {
+        start,
+        size,
+        begin,
+        total,
+        totalPages,
+        list,
+      });
+    } catch (error) {
+      // log sql message with error.original.sqlMessage
+      console.log(error);
+      res.response(500);
+    }
+  };
+};
+
+const generalDelete = (tableName) => {
+  return async (req, res) => {
+    const Table = req.app[tableName];
+    const { id } = req.body;
+
+    try {
+      await Table.destroy({ where: { id } });
+      res.response(200, "Success delete stock brand.");
+    } catch (error) {
+      console.log(error);
+      res.response(500);
+    }
+  };
+};
+
 const controllers = [
   {
     path: "stock",
@@ -185,6 +304,34 @@ const controllers = [
               },
             ],
           }),
+      ],
+    },
+  },
+  {
+    path: "stock-brand",
+    schemas: {
+      read: ["StockBrand"],
+    },
+    actions: {
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalCreate("StockBrand"),
+      ],
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalRead("StockBrand", {
+          queryAttribute: ["id", "name", "description"],
+          searchAttribute: ["name"],
+        }),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("StockBrand"),
       ],
     },
   },

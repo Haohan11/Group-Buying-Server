@@ -3,7 +3,7 @@ import express from "express";
 import { toArray, createBulkConnectMiddleware } from "./model/helper.js";
 import { controllers } from "./controller/controller.js";
 
-const createRouter = ({ path, middlewares, actions }) => {
+const createRouter = ({ path, schemas, actions }) => {
   const router = express.Router();
 
   [
@@ -15,10 +15,10 @@ const createRouter = ({ path, middlewares, actions }) => {
     if (!actions?.[action]) return;
 
     appendMiddleware: try {
-      if (!middlewares || !middlewares[action]) break appendMiddleware;
+      if (!schemas || !schemas[action]) break appendMiddleware;
 
       const connectMiddleware = createBulkConnectMiddleware(
-        middlewares[action]
+        schemas[action]
       );
       router.use(connectMiddleware);
     } catch (error) {

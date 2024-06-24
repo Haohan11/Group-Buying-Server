@@ -18,14 +18,20 @@ export const notFoundResponse = (req, res) => res.response(404);
 
 export const addUserMiddleware = async (req, res, next) => {
   if (!req._user) return next();
+  if (!req.app.User) createBulkConnectMiddleware(["User"])(req, res, next);
 
   try {
     const account = req._user.user_account;
-    const { user: User } = req.app.sequelize.models;
+    const { User } = req.app;
     const { id, name } = await User.findOne({ where: { account } });
     req._user.user_id = id;
-    req._user.create_name = req._user.modify_name = name;
-    req._user.create_id = req._user.modify_id = account;
+    req._author = {
+      create_name: name,
+      modify_name: name,
+      create_id: account,
+      modify_id: account,
+      company_id: 1
+    };
     next();
   } catch {
     res.response(500);

@@ -11,11 +11,17 @@ const getFixedField = (schemaName) => ({
         type: DataTypes.STRING(100),
         comment: "名稱",
         allowNull: false,
+        validate: {
+          len: [2, 15],
+        },
       },
       sorting: {
         type: DataTypes.INTEGER,
         defaultValue: 1,
-        comment: '排序編號',
+        comment: "排序編號",
+        validate: {
+          isInt: true,
+        }
       },
     }),
     description: {
