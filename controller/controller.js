@@ -14,7 +14,7 @@ const generalCreate = (tableName) => {
 
     try {
       await Table.create(data);
-      res.response(200, "Success create stock brand.");
+      res.response(200, `Success create ${tableName}.`);
     } catch (error) {
       console.log(error);
       return error.name === "SequelizeValidationError"
@@ -102,14 +102,43 @@ const generalRead = (tableName, option = {}) => {
   };
 };
 
+const generalUpdate = (tableName) => {
+  return async (req, res) => {
+    const Table = req.app[tableName];
+    
+    const id = parseInt(req.body.id);
+
+    if (isNaN(id)) {
+      return res.response(401, "Invalid id.");
+    }
+
+    delete req.body.id
+    const data = { ...req.body, ...req._author };
+
+    try {
+      await Table.update(data, { where: { id } });
+      res.response(200, `Success update ${tableName}.`);
+    } catch (error) {
+      console.log(error);
+      return error.name === "SequelizeValidationError"
+        ? res.response(401, `Invalid ${error.errors[0].path}.`)
+        : res.response(500);
+    }
+  };
+};
+
 const generalDelete = (tableName) => {
   return async (req, res) => {
     const Table = req.app[tableName];
-    const { id } = req.body;
+    const id = parseInt(req.body.id);
+
+    if (isNaN(id)) {
+      return res.response(401, "Invalid id.");
+    }
 
     try {
       await Table.destroy({ where: { id } });
-      res.response(200, "Success delete stock brand.");
+      res.response(200, `Success delete ${tableName}.`);
     } catch (error) {
       console.log(error);
       res.response(500);
@@ -326,6 +355,12 @@ const controllers = [
           queryAttribute: ["id", "name", "description"],
           searchAttribute: ["name"],
         }),
+      ],
+      update: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("StockBrand"),
       ],
       delete: [
         multer().none(),
