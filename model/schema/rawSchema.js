@@ -171,8 +171,7 @@ export const CurrenciesSchema = {
 
 export const PaymentTypeSchema = {
   name: "payment_type",
-  cols: {
-  },
+  cols: {},
   option: {
     tableName: "payment_type",
     comment: "付款方式類別維護",
@@ -250,8 +249,7 @@ export const CodeTypeSchema = {
 
 export const MediaTypeSchema = {
   name: "media_type",
-  cols: {
-  },
+  cols: {},
   option: {
     tableName: "media_type",
     comment: "媒體檔案類型",
@@ -263,27 +261,26 @@ export const countyDistrictSchema = {
   cols: {
     county: {
       type: DataTypes.STRING(100),
-      comment: '縣市',
+      comment: "縣市",
     },
     zip: {
       type: DataTypes.STRING(10),
-      comment: '郵遞區號',
+      comment: "郵遞區號",
     },
     district: {
       type: DataTypes.STRING(100),
-      comment: '分區',
+      comment: "分區",
     },
   },
   option: {
     tableName: "county_district",
-    comment: "台灣縣市分區"
+    comment: "台灣縣市分區",
   },
 };
 
 export const SexSchema = {
   name: "sex",
-  cols: {
-  },
+  cols: {},
   option: {
     tableName: "sex",
     comment: "性別",
@@ -292,8 +289,7 @@ export const SexSchema = {
 
 export const personTitleSchema = {
   name: "person_title",
-  cols: {
-  },
+  cols: {},
   option: {
     tableName: "person_title",
     comment: "稱謂",
@@ -302,8 +298,7 @@ export const personTitleSchema = {
 
 export const CareerSchema = {
   name: "career",
-  cols: {
-  },
+  cols: {},
   option: {
     tableName: "career",
     comment: "職業",
@@ -315,12 +310,12 @@ export const TagTypeSchema = {
   cols: {
     color: {
       type: DataTypes.STRING(10),
-      comment: '顏色',
+      comment: "顏色",
     },
   },
   option: {
     tableName: "tag_type",
-    comment: '標籤類別',
+    comment: "標籤類別",
   },
 };
 
@@ -329,16 +324,16 @@ export const TagSchema = {
   cols: {
     tag_type_id: {
       type: DataTypes.STRING(36),
-      comment: '標籤類別ID',
+      comment: "標籤類別ID",
     },
     name: {
       type: DataTypes.STRING(100),
-      comment: 'issue名稱',
+      comment: "issue名稱",
     },
   },
   option: {
     tableName: "tag",
-    comment: '標籤',
+    comment: "標籤",
   },
 };
 
@@ -347,42 +342,42 @@ export const UserSchema = {
   cols: {
     company_id: {
       type: DataTypes.STRING(36),
-      comment: '隸屬公司',
+      comment: "隸屬公司",
     },
     account: {
       type: DataTypes.TEXT("long"),
-      comment: '帳號',
+      comment: "帳號",
     },
     password: {
       type: DataTypes.TEXT("long"),
-      comment: '密碼',
+      comment: "密碼",
     },
     remember_token: {
       type: DataTypes.TEXT("long"),
-      comment: 'E-mail',
+      comment: "E-mail",
     },
     is_enable: {
       type: DataTypes.TINYINT,
       defaultValue: 0,
-      comment: '已啟用',
+      comment: "已啟用",
     },
     user_type: {
       type: DataTypes.TINYINT,
       defaultValue: 0,
-      comment: '帳號來源: 0:system,1:business,2:employee,3:member',
+      comment: "帳號來源: 0:system,1:business,2:employee,3:member",
     },
     email: {
       type: DataTypes.TEXT("long"),
-      comment: 'E-mail',
+      comment: "E-mail",
     },
     email_verified_time: {
       type: DataTypes.DATE,
-      comment: 'E-mail驗證時間',
+      comment: "E-mail驗證時間",
     },
   },
   option: {
     tableName: "user",
-    comment: '使用者',
+    comment: "使用者",
   },
 };
 
@@ -409,36 +404,35 @@ export const PermissionSchema = {
       },
     },
   ],
-}
+};
 
 export const PermissionTypeSchema = {
   name: "permission_type",
   cols: {
     is_create: {
-      type: DataTypes.BOOLEAN
+      type: DataTypes.BOOLEAN,
     },
     is_read: {
-      type: DataTypes.BOOLEAN
+      type: DataTypes.BOOLEAN,
     },
     is_update: {
-      type: DataTypes.BOOLEAN
+      type: DataTypes.BOOLEAN,
     },
     is_delete: {
-      type: DataTypes.BOOLEAN
+      type: DataTypes.BOOLEAN,
     },
   },
   option: {
     tableName: "permission_type",
   },
-}
+};
 
 export const SupplierTypeSchema = {
-  name: 'supplier_type',
-  cols: {
-  },
+  name: "supplier_type",
+  cols: {},
   option: {
-    tableName: 'supplier_type',
-    comment: '供應商類別',
+    tableName: "supplier_type",
+    comment: "供應商類別",
   },
 };
 
@@ -447,47 +441,47 @@ export const SupplierSchema = {
   cols: {
     company_id: {
       type: DataTypes.STRING(36),
-      comment: '隸屬公司',
+      comment: "隸屬公司",
       allowNull: false,
     },
     supplier_type_id: {
       type: DataTypes.STRING(36),
-      comment: '供應商類別ID',
+      comment: "供應商類別ID",
       allowNull: false,
     },
     country_id: {
       type: DataTypes.STRING(36),
-      comment: '國籍ID',
+      comment: "國籍ID",
       allowNull: false,
     },
     payment_id: {
       type: DataTypes.STRING(36),
-      comment: '付款方式',
+      comment: "付款方式",
     },
     short_name: {
       type: DataTypes.STRING(100),
-      comment: '簡稱',
+      comment: "簡稱",
     },
     phone: {
       type: DataTypes.STRING(20),
-      comment: '電話',
+      comment: "電話",
     },
     mobile: {
       type: DataTypes.STRING(20),
-      comment: '手機',
+      comment: "手機",
     },
     uniform_number: {
       type: DataTypes.STRING(20),
-      comment: '統一編號',
+      comment: "統一編號",
     },
     contact_address: {
       type: DataTypes.TEXT("long"),
-      comment: '聯絡地址',
+      comment: "聯絡地址",
     },
   },
   option: {
     tableName: "supplier",
-    comment: '供應商主檔',
+    comment: "供應商主檔",
   },
 };
 
@@ -539,27 +533,27 @@ export const SupplierContactPersonSchema = {
 };
 
 export const SupplierContactTypeSchema = {
-  name: 'supplier_contact_type',
+  name: "supplier_contact_type",
   cols: {
     supplier_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
-      comment: '供應商ID',
+      comment: "供應商ID",
     },
     supplier_contact_person_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
-      comment: '連絡人ID',
+      comment: "連絡人ID",
     },
     contact_type_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
-      comment: '連絡方式ID',
+      comment: "連絡方式ID",
     },
   },
   option: {
-    tableName: 'supplier_contact_type',
-    comment: '供應商連絡方式',
+    tableName: "supplier_contact_type",
+    comment: "供應商連絡方式",
   },
 };
 
@@ -569,22 +563,22 @@ export const SupplierMetaSchema = {
     supplier_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
-      comment: '供應商ID'
+      comment: "供應商ID",
     },
     meta_key: {
       type: DataTypes.STRING(1000),
       allowNull: false,
-      comment: '欄位名稱'
+      comment: "欄位名稱",
     },
     meta_value: {
       type: DataTypes.TEXT("long"),
       allowNull: false,
-      comment: '欄位值'
+      comment: "欄位值",
     },
   },
   option: {
     tableName: "supplier_meta",
-    comment: "擴充supplier欄位用"
+    comment: "擴充supplier欄位用",
   },
 };
 
@@ -610,6 +604,18 @@ export const StockCategorySchema = {
       type: DataTypes.STRING(36),
       allowNull: false,
       comment: "隸屬公司",
+    },
+    is_recommended: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      comment: "是否為精選類別",
+    },
+    recommended_image: {
+      type: DataTypes.STRING(1024),
+      comment: "精選類別縮圖",
+      set(value) {
+        this.setDataValue("recommended_image", value ? value : undefined);
+      }
     },
     parent: {
       type: DataTypes.STRING(36),
@@ -663,17 +669,17 @@ export const StockUnitSchema = {
     is_serial_type: {
       type: DataTypes.TINYINT,
       defaultValue: 0,
-      comment: '是否為序號商品單位',
+      comment: "是否為序號商品單位",
     },
     rate: {
       type: DataTypes.INTEGER,
       defaultValue: 1,
-      comment: '換算倍率(ex. 1l = 1000ml)',
+      comment: "換算倍率(ex. 1l = 1000ml)",
     },
   },
   option: {
     tableName: "stock_unit",
-    comment: '商品單位',
+    comment: "商品單位",
   },
 };
 
@@ -682,13 +688,13 @@ export const TaxTypeSchema = {
   cols: {
     country_id: {
       type: DataTypes.STRING(36),
-      comment: '國別',
+      comment: "國別",
       allowNull: false,
     },
   },
   option: {
     tableName: "tax_type",
-    comment: '稅別',
+    comment: "稅別",
   },
 };
 
@@ -697,23 +703,23 @@ export const TaxRateSchema = {
   cols: {
     tax_type_id: {
       type: DataTypes.STRING(36),
-      comment: '稅別ID',
+      comment: "稅別ID",
       allowNull: false,
     },
     rate: {
       type: DataTypes.DOUBLE,
       defaultValue: 0,
-      comment: '稅率',
+      comment: "稅率",
       allowNull: false,
     },
     start_time: {
       type: DataTypes.DATE,
-      comment: '時間(起)',
+      comment: "時間(起)",
       allowNull: false,
     },
     end_time: {
       type: DataTypes.DATE,
-      comment: '時間(迄)',
+      comment: "時間(迄)",
     },
   },
   option: {
@@ -724,8 +730,7 @@ export const TaxRateSchema = {
 
 export const MbflagTypeSchema = {
   name: "mbflag_type",
-  cols: {
-  },
+  cols: {},
   option: {
     tableName: "mbflag_type",
     comment: "商品屬性",
@@ -737,86 +742,86 @@ export const StockSchema = {
   cols: {
     company_id: {
       type: DataTypes.STRING(36),
-      comment: '隸屬公司',
+      comment: "隸屬公司",
       allowNull: false,
     },
     stock_brand_id: {
       type: DataTypes.STRING(36),
-      comment: '商品品牌ID',
+      comment: "商品品牌ID",
     },
     stock_category_id: {
       type: DataTypes.STRING(36),
-      comment: '商品類別ID',
+      comment: "商品類別ID",
     },
     stock_unit_id: {
       type: DataTypes.STRING(36),
-      comment: '商品單位ID',
+      comment: "商品單位ID",
       allowNull: false,
     },
     mbflag_type_id: {
       type: DataTypes.STRING(36),
-      comment: '商品屬性',
+      comment: "商品屬性",
       allowNull: false,
     },
     tax_type_id: {
       type: DataTypes.STRING(36),
-      comment: '稅別',
+      comment: "稅別",
       allowNull: false,
     },
     short_name: {
       type: DataTypes.STRING(100),
-      comment: '商品簡稱',
+      comment: "商品簡稱",
     },
     barcode: {
       type: DataTypes.STRING(1024),
-      comment: '商品條碼',
+      comment: "商品條碼",
     },
     stock_length: {
       type: DataTypes.DOUBLE,
       defaultValue: 0,
-      comment: '商品(長)',
+      comment: "商品(長)",
       allowNull: false,
     },
     stock_width: {
       type: DataTypes.DOUBLE,
       defaultValue: 0,
-      comment: '商品(寬)',
+      comment: "商品(寬)",
       allowNull: false,
     },
     stock_height: {
       type: DataTypes.DOUBLE,
       defaultValue: 0,
-      comment: '商品(高)',
+      comment: "商品(高)",
       allowNull: false,
     },
     stock_weight: {
       type: DataTypes.DOUBLE,
       defaultValue: 0,
-      comment: '商品(重)',
+      comment: "商品(重)",
       allowNull: false,
     },
     is_serial_stock: {
       type: DataTypes.BOOLEAN,
       defaultValue: 0,
-      comment: '是否為序號商品',
+      comment: "是否為序號商品",
       allowNull: false,
     },
     is_consignment: {
       type: DataTypes.BOOLEAN,
       defaultValue: 0,
-      comment: '是否為寄賣品',
+      comment: "是否為寄賣品",
       allowNull: false,
     },
     is_gift: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
-      comment: '是否為贈品',
+      comment: "是否為贈品",
       allowNull: false,
     },
     is_valid: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
-      comment: '是否上架',
+      comment: "是否上架",
       allowNull: false,
     },
   },
@@ -896,37 +901,37 @@ export const StockPriceSchema = {
     stock_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
-      comment: '商品ID',
+      comment: "商品ID",
     },
     price_type_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
-      comment: '價格表ID',
+      comment: "價格表ID",
     },
     country_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
-      comment: '國別',
+      comment: "國別",
     },
     currencies_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
-      comment: '貨幣ID',
+      comment: "貨幣ID",
     },
     price: {
       type: DataTypes.DOUBLE,
       defaultValue: 0,
       allowNull: false,
-      comment: '價格',
+      comment: "價格",
     },
     effective_date_start: {
       type: DataTypes.DATE,
       allowNull: false,
-      comment: '價格生效日(起)',
+      comment: "價格生效日(起)",
     },
     effective_date_end: {
       type: DataTypes.DATE,
-      comment: '價格生效日(迄)',
+      comment: "價格生效日(迄)",
     },
   },
   option: {
@@ -940,25 +945,25 @@ export const StockSerialSchema = {
   cols: {
     stock_id: {
       type: DataTypes.STRING(36),
-      comment: '商品ID',
+      comment: "商品ID",
       allowNull: false,
     },
     is_sold: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
-      comment: '已銷售',
+      comment: "已銷售",
       allowNull: false,
     },
     is_valid: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
-      comment: '是否上架',
+      comment: "是否上架",
       allowNull: false,
     },
   },
   option: {
     tableName: "stock_serial",
-    comment: '序號商品',
+    comment: "序號商品",
   },
 };
 
@@ -1012,18 +1017,18 @@ export const StockBomSchema = {
   cols: {
     company_id: {
       type: DataTypes.STRING(36),
-      comment: '隸屬公司',
+      comment: "隸屬公司",
       allowNull: false,
     },
     stock_id: {
       type: DataTypes.STRING(36),
-      comment: '建立在商品那邊的ID',
+      comment: "建立在商品那邊的ID",
       allowNull: false,
     },
   },
   option: {
     tableName: "stock_bom",
-    comment: '組合商品(產生後會同步新增到stock)',
+    comment: "組合商品(產生後會同步新增到stock)",
   },
 };
 
@@ -1092,17 +1097,17 @@ export const WarehouseSchema = {
     company_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
-      comment: '隸屬公司',
+      comment: "隸屬公司",
     },
     warehouse_type_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
-      comment: '倉別屬性ID',
+      comment: "倉別屬性ID",
     },
   },
   option: {
     tableName: "warehouse",
-    comment: '倉庫',
+    comment: "倉庫",
   },
 };
 
@@ -1190,7 +1195,7 @@ export const IndexItemTypeSchema = {
     icon: {
       type: DataTypes.STRING(36),
       comment: "前面顯示的icon",
-    }
+    },
   },
   option: {
     tableName: "index_item_type",

@@ -236,7 +236,7 @@ export const createUploadImage = (() => {
   return (destination) => {
     const storage = multer.diskStorage({
       destination: (req, file, cb) => {
-        cb(null, `storage/app/public/${destination}`);
+        cb(null, `${staticPathName}/${destination}`);
       },
       filename: (req, file, cb) => {
         const ext = extMap[file.mimetype];
@@ -260,7 +260,7 @@ export const transFilePath = (path) => {
 export const queryParam2False = (target) =>
   !(target === undefined || target === "false");
 
-export const filePathAppend = (path) => `${staticPathName}/${path}`;
+export const filePathAppend = (path) => `${staticPathName}/${path}`.replace(/\\/g, "/");
 
 export const toArray = (target) => (Array.isArray(target) ? target : [target]);
 

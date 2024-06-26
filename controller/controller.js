@@ -1,3 +1,4 @@
+import fs from "fs";
 import multer from "multer";
 import {
   authenticationMiddleware,
@@ -5,14 +6,36 @@ import {
 } from "../middleware/middleware.js";
 
 import { Op } from "sequelize";
-import { queryParam2False, getPage } from "../model/helper.js";
+import {
+  queryParam2False,
+  getPage,
+  createUploadImage,
+  transFilePath,
+  filePathAppend,
+} from "../model/helper.js";
 
-const generalCreate = (tableName) => {
+const generalCreate = (tableName, imageOption = {}) => {
+  const { fieldNames } = imageOption;
+
   return async (req, res) => {
-    const Table = req.app[tableName];
-    const data = { ...req.body, ...req._author };
-
     try {
+      const imageFields = Array.isArray(fieldNames)
+        ? fieldNames.reduce((properties, { name, originalName }) => {
+            if (!req?.files?.[name]?.[0]?.path)
+              throw Error(
+                "Invalid file recieve, you may forgot config proper file upload middleware."
+              );
+            if (!req.files[name] || !name) return properties;
+            properties[name] = transFilePath(req.files[name][0].path);
+            originalName &&
+              (properties[originalName] = req.files[name][0].originalname);
+            return properties;
+          }, {})
+        : {};
+
+      const Table = req.app[tableName];
+      const data = { ...req.body, ...req._author, ...imageFields };
+
       await Table.create(data);
       res.response(200, `Success create ${tableName}.`);
     } catch (error) {
@@ -86,7 +109,7 @@ const generalRead = (tableName, option = {}) => {
         ...(filterArray.length > 0 && { order: filterArray }),
       });
 
-      return res.response(200, {
+      res.response(200, {
         start,
         size,
         begin,
@@ -102,20 +125,46 @@ const generalRead = (tableName, option = {}) => {
   };
 };
 
-const generalUpdate = (tableName) => {
+const generalUpdate = (tableName, imageOption = {}) => {
+  const { fieldNames } = imageOption;
+
   return async (req, res) => {
     const Table = req.app[tableName];
-    
+
     const id = parseInt(req.body.id);
 
     if (isNaN(id)) {
       return res.response(401, "Invalid id.");
     }
 
-    delete req.body.id
-    const data = { ...req.body, ...req._author };
-
     try {
+      const imagePath =
+        Array.isArray(fieldNames) &&
+        (await Table.findByPk(id, {
+          attributes: fieldNames.reduce((attrs, { name }) => {
+            name && attrs.push(name);
+            return attrs;
+          }, []),
+        }));
+
+      const imageFields = Array.isArray(fieldNames)
+        ? fieldNames.reduce((properties, { name, originalName }) => {
+            if (!req.files[name] || !name) return properties;
+            if (req.files[name][0].path) {
+              fs.unlink(filePathAppend(imagePath[name]), (err) => {
+                err && console.log(err);
+              });
+              properties[name] = transFilePath(req.files[name][0].path);
+            }
+            originalName &&
+              (properties[originalName] = req.files[name][0].originalname);
+            return properties;
+          }, {})
+        : {};
+
+      delete req.body.id;
+      const data = { ...req.body, ...req._author, ...imageFields };
+
       await Table.update(data, { where: { id } });
       res.response(200, `Success update ${tableName}.`);
     } catch (error) {
@@ -156,62 +205,6 @@ const controllers = [
             total: 0,
             totalPages: 0,
             list: [],
-          }),
-      ],
-    },
-  },
-  {
-    path: "stock-category",
-    actions: {
-      read: [
-        async (req, res) =>
-          res.response(200, "In stock-category route.", {
-            total: 1,
-            totalPages: 1,
-            list: [
-              {
-                id: 1,
-                name: "零食",
-              },
-              {
-                id: 2,
-                name: "飲料",
-              },
-              {
-                id: 3,
-                name: "用品",
-              },
-              {
-                id: 4,
-                name: "其他",
-              },
-            ],
-          }),
-      ],
-    },
-  },
-  {
-    path: "stock-serial",
-    actions: {
-      read: [
-        async (req, res) =>
-          res.response(200, "In stock-serial route.", {
-            total: 1,
-            totalPages: 1,
-            list: [
-              {
-                id: 1,
-                name: "用品",
-              },
-              {
-                id: 2,
-                name: "雜貨",
-              },
-              {
-                id: 3,
-                name: "飲品",
-              },
-            ],
           }),
       ],
     },
@@ -367,6 +360,55 @@ const controllers = [
         authenticationMiddleware,
         addUserMiddleware,
         generalDelete("StockBrand"),
+      ],
+    },
+  },
+  {
+    path: "stock-category",
+    schemas: {
+      read: ["StockCategory"],
+      create: ["StockCategory"],
+    },
+    actions: {
+      create: [
+        createUploadImage("stock-category-thumbnail").fields([
+          { name: "recommended_image" },
+        ]),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalCreate("StockCategory", {
+          fieldNames: [{ name: "recommended_image" }],
+        }),
+      ],
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalRead("StockCategory", {
+          queryAttribute: [
+            "id",
+            "name",
+            "description",
+            "recommended_image",
+            "is_recommended",
+          ],
+          searchAttribute: ["name"],
+        }),
+      ],
+      update: [
+        createUploadImage("stock-category-thumbnail").fields([
+          { name: "recommended_image" },
+        ]),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("StockCategory", {
+          fieldNames: [{ name: "recommended_image" }],
+        }),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("StockCategory"),
       ],
     },
   },
