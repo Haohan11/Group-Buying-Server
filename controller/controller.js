@@ -186,11 +186,17 @@ const generalDelete = (tableName, imageNameList) => {
     }
 
     try {
-      const imagePath = Array.isArray(imageNameList) && await Table.findByPk(id, { attributes: imageNameList });
+      const imagePath =
+        Array.isArray(imageNameList) &&
+        (await Table.findByPk(id, { attributes: imageNameList }));
 
-      imagePath && imageNameList.forEach((name) => {
-        fs.unlink(filePathAppend(imagePath[name]), (err) => err && console.log(err))
-      });
+      imagePath &&
+        imageNameList.forEach((name) => {
+          fs.unlink(
+            filePathAppend(imagePath[name]),
+            (err) => err && console.log(err)
+          );
+        });
 
       await Table.destroy({ where: { id } });
       res.response(200, `Success delete ${tableName}.`);
@@ -235,32 +241,6 @@ const controllers = [
               {
                 id: 3,
                 name: "星巴克",
-              },
-            ],
-          }),
-      ],
-    },
-  },
-  {
-    path: "accounting",
-    actions: {
-      read: [
-        async (req, res) =>
-          res.response(200, "In accounting route.", {
-            total: 1,
-            totalPages: 1,
-            list: [
-              {
-                id: 1,
-                name: "自己記",
-              },
-              {
-                id: 2,
-                name: "小寶記",
-              },
-              {
-                id: 3,
-                name: "豪子記",
               },
             ],
           }),
@@ -415,6 +395,41 @@ const controllers = [
         authenticationMiddleware,
         addUserMiddleware,
         generalDelete("StockCategory", ["recommended_image"]),
+      ],
+    },
+  },
+  {
+    path: "stock-accounting",
+    schemas: {
+      read: ["StockAccounting"],
+      create: ["StockAccounting"],
+    },
+    actions: {
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalCreate("StockAccounting"),
+      ],
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalRead("StockAccounting", {
+          queryAttribute: ["id", "name", "code", "sorting", "description"],
+          searchAttribute: ["name", "code"],
+        }),
+      ],
+      update: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("StockAccounting"),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("StockAccounting"),
       ],
     },
   },

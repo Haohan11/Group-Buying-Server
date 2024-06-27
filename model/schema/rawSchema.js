@@ -1082,6 +1082,29 @@ export const StockBomMetaSchema = {
   },
 };
 
+export const StockAccountingSchema = {
+  name: "stock_accounting",
+  cols: {
+    name: {
+      type: DataTypes.STRING(100),
+      comment: "名稱",
+      allowNull: false,
+      validate: {
+        len: [1, 35],
+      },
+    },
+    company_id: {
+      type: DataTypes.STRING(36),
+      comment: "隸屬公司",
+      allowNull: false,
+    },
+  },
+  option: {
+    tableName: "stock_accounting",
+    comment: "記帳分類",
+  },
+};
+
 export const WarehouseTypeSchema = {
   name: "warehouse_type",
   cols: {},

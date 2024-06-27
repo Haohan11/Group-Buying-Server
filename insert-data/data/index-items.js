@@ -18,7 +18,7 @@ const data = [
       { route: "management", name: "商品維護" },
       { route: "category", name: "商品類別維護" },
       { route: "brand", name: "商品品牌維護" },
-      { route: "accounts", name: "記帳分類維護" },
+      { route: "accounting", name: "記帳分類維護" },
     ],
   },
   {

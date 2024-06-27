@@ -12,7 +12,7 @@ const getFixedField = (schemaName) => ({
         comment: "名稱",
         allowNull: false,
         validate: {
-          len: [2, 15],
+          len: [2, 35],
         },
       },
       sorting: {
