@@ -176,7 +176,7 @@ const generalUpdate = (tableName, imageOption = {}) => {
   };
 };
 
-const generalDelete = (tableName) => {
+const generalDelete = (tableName, imageNameList) => {
   return async (req, res) => {
     const Table = req.app[tableName];
     const id = parseInt(req.body.id);
@@ -186,6 +186,12 @@ const generalDelete = (tableName) => {
     }
 
     try {
+      const imagePath = Array.isArray(imageNameList) && await Table.findByPk(id, { attributes: imageNameList });
+
+      imagePath && imageNameList.forEach((name) => {
+        fs.unlink(filePathAppend(imagePath[name]), (err) => err && console.log(err))
+      });
+
       await Table.destroy({ where: { id } });
       res.response(200, `Success delete ${tableName}.`);
     } catch (error) {
@@ -408,7 +414,7 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("StockCategory"),
+        generalDelete("StockCategory", ["recommended_image"]),
       ],
     },
   },
