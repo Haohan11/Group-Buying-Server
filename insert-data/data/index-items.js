@@ -31,6 +31,21 @@ const data = [
       { route: "warehouse", name: "倉別維護" },
     ],
   },
+  {
+    name: "進貨管理",
+    icon: "upc-scan",
+    route: "purchase",
+    indexItems: [
+      { route: "management", name: "採購作業" },
+      { route: "receive", name: "進貨作業" },
+      { route: "arrival", name: "到貨作業" },
+      { route: "select", name: "揀貨作業" },
+      { route: "dispatch", name: "配貨作業" },
+      { route: "supplier", name: "供應商管理" },
+      { route: "type", name: "進貨類別作業" },
+      { route: "accounting", name: "供應商結帳方式維護" },
+    ],
+  },
 ];
 
 export default data;
