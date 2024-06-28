@@ -21,10 +21,6 @@ const generalCreate = (tableName, imageOption = {}) => {
     try {
       const imageFields = Array.isArray(fieldNames)
         ? fieldNames.reduce((properties, { name, originalName }) => {
-            if (!req?.files?.[name]?.[0]?.path)
-              throw Error(
-                "Invalid file recieve, you may forgot config proper file upload middleware."
-              );
             if (!req.files[name] || !name) return properties;
             properties[name] = transFilePath(req.files[name][0].path);
             originalName &&

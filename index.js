@@ -1,5 +1,4 @@
 import versionText from "./versionText.js";
-import indexItemsData from "./insert-data/data/index-items.js";
 
 import express from "express";
 import cors from "cors";
@@ -385,54 +384,6 @@ app.get("/all-tables", authenticationMiddleware, async (req, res) => {
     res.response(500);
   }
 });
-
-app.get(
-  "/create-index-item",
-  createBulkConnectMiddleware(["IndexItem", "IndexItemType"], { alter: true }),
-  async (req, res) => {
-    const author = {
-      create_id: "admin",
-      create_name: "admin",
-      modify_id: "admin",
-      modify_name: "admin",
-    };
-    const { IndexItem, IndexItemType } = req.app;
-
-    try {
-      await IndexItemType.destroy({
-        truncate: true,
-      });
-      await IndexItem.destroy({
-        truncate: true,
-      });
-      await Promise.all(
-        indexItemsData.map(async ({ name, icon, route, indexItems }) => {
-          const { id: typeId } = await IndexItemType.create({
-            name,
-            icon,
-            route,
-            ...author,
-          });
-
-          const insertData = indexItems.map((item) => ({
-            name: item.name,
-            route: item.route,
-            table_name: item.tableName,
-            index_item_type_id: typeId,
-            ...author,
-          }));
-
-          await IndexItem.bulkCreate(insertData);
-        })
-      );
-
-      res.response(200);
-    } catch (error) {
-      console.log(error);
-      res.response(500);
-    }
-  }
-);
 
 app.get(
   "/get-index-item",

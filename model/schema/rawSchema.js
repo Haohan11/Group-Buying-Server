@@ -351,6 +351,9 @@ export const UserSchema = {
     password: {
       type: DataTypes.TEXT("long"),
       comment: "密碼",
+      set(value) {
+        this.setDataValue("password", goHashSync(value));
+      }      
     },
     remember_token: {
       type: DataTypes.TEXT("long"),
