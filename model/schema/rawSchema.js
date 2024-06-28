@@ -192,6 +192,16 @@ export const PaymentSchema = {
   },
 };
 
+export const AccountMethodSchema = {
+  name: "account_method",
+  cols: {
+  },
+  option: {
+    tableName: "account_method",
+    comment: "結帳方式",
+  },
+};
+
 export const departmentSchema = {
   name: "department",
   cols: {
@@ -461,6 +471,10 @@ export const SupplierSchema = {
       type: DataTypes.STRING(36),
       comment: "付款方式",
     },
+    accounting_id: {
+      type: DataTypes.STRING(36),
+      comment: "結帳方式",
+    },
     short_name: {
       type: DataTypes.STRING(100),
       comment: "簡稱",
@@ -480,6 +494,10 @@ export const SupplierSchema = {
     contact_address: {
       type: DataTypes.TEXT("long"),
       comment: "聯絡地址",
+    },
+    contact_person: {
+      type: DataTypes.STRING(36),
+      comment: "聯絡人",
     },
   },
   option: {

@@ -61,6 +61,7 @@ await (async () => {
   const getModel = async (schema) => {
     const Model = createSchema(sequelize, schema);
     await Model.sync({ alter: true });
+    return Model;
   };
 
   const { generateTable } = initialConfig;
@@ -77,7 +78,7 @@ await (async () => {
   if (!UserSchema) return exit("UserSchema not set.");
 
   try {
-    const User = sequelize.models.user || getModel(UserSchema);
+    const User = sequelize.models.user || (await getModel(UserSchema));
 
     await User.destroy({
       where: userData.unique.reduce(
@@ -110,9 +111,10 @@ await (async () => {
       {}
     );
 
-    const IndexItem = sequelize.models.index_item || getModel(IndexItemSchema);
+    const IndexItem =
+      sequelize.models.index_item || (await getModel(IndexItemSchema));
     const IndexItemType =
-      sequelize.models.index_item_type || getModel(IndexItemTypeSchema);
+      sequelize.models.index_item_type || (await getModel(IndexItemTypeSchema));
 
     await IndexItemType.destroy({
       truncate: true,
@@ -150,7 +152,13 @@ await (async () => {
     log("Inserting extra data...");
     await Promise.all(
       Object.entries(insertData).map(async ([dataName, config]) => {
-        const { modelName, schemaName, data, destroy = true, author = initAuthor } = config;
+        const {
+          modelName,
+          schemaName,
+          data,
+          destroy = true,
+          author = initAuthor,
+        } = config;
 
         if (!Array.isArray(data))
           return console.warn(`Insert data must receive array type.`);
@@ -161,7 +169,8 @@ await (async () => {
             `Schema \`${schemaName}\` not found when insert ${dataName}.`
           );
 
-        const Table = sequelize.models[modelName] || getModel(InsertSchema);
+        const Table =
+          sequelize.models[modelName] || (await getModel(InsertSchema));
 
         destroy && (await Table.destroy({ truncate: true }));
 

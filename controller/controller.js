@@ -14,7 +14,7 @@ import {
   filePathAppend,
 } from "../model/helper.js";
 
-const generalCreate = (tableName, imageOption = {}) => {
+const generalCreate = (tableName, imageOption = {}, defaultData = {}) => {
   const { fieldNames } = imageOption;
 
   return async (req, res) => {
@@ -30,7 +30,12 @@ const generalCreate = (tableName, imageOption = {}) => {
         : {};
 
       const Table = req.app[tableName];
-      const data = { ...req.body, ...req._author, ...imageFields };
+      const data = {
+        ...req.body,
+        ...req._author,
+        ...imageFields,
+        ...defaultData,
+      };
 
       await Table.create(data);
       res.response(200, `Success create ${tableName}.`);
@@ -218,32 +223,6 @@ const controllers = [
     },
   },
   {
-    path: "supplier",
-    actions: {
-      read: [
-        async (req, res) =>
-          res.response(200, "In supplier route.", {
-            total: 1,
-            totalPages: 1,
-            list: [
-              {
-                id: 1,
-                name: "麥當勞",
-              },
-              {
-                id: 2,
-                name: "肯德基",
-              },
-              {
-                id: 3,
-                name: "星巴克",
-              },
-            ],
-          }),
-      ],
-    },
-  },
-  {
     path: "role-price",
     actions: {
       read: [
@@ -426,6 +405,83 @@ const controllers = [
         authenticationMiddleware,
         addUserMiddleware,
         generalDelete("StockAccounting"),
+      ],
+    },
+  },
+  {
+    path: "payment",
+    schemas: {
+      read: ["Payment"],
+    },
+    actions: {
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalRead("Payment", {
+          queryAttribute: ["id", "name"],
+        }),
+      ],
+    },
+  },
+  {
+    path: "account-method",
+    schemas: {
+      read: ["AccountMethod"],
+    },
+    actions: {
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalRead("AccountMethod", {
+          queryAttribute: ["id", "name"],
+        }),
+      ],
+    },
+  },
+  {
+    path: "supplier",
+    schemas: {
+      read: ["Supplier"],
+      create: ["Supplier"],
+    },
+    actions: {
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalRead("Supplier", {
+          queryAttribute: [
+            "id",
+            "name",
+            "code",
+            "payment_id",
+            "accounting_id",
+            "uniform_number",
+            "phone",
+            "contact_address",
+            "contact_person",
+            "mobile",
+            "description",
+          ],
+          searchAttribute: ["name", "code"],
+        }),
+      ],
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalCreate("Supplier", undefined, { supplier_type_id: 1, country_id: 1 }),
+      ],
+      update: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("Supplier"),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("Supplier"),
       ],
     },
   },
