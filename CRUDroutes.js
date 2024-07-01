@@ -17,9 +17,7 @@ const createRouter = ({ path, schemas, actions }) => {
     appendMiddleware: try {
       if (!schemas || !schemas[action]) break appendMiddleware;
 
-      const connectMiddleware = createBulkConnectMiddleware(
-        schemas[action]
-      );
+      const connectMiddleware = createBulkConnectMiddleware(schemas[action]);
       router.use(connectMiddleware);
     } catch (error) {
       console.warn(error);

@@ -394,6 +394,15 @@ export const UserSchema = {
   },
 };
 
+export const MemberGradeSchema = {
+  name: "member_grade",
+  cols: {},
+  option: {
+    tableName: "member_grade",
+    comment: "會員等級",
+  },
+};
+
 export const PermissionSchema = {
   name: "permission",
   cols: {

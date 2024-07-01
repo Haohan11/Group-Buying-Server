@@ -18,7 +18,8 @@ export const notFoundResponse = (req, res) => res.response(404);
 
 export const addUserMiddleware = async (req, res, next) => {
   if (!req._user) return next();
-  if (!req.app.User) createBulkConnectMiddleware(["User"])(req, res, next);
+  if (!req.app.User)
+    await createBulkConnectMiddleware(["User"])(req, res, next);
 
   try {
     const account = req._user.user_account;
@@ -30,7 +31,7 @@ export const addUserMiddleware = async (req, res, next) => {
       modify_name: name,
       create_id: account,
       modify_id: account,
-      company_id: 1
+      company_id: 1,
     };
     next();
   } catch {

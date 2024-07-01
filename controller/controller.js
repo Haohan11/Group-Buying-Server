@@ -480,7 +480,7 @@ const controllers = [
                 const accounting = await AccountMethod.findOne({
                   attributes: ["name"],
                   where: { id: supplier.accounting_id },
-                })
+                });
                 supplier.setDataValue("payment", payment.name);
                 supplier.setDataValue("accounting", accounting.name);
                 return supplier;
@@ -509,6 +509,43 @@ const controllers = [
         authenticationMiddleware,
         addUserMiddleware,
         generalDelete("Supplier"),
+      ],
+    },
+  },
+  {
+    path: "member-grade",
+    schemas: {
+      read: ["MemberGrade"],
+      create: ["MemberGrade"],
+      update: ["MemberGrade"],
+      delete: ["MemberGrade"],
+    },
+    actions: {
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalCreate("MemberGrade"),
+      ],
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalRead("MemberGrade", {
+          queryAttribute: ["id", "name", "description"],
+          searchAttribute: ["name"],
+        }),
+      ],
+      update: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("MemberGrade"),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("MemberGrade"),
       ],
     },
   },

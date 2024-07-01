@@ -190,6 +190,7 @@ export const customResponse = (() => {
     if (secondType === "object") result.data = second;
     if (firstType === "object") result.data = first;
 
+    console.log(`\n Sending response route: ${res.req.originalUrl} \n`);
     return res.status(statusCode).send(result).end();
   };
 })();
