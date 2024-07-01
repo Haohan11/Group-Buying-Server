@@ -549,6 +549,43 @@ const controllers = [
       ],
     },
   },
+  {
+    path: "member-role",
+    schemas: {
+      read: ["MemberRole"],
+      create: ["MemberRole"],
+      update: ["MemberRole"],
+      delete: ["MemberRole"],
+    },
+    actions: {
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalCreate("MemberRole"),
+      ],
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalRead("MemberRole", {
+          queryAttribute: ["id", "name", "description"],
+          searchAttribute: ["name"],
+        }),
+      ],
+      update: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("MemberRole"),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("MemberRole"),
+      ],
+    },
+  },
 ];
 
 export { controllers };

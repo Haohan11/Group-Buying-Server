@@ -403,6 +403,15 @@ export const MemberGradeSchema = {
   },
 };
 
+export const MemberRoleSchema = {
+  name: "member_role",
+  cols: {},
+  option: {
+    tableName: "member_role",
+    comment: "會員角色",
+  },
+};
+
 export const PermissionSchema = {
   name: "permission",
   cols: {
