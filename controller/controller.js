@@ -49,7 +49,7 @@ const generalCreate = (tableName, imageOption = {}, defaultData = {}) => {
 };
 
 const generalRead = (tableName, option = {}) => {
-  const { queryAttribute = [], searchAttribute = [] } = option;
+  const { queryAttribute = [], searchAttribute = [], listAdaptor } = option;
   return async (req, res) => {
     const Table = req.app[tableName];
     queryAttribute.includes("create_time") ||
@@ -102,13 +102,18 @@ const generalRead = (tableName, option = {}) => {
         ...req.query,
       });
 
-      const list = await Table.findAll({
+      const rawlist = await Table.findAll({
         offset: begin,
         limit: size,
         attributes: queryAttribute,
         ...whereOption,
         ...(filterArray.length > 0 && { order: filterArray }),
       });
+
+      const list =
+        typeof listAdaptor === "function"
+          ? await listAdaptor(rawlist, req)
+          : rawlist;
 
       res.response(200, {
         start,
@@ -441,7 +446,7 @@ const controllers = [
   {
     path: "supplier",
     schemas: {
-      read: ["Supplier"],
+      read: ["Supplier", "Payment", "AccountMethod"],
       create: ["Supplier"],
     },
     actions: {
@@ -463,13 +468,35 @@ const controllers = [
             "description",
           ],
           searchAttribute: ["name", "code"],
+          listAdaptor: async (list, req) => {
+            const { Payment, AccountMethod } = req.app;
+
+            return await Promise.all(
+              list.map(async (supplier) => {
+                const payment = await Payment.findOne({
+                  attributes: ["name"],
+                  where: { id: supplier.payment_id },
+                });
+                const accounting = await AccountMethod.findOne({
+                  attributes: ["name"],
+                  where: { id: supplier.accounting_id },
+                })
+                supplier.setDataValue("payment", payment.name);
+                supplier.setDataValue("accounting", accounting.name);
+                return supplier;
+              })
+            );
+          },
         }),
       ],
       create: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalCreate("Supplier", undefined, { supplier_type_id: 1, country_id: 1 }),
+        generalCreate("Supplier", undefined, {
+          supplier_type_id: 1,
+          country_id: 1,
+        }),
       ],
       update: [
         multer().none(),
