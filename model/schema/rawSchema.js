@@ -792,6 +792,14 @@ export const StockSchema = {
       type: DataTypes.STRING(36),
       comment: "商品類別ID",
     },
+    supplier_id: {
+      type: DataTypes.STRING(36),
+      comment: "供應商ID",
+    },
+    accounting_id: {
+      type: DataTypes.STRING(36),
+      comment: "記帳分類ID",
+    },
     stock_unit_id: {
       type: DataTypes.STRING(36),
       comment: "商品單位ID",
@@ -804,9 +812,9 @@ export const StockSchema = {
     },
     cover_image: {
       type: DataTypes.STRING(1024),
-      comment: "精選類別縮圖",
+      comment: "商品封面圖",
       set(value) {
-        this.setDataValue("recommended_image", value ? value : undefined);
+        this.setDataValue("cover_image", value ? value : undefined);
       }
     },
     tax_type_id: {
@@ -826,67 +834,83 @@ export const StockSchema = {
       type: DataTypes.DOUBLE,
       defaultValue: 0,
       comment: "商品(長)",
-      allowNull: false,
     },
     stock_width: {
       type: DataTypes.DOUBLE,
       defaultValue: 0,
       comment: "商品(寬)",
-      allowNull: false,
     },
     stock_height: {
       type: DataTypes.DOUBLE,
       defaultValue: 0,
       comment: "商品(高)",
-      allowNull: false,
     },
     stock_weight: {
       type: DataTypes.DOUBLE,
       defaultValue: 0,
       comment: "商品(重)",
-      allowNull: false,
     },
     is_preorder: {
       type: DataTypes.BOOLEAN,
-      defaultValue: 0,
+      defaultValue: false,
       comment: "是否為預購商品",
-      allowNull: false,
     },
     is_serial_stock: {
       type: DataTypes.BOOLEAN,
-      defaultValue: 0,
+      defaultValue: false,
       comment: "是否為序號商品",
-      allowNull: false,
     },
     is_nostock_sell: {
       type: DataTypes.BOOLEAN,
-      defaultValue: 0,
+      defaultValue: false,
       comment: "是否負庫存銷售",
-      allowNull: false,
     },
     is_independent: {
       type: DataTypes.BOOLEAN,
-      defaultValue: 0,
+      defaultValue: false,
       comment: "是否為獨立揀貨商品",
-      allowNull: false,
     },
     is_consignment: {
       type: DataTypes.BOOLEAN,
-      defaultValue: 0,
+      defaultValue: false,
       comment: "是否為寄賣品",
-      allowNull: false,
     },
     is_gift: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
       comment: "是否為贈品",
-      allowNull: false,
     },
     is_valid: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
       comment: "是否上架",
-      allowNull: false,
+    },
+    min_order:{
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
+      comment: "最少訂購數",
+    },
+    order_step: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
+      comment: "訂購倍數",
+    },
+    preorder_count: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: "預購數量",
+    },
+    price: {
+      type: DataTypes.INTEGER,
+      comment: "商品售價",
+    },
+    purchase_price: {
+      type: DataTypes.INTEGER,
+      comment: "進貨價",
+    },
+    specification: {
+      type: DataTypes.TEXT("long"),
+      comment: "商品規格",
     },
   },
   option: {

@@ -12,16 +12,16 @@ import {
   createUploadImage,
   transFilePath,
   filePathAppend,
-  logger
+  logger,
 } from "../model/helper.js";
 
-const getGeneralCreate = (tableName, imageOption = {}, defaultData = {}) => {
-  const { fieldNames } = imageOption;
+const getGeneralCreate = (tableName, option) => {
+  const { imageFieldName, defaultData } = option || {};
 
   return async (req, res) => {
     try {
-      const imageFields = Array.isArray(fieldNames)
-        ? fieldNames.reduce((properties, { name, originalName }) => {
+      const imageField = Array.isArray(imageFieldName)
+        ? imageFieldName.reduce((properties, { name, originalName }) => {
             if (!req.files[name] || !name) return properties;
             properties[name] = transFilePath(req.files[name][0].path);
             originalName &&
@@ -34,7 +34,7 @@ const getGeneralCreate = (tableName, imageOption = {}, defaultData = {}) => {
       const data = {
         ...req.body,
         ...req._author,
-        ...imageFields,
+        ...imageField,
         ...defaultData,
       };
 
@@ -135,8 +135,8 @@ const getGeneralRead = (tableName, option = {}) => {
   };
 };
 
-const generalUpdate = (tableName, imageOption = {}) => {
-  const { fieldNames } = imageOption;
+const generalUpdate = (tableName, option) => {
+  const { imageFieldName } = option || {};
 
   return async (req, res) => {
     const Table = req.app[tableName];
@@ -149,16 +149,16 @@ const generalUpdate = (tableName, imageOption = {}) => {
 
     try {
       const imagePath =
-        Array.isArray(fieldNames) &&
+        Array.isArray(imageFieldName) &&
         (await Table.findByPk(id, {
-          attributes: fieldNames.reduce((attrs, { name }) => {
+          attributes: imageFieldName.reduce((attrs, { name }) => {
             name && attrs.push(name);
             return attrs;
           }, []),
         }));
 
-      const imageFields = Array.isArray(fieldNames)
-        ? fieldNames.reduce((properties, { name, originalName }) => {
+      const imageField = Array.isArray(imageFieldName)
+        ? imageFieldName.reduce((properties, { name, originalName }) => {
             if (!req.files[name] || !name) return properties;
             if (req.files[name][0].path) {
               fs.unlink(filePathAppend(imagePath[name]), (err) => {
@@ -173,7 +173,7 @@ const generalUpdate = (tableName, imageOption = {}) => {
         : {};
 
       delete req.body.id;
-      const data = { ...req.body, ...req._author, ...imageFields };
+      const data = { ...req.body, ...req._author, ...imageField };
 
       await Table.update(data, { where: { id } });
       res.response(200, `Success update ${tableName}.`);
@@ -186,7 +186,8 @@ const generalUpdate = (tableName, imageOption = {}) => {
   };
 };
 
-const generalDelete = (tableName, imageNameList) => {
+const generalDelete = (tableName, option) => {
+  const { imageFieldName } = option || {};
   return async (req, res) => {
     const Table = req.app[tableName];
     const id = parseInt(req.body.id);
@@ -197,11 +198,11 @@ const generalDelete = (tableName, imageNameList) => {
 
     try {
       const imagePath =
-        Array.isArray(imageNameList) &&
-        (await Table.findByPk(id, { attributes: imageNameList }));
+        Array.isArray(imageFieldName) &&
+        (await Table.findByPk(id, { attributes: imageFieldName }));
 
       imagePath &&
-        imageNameList.forEach((name) => {
+        imageFieldName.forEach((name) => {
           fs.unlink(
             filePathAppend(imagePath[name]),
             (err) => err && console.log(err)
@@ -218,6 +219,73 @@ const generalDelete = (tableName, imageNameList) => {
 };
 
 const controllers = [
+  {
+    path: "stock",
+    schemas: {
+      create: ["Stock"],
+      read: ["Stock"],
+    },
+    actions: {
+      create: [
+        createUploadImage("stock-cover").fields([{ name: "cover_image" }]),
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralCreate("Stock", {
+          imageFieldName: [{ name: "cover_image" }],
+          defaultData: {
+            company_id: 1,
+            stock_unit_id: 1,
+            mbflag_type_id: 1,
+            tax_type_id: 1,
+          },
+        }),
+      ],
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralRead("Stock", {
+          queryAttribute: ["id", 
+            "cover_image",
+            "is_valid",
+            "is_preorder",
+            "is_nostock_sell",
+            "is_independent",
+            "name",
+            "code",
+            "barcode",
+            "specification",
+            "stock_brand_id",
+            "stock_category_id",
+            "accounting_id",
+            "supplier_id",
+            "min_order",
+            "order_step",
+            "preorder_count",
+            "price",
+            "purchase_price",
+            "description",
+          ],
+          searchAttribute: ["name"],
+        }),
+      ],
+      update: [
+        createUploadImage("stock-cover").fields([{ name: "cover_image" }]),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("Stock", {
+          imageFieldName: [{ name: "cover_image" }],
+        }),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("Stock", {
+          imageFieldName: ["cover_image"],
+        }),
+      ],
+    },
+  },
   {
     path: "stock-brand",
     schemas: {
@@ -267,7 +335,7 @@ const controllers = [
         authenticationMiddleware,
         addUserMiddleware,
         getGeneralCreate("StockCategory", {
-          fieldNames: [{ name: "recommended_image" }],
+          imageFieldName: [{ name: "recommended_image" }],
         }),
       ],
       read: [
@@ -291,14 +359,16 @@ const controllers = [
         authenticationMiddleware,
         addUserMiddleware,
         generalUpdate("StockCategory", {
-          fieldNames: [{ name: "recommended_image" }],
+          imageFieldName: [{ name: "recommended_image" }],
         }),
       ],
       delete: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("StockCategory", ["recommended_image"]),
+        generalDelete("StockCategory", {
+          imageFieldName: ["recommended_image"],
+        }),
       ],
     },
   },
@@ -417,9 +487,11 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        getGeneralCreate("Supplier", undefined, {
-          supplier_type_id: 1,
-          country_id: 1,
+        getGeneralCreate("Supplier", {
+          defaultData: {
+            supplier_type_id: 1,
+            country_id: 1,
+          },
         }),
       ],
       update: [

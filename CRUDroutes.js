@@ -1,6 +1,10 @@
 import express from "express";
 
-import { toArray, createBulkConnectMiddleware, logger } from "./model/helper.js";
+import {
+  toArray,
+  createBulkConnectMiddleware,
+  logger,
+} from "./model/helper.js";
 import { controllers } from "./controller/controller.js";
 
 const createRouter = ({ path, schemas, actions }) => {
