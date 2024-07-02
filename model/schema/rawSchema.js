@@ -802,6 +802,13 @@ export const StockSchema = {
       comment: "商品屬性",
       allowNull: false,
     },
+    cover_image: {
+      type: DataTypes.STRING(1024),
+      comment: "精選類別縮圖",
+      set(value) {
+        this.setDataValue("recommended_image", value ? value : undefined);
+      }
+    },
     tax_type_id: {
       type: DataTypes.STRING(36),
       comment: "稅別",
@@ -839,10 +846,28 @@ export const StockSchema = {
       comment: "商品(重)",
       allowNull: false,
     },
+    is_preorder: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: 0,
+      comment: "是否為預購商品",
+      allowNull: false,
+    },
     is_serial_stock: {
       type: DataTypes.BOOLEAN,
       defaultValue: 0,
       comment: "是否為序號商品",
+      allowNull: false,
+    },
+    is_nostock_sell: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: 0,
+      comment: "是否負庫存銷售",
+      allowNull: false,
+    },
+    is_independent: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: 0,
+      comment: "是否為獨立揀貨商品",
       allowNull: false,
     },
     is_consignment: {
