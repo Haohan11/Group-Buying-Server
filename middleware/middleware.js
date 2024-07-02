@@ -5,7 +5,7 @@ import {
   customResponse,
   createSchema,
   connectToDataBase,
-  createBulkConnectMiddleware,
+  logger,
 } from "../model/helper.js";
 
 export const responseMiddleware = (req, res, next) => {
@@ -17,11 +17,20 @@ export const responseMiddleware = (req, res, next) => {
 export const notFoundResponse = (req, res) => res.response(404);
 
 export const addUserMiddleware = async (req, res, next) => {
-  if (!req._user) return next();
-  if (!req.app.User)
-    await createBulkConnectMiddleware(["User"])(req, res, next);
+  logger("========== in addUserMiddleware ==========");
+  if (!req._user) {
+    logger("======= exit addUserMiddleware due to no req._user =======");
+    return next();
+  }
 
   try {
+    if (!req.app.User) {
+      logger("========== Creating User Model ==========");
+      const User = createSchema(req.app.sequelize, Schemas.UserSchema);
+      await User.sync();
+      req.app.User = User;
+      logger("========== Success created User Model ==========");
+    }
     const account = req._user.user_account;
     const { User } = req.app;
     const { id, name } = await User.findOne({ where: { account } });
@@ -33,6 +42,7 @@ export const addUserMiddleware = async (req, res, next) => {
       modify_id: account,
       company_id: 1,
     };
+    logger("========== exit addUserMiddleware ==========");
     next();
   } catch {
     res.response(500);
@@ -40,6 +50,7 @@ export const addUserMiddleware = async (req, res, next) => {
 };
 
 export const authenticationMiddleware = (req, res, next) => {
+  logger("========= in authentication middleware =========");
   let token;
   try {
     token = req.headers["authorization"].split(" ")[1];
@@ -71,7 +82,9 @@ export const authenticationMiddleware = (req, res, next) => {
 
     result[1] = true;
   });
-
+  
+  logger("========= exit authentication middleware =========");
+  
   result.includes(true) ? next() : res.response(401);
 };
 

@@ -12,9 +12,10 @@ import {
   createUploadImage,
   transFilePath,
   filePathAppend,
+  logger
 } from "../model/helper.js";
 
-const generalCreate = (tableName, imageOption = {}, defaultData = {}) => {
+const getGeneralCreate = (tableName, imageOption = {}, defaultData = {}) => {
   const { fieldNames } = imageOption;
 
   return async (req, res) => {
@@ -48,9 +49,10 @@ const generalCreate = (tableName, imageOption = {}, defaultData = {}) => {
   };
 };
 
-const generalRead = (tableName, option = {}) => {
+const getGeneralRead = (tableName, option = {}) => {
   const { queryAttribute = [], searchAttribute = [], listAdaptor } = option;
   return async (req, res) => {
+    logger("========== in generalRead ==========");
     const Table = req.app[tableName];
     queryAttribute.includes("create_time") ||
       queryAttribute.push("create_time");
@@ -123,9 +125,11 @@ const generalRead = (tableName, option = {}) => {
         totalPages,
         list,
       });
+
+      logger("========== exit generalRead ==========");
     } catch (error) {
       // log sql message with error.original.sqlMessage
-      console.log(error);
+      console.log("Error in generalRead: ", error);
       res.response(500);
     }
   };
@@ -215,89 +219,9 @@ const generalDelete = (tableName, imageNameList) => {
 
 const controllers = [
   {
-    path: "stock",
-    actions: {
-      read: [
-        async (req, res) =>
-          res.response(200, "In Stock route.", {
-            total: 0,
-            totalPages: 0,
-            list: [],
-          }),
-      ],
-    },
-  },
-  {
-    path: "role-price",
-    actions: {
-      read: [
-        async (req, res) =>
-          res.response(200, "Mock role-price route.", {
-            total: 1,
-            totalPages: 1,
-            list: [
-              {
-                id: 1,
-                name: "一般會員",
-                price: 1000,
-              },
-              {
-                id: 2,
-                name: "VIP",
-                price: 750,
-              },
-              {
-                id: 3,
-                name: "VVIP",
-                price: 700,
-              },
-              {
-                id: 4,
-                name: "MEGA-VIP",
-                price: 500,
-              },
-            ],
-          }),
-      ],
-    },
-  },
-  {
-    path: "grade-price",
-    actions: {
-      read: [
-        async (req, res) =>
-          res.response(200, "Mock role-price route.", {
-            total: 1,
-            totalPages: 1,
-            list: [
-              {
-                id: 1,
-                name: "UR",
-                price: 1200,
-              },
-              {
-                id: 2,
-                name: "R",
-                price: 1000,
-              },
-              {
-                id: 3,
-                name: "SR",
-                price: 900,
-              },
-              {
-                id: 4,
-                name: "SSR",
-                price: 850,
-              },
-            ],
-          }),
-      ],
-    },
-  },
-  {
     path: "stock-brand",
     schemas: {
+      create: ["StockBrand"],
       read: ["StockBrand"],
     },
     actions: {
@@ -305,12 +229,12 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalCreate("StockBrand"),
+        getGeneralCreate("StockBrand"),
       ],
       read: [
         authenticationMiddleware,
         addUserMiddleware,
-        generalRead("StockBrand", {
+        getGeneralRead("StockBrand", {
           queryAttribute: ["id", "name", "description"],
           searchAttribute: ["name"],
         }),
@@ -342,14 +266,14 @@ const controllers = [
         ]),
         authenticationMiddleware,
         addUserMiddleware,
-        generalCreate("StockCategory", {
+        getGeneralCreate("StockCategory", {
           fieldNames: [{ name: "recommended_image" }],
         }),
       ],
       read: [
         authenticationMiddleware,
         addUserMiddleware,
-        generalRead("StockCategory", {
+        getGeneralRead("StockCategory", {
           queryAttribute: [
             "id",
             "name",
@@ -389,12 +313,12 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalCreate("StockAccounting"),
+        getGeneralCreate("StockAccounting"),
       ],
       read: [
         authenticationMiddleware,
         addUserMiddleware,
-        generalRead("StockAccounting", {
+        getGeneralRead("StockAccounting", {
           queryAttribute: ["id", "name", "code", "sorting", "description"],
           searchAttribute: ["name", "code"],
         }),
@@ -422,7 +346,7 @@ const controllers = [
       read: [
         authenticationMiddleware,
         addUserMiddleware,
-        generalRead("Payment", {
+        getGeneralRead("Payment", {
           queryAttribute: ["id", "name"],
         }),
       ],
@@ -437,7 +361,7 @@ const controllers = [
       read: [
         authenticationMiddleware,
         addUserMiddleware,
-        generalRead("AccountMethod", {
+        getGeneralRead("AccountMethod", {
           queryAttribute: ["id", "name"],
         }),
       ],
@@ -453,7 +377,7 @@ const controllers = [
       read: [
         authenticationMiddleware,
         addUserMiddleware,
-        generalRead("Supplier", {
+        getGeneralRead("Supplier", {
           queryAttribute: [
             "id",
             "name",
@@ -493,7 +417,7 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalCreate("Supplier", undefined, {
+        getGeneralCreate("Supplier", undefined, {
           supplier_type_id: 1,
           country_id: 1,
         }),
@@ -525,12 +449,12 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalCreate("MemberGrade"),
+        getGeneralCreate("MemberGrade"),
       ],
       read: [
         authenticationMiddleware,
         addUserMiddleware,
-        generalRead("MemberGrade", {
+        getGeneralRead("MemberGrade", {
           queryAttribute: ["id", "name", "description"],
           searchAttribute: ["name"],
         }),
@@ -562,12 +486,12 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalCreate("MemberRole"),
+        getGeneralCreate("MemberRole"),
       ],
       read: [
         authenticationMiddleware,
         addUserMiddleware,
-        generalRead("MemberRole", {
+        getGeneralRead("MemberRole", {
           queryAttribute: ["id", "name", "description"],
           searchAttribute: ["name"],
         }),

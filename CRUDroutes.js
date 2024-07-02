@@ -1,6 +1,6 @@
 import express from "express";
 
-import { toArray, createBulkConnectMiddleware } from "./model/helper.js";
+import { toArray, createBulkConnectMiddleware, logger } from "./model/helper.js";
 import { controllers } from "./controller/controller.js";
 
 const createRouter = ({ path, schemas, actions }) => {
@@ -33,4 +33,5 @@ export const createCRUDRoutes = (app) =>
   controllers.forEach((controller) => {
     const { path, router } = createRouter(controller);
     app.use(path, router);
+    logger("register route:", controller.path);
   });

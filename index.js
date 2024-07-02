@@ -13,6 +13,7 @@ import {
   goHash,
   connectToDataBase,
   createBulkConnectMiddleware,
+  logger
 } from "./model/helper.js";
 // import getUserPermission from "./controller/getUserPermission.js";
 
@@ -428,6 +429,7 @@ app.get(
 );
 
 createCRUDRoutes(app);
+logger("register routes finished.");
 
 false &&
   app.post("/logout", async function (req, res) {

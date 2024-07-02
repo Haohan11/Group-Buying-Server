@@ -9,6 +9,11 @@ import { PermissionTypeSchema } from "../model/schema/rawSchema.js";
 
 import staticPathName from "../model/staticPathName.js";
 
+export const logger = (() => {
+  const loggerOn = false;
+  return (...message) => loggerOn && console.log(...message);
+})();
+
 export const connectToDataBase = async () => {
   dotenv.config();
   const { DB_NAME, DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT } = process.env;
@@ -21,7 +26,7 @@ export const connectToDataBase = async () => {
 
   try {
     await sequelize.authenticate();
-    console.log('Connection has been established successfully.');
+    console.log("Connection has been established successfully.");
     return sequelize;
   } catch (error) {
     console.error("Unable to connect to the database:", error);
@@ -65,10 +70,12 @@ export const createBulkConnectMiddleware = (tableNames, syncOption) => {
     try {
       schemas.forEach((schema, index) => {
         const Table = createSchema(sequelize, schema);
+
         req.app[tableNames[index]] = Table;
       });
       await sequelize.sync(syncOption);
     } catch (error) {
+      logger("Error in createBulkConnectMiddleware:", error);
       return res.response(500);
     }
     next();
@@ -190,8 +197,10 @@ export const customResponse = (() => {
     if (secondType === "object") result.data = second;
     if (firstType === "object") result.data = first;
 
-    console.log(`\n Sending response route: ${res.req.originalUrl} \n`);
-    return res.status(statusCode).send(result).end();
+    logger(
+      `\n Sending response route: ${res.req.originalUrl} with status code: ${statusCode}\n`
+    );
+    return res.status(statusCode).send(result);
   };
 })();
 
@@ -261,7 +270,8 @@ export const transFilePath = (path) => {
 export const queryParam2False = (target) =>
   !(target === undefined || target === "false");
 
-export const filePathAppend = (path) => `${staticPathName}/${path}`.replace(/\\/g, "/");
+export const filePathAppend = (path) =>
+  `${staticPathName}/${path}`.replace(/\\/g, "/");
 
 export const toArray = (target) => (Array.isArray(target) ? target : [target]);
 
