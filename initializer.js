@@ -64,12 +64,19 @@ await (async () => {
     return Model;
   };
 
-  const { generateTable } = initialConfig;
-  if (generateTable) {
-    log("Generate table...");
-    Object.values(Schemas).forEach((schema) => createSchema(sequelize, schema));
-    await sequelize.sync({ alter: true });
-    onelineLog("Table generated.");
+  GenerateTable: {
+    const { generateTable } = initialConfig;
+    if (!generateTable) break GenerateTable;
+
+    try {
+      log("Generating table...");
+      Object.values(Schemas).forEach((schema) => createSchema(sequelize, schema));
+      await sequelize.sync({ alter: true });
+      onelineLog("Table generated.");
+    } catch (error) {
+      console.warn("Table not generated.", error);
+      break GenerateTable;
+    }
   }
 
   /** Handle User below */
@@ -94,55 +101,61 @@ await (async () => {
     /** Handle User above */
 
     /** Handle IndexItem below */
-    log("Create IndexItem...");
-    const { IndexItemSchema, IndexItemTypeSchema } = Schemas;
-    if (!indexItemData || !IndexItemSchema || !IndexItemTypeSchema)
-      return console.warn(
-        "IndexItem not create due to schema or indexItem data not set."
+    HandleIndexItem: {
+      log("Create IndexItem...");
+      const { IndexItemSchema, IndexItemTypeSchema } = Schemas;
+      if (!indexItemData || !IndexItemSchema || !IndexItemTypeSchema) {
+        onelineLog(
+          "IndexItem not create due to schema or indexItem data not set."
+        );
+
+        break HandleIndexItem;
+      }
+
+      const initAuthor = [
+        "create_id",
+        "create_name",
+        "modify_id",
+        "modify_name",
+      ].reduce(
+        (dict, colName) => ({ ...dict, [colName]: userData.data[colName] }),
+        {}
       );
 
-    const initAuthor = [
-      "create_id",
-      "create_name",
-      "modify_id",
-      "modify_name",
-    ].reduce(
-      (dict, colName) => ({ ...dict, [colName]: userData.data[colName] }),
-      {}
-    );
+      const IndexItem =
+        sequelize.models.index_item || (await getModel(IndexItemSchema));
+      const IndexItemType =
+        sequelize.models.index_item_type ||
+        (await getModel(IndexItemTypeSchema));
 
-    const IndexItem =
-      sequelize.models.index_item || (await getModel(IndexItemSchema));
-    const IndexItemType =
-      sequelize.models.index_item_type || (await getModel(IndexItemTypeSchema));
+      await IndexItemType.destroy({
+        truncate: true,
+      });
+      await IndexItem.destroy({
+        truncate: true,
+      });
+      await Promise.all(
+        indexItemData.map(async ({ name, icon, route, indexItems }) => {
+          const { id: typeId } = await IndexItemType.create({
+            name,
+            icon,
+            route,
+            ...initAuthor,
+          });
 
-    await IndexItemType.destroy({
-      truncate: true,
-    });
-    await IndexItem.destroy({
-      truncate: true,
-    });
-    await Promise.all(
-      indexItemData.map(async ({ name, icon, route, indexItems }) => {
-        const { id: typeId } = await IndexItemType.create({
-          name,
-          icon,
-          route,
-          ...initAuthor,
-        });
+          const insertData = indexItems.map((item) => ({
+            name: item.name,
+            route: item.route,
+            table_name: item.tableName,
+            index_item_type_id: typeId,
+            ...initAuthor,
+          }));
 
-        const insertData = indexItems.map((item) => ({
-          name: item.name,
-          route: item.route,
-          table_name: item.tableName,
-          index_item_type_id: typeId,
-          ...initAuthor,
-        }));
-
-        await IndexItem.bulkCreate(insertData);
-      })
-    );
-    onelineLog("IndexItem created.");
+          await IndexItem.bulkCreate(insertData);
+        })
+      );
+      onelineLog("IndexItem created.");
+    }
     /** Handle IndexItem above */
 
     /** Handle insert data below */
