@@ -13,6 +13,7 @@ import {
   transFilePath,
   filePathAppend,
   logger,
+  checkArray,
 } from "../model/helper.js";
 
 const getGeneralCreate = (tableName, option) => {
@@ -139,7 +140,7 @@ const getGeneralRead = (tableName, option = {}) => {
 };
 
 const generalUpdate = (tableName, option) => {
-  const { imageFieldName } = option || {};
+  const { imageFieldName, extraHandler } = option || {};
 
   return async (req, res) => {
     const Table = req.app[tableName];
@@ -179,6 +180,8 @@ const generalUpdate = (tableName, option) => {
       const data = { ...req.body, ...req._author, ...imageField };
 
       await Table.update(data, { where: { id } });
+      typeof extraHandler === "function" && (await extraHandler(id, req));
+
       res.response(200, `Success update ${tableName}.`);
     } catch (error) {
       console.log(error);
@@ -226,12 +229,7 @@ const controllers = [
     path: "stock",
     schemas: {
       create: ["Stock", "StockMedia"],
-      read: [
-        "StockCategory",
-        "StockBrand",
-        "StockAccounting",
-        "Supplier",
-      ],
+      read: ["StockCategory", "StockBrand", "StockAccounting", "Supplier"],
     },
     actions: {
       create: [
@@ -252,7 +250,7 @@ const controllers = [
           extraHandler: async (id, req) => {
             if (!req.files?.stock_image) return;
             const { StockMedia } = req.app;
-            const insertData = req.files?.stock_image.map((file) => ({
+            const insertData = req.files.stock_image.map((file) => ({
               stock_id: id,
               name: transFilePath(file.path),
               media_type: file.mimetype.split("/")[0],
@@ -292,8 +290,13 @@ const controllers = [
           ],
           searchAttribute: ["name"],
           listAdaptor: async (list, req) => {
-            const { StockCategory, StockBrand, StockAccounting, Supplier, StockMedia } =
-              req.app;
+            const {
+              StockCategory,
+              StockBrand,
+              StockAccounting,
+              Supplier,
+              StockMedia,
+            } = req.app;
 
             return await Promise.all(
               list.map(async (stock) => {
@@ -334,8 +337,10 @@ const controllers = [
                   attributes: ["name"],
                   where: { stock_id: stock.id },
                 });
-                stock.setDataValue("stock_image_preview", images.map((image) => image.name));
-                console.log(stock);
+                stock.setDataValue(
+                  "stock_image_preview",
+                  images.map((image) => image.name)
+                );
 
                 return stock;
               })
@@ -344,11 +349,52 @@ const controllers = [
         }),
       ],
       update: [
-        createUploadImage("stock").fields([{ name: "cover_image" }]),
+        createUploadImage("stock").fields([
+          { name: "cover_image" },
+          { name: "stock_image" },
+        ]),
         authenticationMiddleware,
         addUserMiddleware,
         generalUpdate("Stock", {
           imageFieldName: [{ name: "cover_image" }],
+          extraHandler: async (id, req) => {
+            const { StockMedia } = req.app;
+            const persistImage = req.body.stock_image_persist || [];
+            console.log("======= persistImage ========", persistImage);
+
+
+            const willDelete = await StockMedia.findAll({
+              where: { stock_id: id, name: { [Op.notIn]: persistImage } },
+            });
+
+            if (willDelete) {
+              await StockMedia.destroy({
+                where: { stock_id: id, name: { [Op.notIn]: persistImage } },
+              });
+
+              console.log("======= willDelete ========", willDelete);
+
+              willDelete.forEach((data) =>
+                fs.unlink(
+                  filePathAppend(data.name),
+                  (err) => err && console.log(err)
+                )
+              );
+            }
+
+            if (!req.files?.stock_image) return;
+
+            const insertData = req.files.stock_image.map((file) => ({
+              stock_id: id,
+              name: transFilePath(file.path),
+              media_type: file.mimetype.split("/")[0],
+              org_name: file.originalname,
+              size: file.size,
+              ...req._author,
+            }));
+
+            await StockMedia.bulkCreate(insertData);
+          },
         }),
       ],
       delete: [

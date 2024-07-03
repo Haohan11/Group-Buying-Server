@@ -275,6 +275,8 @@ export const filePathAppend = (path) =>
 
 export const toArray = (target) => (Array.isArray(target) ? target : [target]);
 
+export const checkArray = (arr) => Array.isArray(arr) && arr.length > 0;
+
 export const formatTime = (time) =>
   time
     ?.toISOString()
