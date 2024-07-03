@@ -829,6 +829,7 @@ export const StockSchema = {
     barcode: {
       type: DataTypes.STRING(1024),
       comment: "商品條碼",
+      allowNull: false,
     },
     stock_length: {
       type: DataTypes.DOUBLE,
@@ -898,19 +899,22 @@ export const StockSchema = {
     preorder_count: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
-      comment: "預購數量",
+      comment: "預購商品庫存",
     },
     price: {
       type: DataTypes.INTEGER,
       comment: "商品售價",
+      allowNull: false,
     },
     purchase_price: {
       type: DataTypes.INTEGER,
       comment: "進貨價",
+      allowNull: false,
     },
     specification: {
       type: DataTypes.TEXT("long"),
       comment: "商品規格",
+      allowNull: false,
     },
   },
   option: {

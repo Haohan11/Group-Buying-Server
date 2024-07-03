@@ -16,7 +16,7 @@ import {
 } from "../model/helper.js";
 
 const getGeneralCreate = (tableName, option) => {
-  const { imageFieldName, defaultData } = option || {};
+  const { imageFieldName, defaultData, extraHandler } = option || {};
 
   return async (req, res) => {
     try {
@@ -38,7 +38,10 @@ const getGeneralCreate = (tableName, option) => {
         ...defaultData,
       };
 
-      await Table.create(data);
+      const { id } = await Table.create(data);
+
+      typeof extraHandler === "function" && (await extraHandler(id, req));
+
       res.response(200, `Success create ${tableName}.`);
     } catch (error) {
       console.log(error);
@@ -222,12 +225,20 @@ const controllers = [
   {
     path: "stock",
     schemas: {
-      create: ["Stock"],
-      read: ["Stock"],
+      create: ["Stock", "StockMedia"],
+      read: [
+        "StockCategory",
+        "StockBrand",
+        "StockAccounting",
+        "Supplier",
+      ],
     },
     actions: {
       create: [
-        createUploadImage("stock-cover").fields([{ name: "cover_image" }]),
+        createUploadImage("stock").fields([
+          { name: "cover_image" },
+          { name: "stock_image" },
+        ]),
         authenticationMiddleware,
         addUserMiddleware,
         getGeneralCreate("Stock", {
@@ -238,13 +249,27 @@ const controllers = [
             mbflag_type_id: 1,
             tax_type_id: 1,
           },
+          extraHandler: async (id, req) => {
+            if (!req.files?.stock_image) return;
+            const { StockMedia } = req.app;
+            const insertData = req.files?.stock_image.map((file) => ({
+              stock_id: id,
+              name: transFilePath(file.path),
+              media_type: file.mimetype.split("/")[0],
+              org_name: file.originalname,
+              size: file.size,
+              ...req._author,
+            }));
+            await StockMedia.bulkCreate(insertData);
+          },
         }),
       ],
       read: [
         authenticationMiddleware,
         addUserMiddleware,
         getGeneralRead("Stock", {
-          queryAttribute: ["id", 
+          queryAttribute: [
+            "id",
             "cover_image",
             "is_valid",
             "is_preorder",
@@ -254,8 +279,8 @@ const controllers = [
             "code",
             "barcode",
             "specification",
-            "stock_brand_id",
             "stock_category_id",
+            "stock_brand_id",
             "accounting_id",
             "supplier_id",
             "min_order",
@@ -266,10 +291,60 @@ const controllers = [
             "description",
           ],
           searchAttribute: ["name"],
+          listAdaptor: async (list, req) => {
+            const { StockCategory, StockBrand, StockAccounting, Supplier, StockMedia } =
+              req.app;
+
+            return await Promise.all(
+              list.map(async (stock) => {
+                // add field name by query id below
+                await Promise.all(
+                  [
+                    {
+                      Table: StockCategory,
+                      idField: "stock_category_id",
+                      fieldName: "category",
+                    },
+                    {
+                      Table: StockBrand,
+                      idField: "stock_brand_id",
+                      fieldName: "brand",
+                    },
+                    {
+                      Table: StockAccounting,
+                      idField: "accounting_id",
+                      fieldName: "accounting",
+                    },
+                    {
+                      Table: Supplier,
+                      idField: "supplier_id",
+                      fieldName: "supplier",
+                    },
+                  ].map(async ({ Table, idField, fieldName }) => {
+                    const result = await Table.findOne({
+                      attributes: ["name"],
+                      where: { id: stock[idField] },
+                    });
+                    stock.setDataValue(fieldName, result.name);
+                  })
+                );
+                // add field name by query id above
+
+                const images = await StockMedia.findAll({
+                  attributes: ["name"],
+                  where: { stock_id: stock.id },
+                });
+                stock.setDataValue("stock_image_preview", images.map((image) => image.name));
+                console.log(stock);
+
+                return stock;
+              })
+            );
+          },
         }),
       ],
       update: [
-        createUploadImage("stock-cover").fields([{ name: "cover_image" }]),
+        createUploadImage("stock").fields([{ name: "cover_image" }]),
         authenticationMiddleware,
         addUserMiddleware,
         generalUpdate("Stock", {
