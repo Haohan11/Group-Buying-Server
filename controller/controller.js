@@ -13,7 +13,7 @@ import {
   transFilePath,
   filePathAppend,
   logger,
-  checkArray,
+  toArray,
 } from "../model/helper.js";
 
 const getGeneralCreate = (tableName, option) => {
@@ -193,7 +193,7 @@ const generalUpdate = (tableName, option) => {
 };
 
 const generalDelete = (tableName, option) => {
-  const { imageFieldName } = option || {};
+  const { imageFieldName, extraHandler } = option || {};
   return async (req, res) => {
     const Table = req.app[tableName];
     const id = parseInt(req.body.id);
@@ -216,6 +216,8 @@ const generalDelete = (tableName, option) => {
         });
 
       await Table.destroy({ where: { id } });
+      typeof extraHandler === "function" && (await extraHandler(id, req));
+
       res.response(200, `Success delete ${tableName}.`);
     } catch (error) {
       console.log(error);
@@ -359,9 +361,9 @@ const controllers = [
           imageFieldName: [{ name: "cover_image" }],
           extraHandler: async (id, req) => {
             const { StockMedia } = req.app;
-            const persistImage = req.body.stock_image_persist || [];
-            console.log("======= persistImage ========", persistImage);
-
+            const persistImage = req.body.stock_image_persist
+              ? toArray(req.body.stock_image_persist)
+              : [];
 
             const willDelete = await StockMedia.findAll({
               where: { stock_id: id, name: { [Op.notIn]: persistImage } },
@@ -371,8 +373,6 @@ const controllers = [
               await StockMedia.destroy({
                 where: { stock_id: id, name: { [Op.notIn]: persistImage } },
               });
-
-              console.log("======= willDelete ========", willDelete);
 
               willDelete.forEach((data) =>
                 fs.unlink(
@@ -403,6 +403,22 @@ const controllers = [
         addUserMiddleware,
         generalDelete("Stock", {
           imageFieldName: ["cover_image"],
+          extraHandler: async (id, req) => {
+            const { StockMedia } = req.app;
+            const willDelete = await StockMedia.findAll({
+              where: { stock_id: id },
+            });
+            
+            if (!willDelete) return;
+
+            await StockMedia.destroy({ where: { stock_id: id } });
+            willDelete.forEach((data) =>
+              fs.unlink(
+                filePathAppend(data.name),
+                (err) => err && console.log(err)
+              )
+            );
+          },
         }),
       ],
     },
