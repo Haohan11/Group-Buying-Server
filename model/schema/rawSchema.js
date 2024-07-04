@@ -403,12 +403,50 @@ export const MemberGradeSchema = {
   },
 };
 
+export const GradePriceSchema = {
+  name: "grade_price",
+  cols: {
+    stock_id: {
+      type: DataTypes.STRING(36),
+    },
+    member_grade_id: {
+      type: DataTypes.STRING(36),
+    },
+    price: {
+      type: DataTypes.INTEGER,
+    },
+  },
+  option: {
+    tableName: "grade_price",
+    comment: "會員等級價格",
+  },
+};
+
 export const MemberRoleSchema = {
   name: "member_role",
   cols: {},
   option: {
     tableName: "member_role",
     comment: "會員角色",
+  },
+};
+
+export const RolePriceSchema = {
+  name: "role_price",
+  cols: {
+    stock_id: {
+      type: DataTypes.STRING(36),
+    },
+    member_role_id: {
+      type: DataTypes.STRING(36),
+    },
+    price: {
+      type: DataTypes.INTEGER,
+    },
+  },
+  option: {
+    tableName: "role_price",
+    comment: "會員角色價格",
   },
 };
 

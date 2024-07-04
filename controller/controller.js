@@ -230,7 +230,7 @@ const controllers = [
   {
     path: "stock",
     schemas: {
-      create: ["Stock", "StockMedia"],
+      create: ["Stock", "StockMedia", "GradePrice", "RolePrice"],
       read: ["StockCategory", "StockBrand", "StockAccounting", "Supplier"],
     },
     actions: {
@@ -250,8 +250,12 @@ const controllers = [
             tax_type_id: 1,
           },
           extraHandler: async (id, req) => {
+            const { StockMedia, GradePrice, RolePrice } = req.app;
+            req.body.grade_price && Object.entries(req.body.grade_price).map(([id, price]) => {
+
+            })
+
             if (!req.files?.stock_image) return;
-            const { StockMedia } = req.app;
             const insertData = req.files.stock_image.map((file) => ({
               stock_id: id,
               name: transFilePath(file.path),
@@ -408,7 +412,7 @@ const controllers = [
             const willDelete = await StockMedia.findAll({
               where: { stock_id: id },
             });
-            
+
             if (!willDelete) return;
 
             await StockMedia.destroy({ where: { stock_id: id } });
