@@ -230,7 +230,7 @@ const controllers = [
   {
     path: "stock",
     schemas: {
-      create: ["Stock", "StockMedia", "GradePrice", "RolePrice"],
+      create: ["Stock", "StockMedia", "Grade_Price", "Role_Price"],
       read: ["StockCategory", "StockBrand", "StockAccounting", "Supplier"],
     },
     actions: {
@@ -249,15 +249,43 @@ const controllers = [
             mbflag_type_id: 1,
             tax_type_id: 1,
           },
-          extraHandler: async (id, req) => {
-            const { StockMedia, GradePrice, RolePrice } = req.app;
-            req.body.grade_price && Object.entries(req.body.grade_price).map(([id, price]) => {
+          extraHandler: async (stock_id, req) => {
+            const { StockMedia, Grade_Price, Role_Price } = req.app;
 
-            })
+            /* Handle price fields below */
+            await Promise.all(
+              [
+                {
+                  Table: Grade_Price,
+                  reqName: "grade_price",
+                  colName: "member_grade_id",
+                },
+                {
+                  Table: Role_Price,
+                  reqName: "role_price",
+                  colName: "member_role_id",
+                },
+              ].map(({ Table, reqName, colName }) => {
+                if (!Array.isArray(req.body[reqName])) return;
+
+                return Table.bulkCreate(
+                  req.body[reqName].map((data) => {
+                    const { id, price } = JSON.parse(data);
+                    return {
+                      stock_id,
+                      [colName]: id,
+                      price,
+                      ...req._author,
+                    };
+                  })
+                );
+              })
+            );
+            /* Handle price fields above */
 
             if (!req.files?.stock_image) return;
             const insertData = req.files.stock_image.map((file) => ({
-              stock_id: id,
+              stock_id,
               name: transFilePath(file.path),
               media_type: file.mimetype.split("/")[0],
               org_name: file.originalname,
@@ -302,11 +330,13 @@ const controllers = [
               StockAccounting,
               Supplier,
               StockMedia,
+              Grade_Price,
+              Role_Price,
             } = req.app;
 
             return await Promise.all(
               list.map(async (stock) => {
-                // add field name by query id below
+                /* add field name by query id below */
                 await Promise.all(
                   [
                     {
@@ -337,7 +367,37 @@ const controllers = [
                     stock.setDataValue(fieldName, result.name);
                   })
                 );
-                // add field name by query id above
+                /* add field name by query id above */
+
+                /* handle append price fields below */
+                await Promise.all(
+                  [
+                    {
+                      Table: Grade_Price,
+                      idField: "member_grade_id",
+                      fieldName: "grade_price",
+                    },
+                    {
+                      Table: Role_Price,
+                      idField: "member_role_id",
+                      fieldName: "role_price",
+                    },
+                  ].map(async ({ Table, idField, fieldName }) => {
+                    const gradePriceList = await Table.findAll({
+                      where: { stock_id: stock.id },
+                      attributes: [idField, "price"],
+                    });
+
+                    stock.setDataValue(
+                      fieldName,
+                      gradePriceList.map(({ [idField]: id, price }) => ({
+                        id,
+                        price,
+                      }))
+                    );
+                  })
+                );
+                /* handle append price fields above */
 
                 const images = await StockMedia.findAll({
                   attributes: ["name"],
@@ -363,19 +423,66 @@ const controllers = [
         addUserMiddleware,
         generalUpdate("Stock", {
           imageFieldName: [{ name: "cover_image" }],
-          extraHandler: async (id, req) => {
-            const { StockMedia } = req.app;
+          extraHandler: async (stock_id, req) => {
+            const { StockMedia, Grade_Price, Role_Price } = req.app;
+
+            /* Handle price fields below */
+            await Promise.all(
+              [
+                {
+                  Table: Grade_Price,
+                  reqName: "grade_price",
+                  colName: "member_grade_id",
+                },
+                {
+                  Table: Role_Price,
+                  reqName: "role_price",
+                  colName: "member_role_id",
+                },
+              ].map(async ({ Table, reqName, colName }) => {
+                if (!Array.isArray(req.body[reqName])) return;
+
+                const data = req.body[reqName].map((rawData) =>
+                  JSON.parse(rawData)
+                );
+                await Table.destroy({
+                  where: {
+                    stock_id,
+                    // [Op.or]: data.map(({ id, price }) => ({
+                    //   [Op.and]: [{ [colName]: id }, { price }],
+                    // })),
+                  },
+                });
+
+                await Table.bulkCreate(
+                  data.map(({ id, price }) => {
+                    return {
+                      stock_id,
+                      [colName]: id,
+                      price,
+                      ...req._author,
+                    };
+                  })
+                );
+              })
+            );
+            /* Handle price fields above */
+
+            /* Handle update image below */
             const persistImage = req.body.stock_image_persist
               ? toArray(req.body.stock_image_persist)
               : [];
 
             const willDelete = await StockMedia.findAll({
-              where: { stock_id: id, name: { [Op.notIn]: persistImage } },
+              where: { stock_id: stock_id, name: { [Op.notIn]: persistImage } },
             });
 
             if (willDelete) {
               await StockMedia.destroy({
-                where: { stock_id: id, name: { [Op.notIn]: persistImage } },
+                where: {
+                  stock_id: stock_id,
+                  name: { [Op.notIn]: persistImage },
+                },
               });
 
               willDelete.forEach((data) =>
@@ -389,7 +496,7 @@ const controllers = [
             if (!req.files?.stock_image) return;
 
             const insertData = req.files.stock_image.map((file) => ({
-              stock_id: id,
+              stock_id: stock_id,
               name: transFilePath(file.path),
               media_type: file.mimetype.split("/")[0],
               org_name: file.originalname,
@@ -407,21 +514,32 @@ const controllers = [
         addUserMiddleware,
         generalDelete("Stock", {
           imageFieldName: ["cover_image"],
-          extraHandler: async (id, req) => {
-            const { StockMedia } = req.app;
+          extraHandler: async (stock_id, req) => {
+            const { StockMedia, Grade_Price, Role_Price } = req.app;
+
+            /* Handle price fields below */
+            await Promise.all(
+              [Grade_Price, Role_Price].map((Table) =>
+                Table.destroy({ where: { stock_id } })
+              )
+            );
+            /* Handle price fields above */
+
+            /* delete image below */
             const willDelete = await StockMedia.findAll({
-              where: { stock_id: id },
+              where: { stock_id },
             });
 
             if (!willDelete) return;
 
-            await StockMedia.destroy({ where: { stock_id: id } });
+            await StockMedia.destroy({ where: { stock_id } });
             willDelete.forEach((data) =>
               fs.unlink(
                 filePathAppend(data.name),
                 (err) => err && console.log(err)
               )
             );
+            /* delete image above */
           },
         }),
       ],

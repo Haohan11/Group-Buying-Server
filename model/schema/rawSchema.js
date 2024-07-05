@@ -403,7 +403,7 @@ export const MemberGradeSchema = {
   },
 };
 
-export const GradePriceSchema = {
+export const Grade_PriceSchema = {
   name: "grade_price",
   cols: {
     stock_id: {
@@ -431,7 +431,7 @@ export const MemberRoleSchema = {
   },
 };
 
-export const RolePriceSchema = {
+export const Role_PriceSchema = {
   name: "role_price",
   cols: {
     stock_id: {
