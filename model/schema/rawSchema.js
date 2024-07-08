@@ -954,6 +954,10 @@ export const StockSchema = {
       comment: "商品規格",
       allowNull: false,
     },
+    introduction: {
+      type: DataTypes.TEXT("long"),
+      comment: "商品介紹",
+    },
   },
   option: {
     tableName: "stock",

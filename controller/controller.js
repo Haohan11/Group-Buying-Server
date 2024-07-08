@@ -238,6 +238,7 @@ const controllers = [
         createUploadImage("stock").fields([
           { name: "cover_image" },
           { name: "stock_image" },
+          { name: "introduction_image" },
         ]),
         authenticationMiddleware,
         addUserMiddleware,
@@ -250,7 +251,7 @@ const controllers = [
             tax_type_id: 1,
           },
           extraHandler: async (stock_id, req) => {
-            const { StockMedia, Grade_Price, Role_Price } = req.app;
+            const { Stock, StockMedia, Grade_Price, Role_Price } = req.app;
 
             /* Handle price fields below */
             await Promise.all(
@@ -283,16 +284,46 @@ const controllers = [
             );
             /* Handle price fields above */
 
-            if (!req.files?.stock_image) return;
-            const insertData = req.files.stock_image.map((file) => ({
-              stock_id,
-              name: transFilePath(file.path),
-              media_type: file.mimetype.split("/")[0],
-              org_name: file.originalname,
-              size: file.size,
-              ...req._author,
-            }));
-            await StockMedia.bulkCreate(insertData);
+            if (req.files?.stock_image) {
+              const stockImgData = req.files.stock_image.map((file) => ({
+                stock_id,
+                name: transFilePath(file.path),
+                media_type: file.mimetype.split("/")[0],
+                org_name: file.originalname,
+                size: file.size,
+                ...req._author,
+              }));
+              await StockMedia.bulkCreate(stockImgData);
+            }
+
+            if (!req.files?.introduction_image) return;
+            let introText = req.body.introduction;
+            const introDict = toArray(req.body.introduction_preview).map((item) =>
+              JSON.parse(item)
+            );
+
+            const introImgData = req.files.introduction_image.map((file) => {
+              const newPath = transFilePath(file.path);
+              const { id: path } = introDict.find(
+                ({ ori }) => ori === file.originalname
+              );
+              introText = introText.replace(path, `path:${newPath}`);
+
+              return {
+                stock_id,
+                code: "intro",
+                name: newPath,
+                media_type: file.mimetype.split("/")[0],
+                org_name: file.originalname,
+                size: file.size,
+                ...req._author,
+              };
+            });
+            await StockMedia.bulkCreate(introImgData);
+            await Stock.update(
+              { introduction: introText },
+              { where: { id: stock_id } }
+            )
           },
         }),
       ],
@@ -321,6 +352,7 @@ const controllers = [
             "price",
             "purchase_price",
             "description",
+            "introduction",
           ],
           searchAttribute: ["name"],
           listAdaptor: async (list, req) => {
@@ -418,6 +450,7 @@ const controllers = [
         createUploadImage("stock").fields([
           { name: "cover_image" },
           { name: "stock_image" },
+          { name: "introduction_image" },
         ]),
         authenticationMiddleware,
         addUserMiddleware,
