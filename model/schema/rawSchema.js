@@ -194,8 +194,7 @@ export const PaymentSchema = {
 
 export const AccountMethodSchema = {
   name: "account_method",
-  cols: {
-  },
+  cols: {},
   option: {
     tableName: "account_method",
     comment: "結帳方式",
@@ -363,7 +362,7 @@ export const UserSchema = {
       comment: "密碼",
       set(value) {
         this.setDataValue("password", goHashSync(value));
-      }      
+      },
     },
     remember_token: {
       type: DataTypes.TEXT("long"),
@@ -391,6 +390,268 @@ export const UserSchema = {
   option: {
     tableName: "user",
     comment: "使用者",
+  },
+};
+
+export const MemberSchema = {
+  name: "member",
+  cols: {
+    company_id: {
+      type: DataTypes.STRING(36),
+      comment: "對應的公司ID",
+    },
+    user_id: {
+      type: DataTypes.STRING(36),
+      comment: "UserID",
+    },
+    member_type_id: {
+      type: DataTypes.STRING(36),
+      comment: "會員類別ID",
+    },
+    member_level_id: {
+      type: DataTypes.STRING(36),
+      comment: "會員等級ID",
+    },
+    recommend_member_id: {
+      type: DataTypes.STRING(36),
+      comment: "推薦會員ID",
+    },
+    country_id: {
+      type: DataTypes.STRING(36),
+      comment: "國家ID",
+    },
+    sex_id: {
+      type: DataTypes.STRING(36),
+      comment: "性別ID",
+    },
+    person_title_id: {
+      type: DataTypes.STRING(36),
+      comment: "職稱ID",
+    },
+    join_sale_point_id: {
+      type: DataTypes.STRING(36),
+      comment: "入會門市ID",
+    },
+    last_consume_sale_point_id: {
+      type: DataTypes.STRING(36),
+      comment: "最後消費門市ID",
+    },
+    name2: {
+      type: DataTypes.TEXT("long"),
+      comment: "名稱2",
+    },
+    card_no: {
+      type: DataTypes.STRING(20),
+      comment: "會員卡號",
+    },
+    uniform_number: {
+      type: DataTypes.STRING(20),
+      comment: "身份證字號",
+    },
+    phone: {
+      type: DataTypes.STRING(20),
+      comment: "電話",
+    },
+    phone2: {
+      type: DataTypes.STRING(20),
+      comment: "電話2",
+    },
+    mobile: {
+      type: DataTypes.STRING(20),
+      comment: "手機",
+    },
+    mobile2: {
+      type: DataTypes.STRING(20),
+      comment: "手機2",
+    },
+    email: {
+      type: DataTypes.STRING(100),
+      comment: "Email",
+    },
+    birthdate: {
+      type: DataTypes.DATE,
+      comment: "生日",
+    },
+    join_date: {
+      type: DataTypes.DATE,
+      comment: "入會日期",
+    },
+    upgrade_date: {
+      type: DataTypes.DATE,
+      comment: "升級日期",
+    },
+    last_consume_date: {
+      type: DataTypes.DATE,
+      comment: "最後消費日期",
+    },
+    accumulated_consumption: {
+      type: DataTypes.DOUBLE,
+      comment: "累積消費金額",
+    },
+    accumulated_return: {
+      type: DataTypes.DOUBLE,
+      comment: "累積退貨金額",
+    },
+    accumulated_revenue: {
+      type: DataTypes.DOUBLE,
+      comment: "累積業績金額",
+    },
+    invoice_zip: {
+      type: DataTypes.STRING(10),
+      comment: "發票_郵遞區號",
+    },
+    invoice_city: {
+      type: DataTypes.STRING(10),
+      comment: "發票_縣市",
+    },
+    invoice_area: {
+      type: DataTypes.STRING(10),
+      comment: "發票_鄉鎮市區",
+    },
+    invoice_street: {
+      type: DataTypes.TEXT('long'),
+      comment: "發票_街區",
+    },
+    invoice_floor: {
+      type: DataTypes.STRING(20),
+      comment: "發票_樓",
+    },
+    invoice_room: {
+      type: DataTypes.STRING(20),
+      comment: "發票_室",
+    },
+    invoice_address: {
+      type: DataTypes.TEXT('long'),
+      comment: "發票_地址",
+    },
+    contact_zip: {
+      type: DataTypes.STRING(10),
+      comment: "聯絡_郵遞區號",
+    },
+    contact_city: {
+      type: DataTypes.STRING(10),
+      comment: "聯絡_縣市",
+    },
+    contact_area: {
+      type: DataTypes.STRING(10),
+      comment: "聯絡_鄉鎮市區",
+    },
+    contact_street: {
+      type: DataTypes.TEXT('long'),
+      comment: "聯絡_街區",
+    },
+    contact_floor: {
+      type: DataTypes.STRING(20),
+      comment: "聯絡_樓",
+    },
+    contact_room: {
+      type: DataTypes.STRING(20),
+      comment: "聯絡_室",
+    },
+    contact_address: {
+      type: DataTypes.TEXT('long'),
+      comment: "聯絡_地址",
+    },
+
+  },
+  option: {
+    tableName: "member",
+    comment: "會員",
+  },
+};
+export const MemberTypeSchema={
+  name: "member_type",
+  cols: {
+
+  },
+  option: {
+    tableName: "member_type",
+    comment: "會員類別",
+  },
+}
+
+export const MemberPointSchema = {
+  name: "member_point",
+  cols: {
+    member_id: {
+      type: DataTypes.STRING(36),
+      comment: "會員ID",
+    },
+    point: {
+      type: DataTypes.DOUBLE,
+      comment: "點數",
+    },
+    expire_date: {
+      type: DataTypes.DATE,
+      comment: "失效日期",
+    },
+  },
+  option: {
+    tableName: "member_point",
+    comment: "會員點數",
+  },
+};
+export const MemberContactTypeSchema = {
+  name: "member_contact_type",
+  cols: {
+    member_id: {
+      type: DataTypes.STRING(36),
+      comment: "會員ID",
+    },
+    contact_type_id: {
+      type: DataTypes.STRING(36),
+      comment: "連絡方式ID",
+    },
+    im_visible_id: {
+      type: DataTypes.STRING(100),
+      comment: "如果是通訊軟體 則填入表面可看的到的ID",
+    },
+    im_id: {
+      type: DataTypes.STRING(100),
+      comment: "如果是通訊軟體 則填入程式才看的到的ID",
+    },
+    is_register: {
+      type: DataTypes.BOOLEAN,
+      comment: "此聯絡方式是否已註冊(開通)",
+    },
+    register_date: {
+      type: DataTypes.DATE(6),
+      comment: "註冊時間",
+    },
+    unregister_date: {
+      type: DataTypes.DATE(6),
+      comment: "取消註冊時間",
+    },
+    picture: {
+      type: DataTypes.TEXT('long'),
+      comment: "圖片",
+    },
+    last_active_date: {
+      type: DataTypes.DATE(6),
+      comment: "上次互動時間",
+    },
+  },
+  option: {
+    tableName: "member_contact_type",
+    comment: "會員聯絡方式",
+  },
+};
+
+export const MemberTagSchema = {
+  name: "member_tag",
+  cols: {
+    member_id: {
+      type: DataTypes.STRING(36),
+      comment: "會員ID",
+    },
+    tag_id: {
+      type: DataTypes.STRING(36),
+      comment: "tagID",
+    },
+  },
+  option: {
+    tableName: "member_tag",
+    comment: "會員點數",
   },
 };
 
@@ -692,7 +953,7 @@ export const StockCategorySchema = {
       comment: "精選類別縮圖",
       set(value) {
         this.setDataValue("recommended_image", value ? value : undefined);
-      }
+      },
     },
     parent: {
       type: DataTypes.STRING(36),
@@ -853,7 +1114,7 @@ export const StockSchema = {
       comment: "商品封面圖",
       set(value) {
         this.setDataValue("cover_image", value ? value : undefined);
-      }
+      },
     },
     tax_type_id: {
       type: DataTypes.STRING(36),
@@ -924,7 +1185,7 @@ export const StockSchema = {
       defaultValue: true,
       comment: "是否上架",
     },
-    min_order:{
+    min_order: {
       type: DataTypes.INTEGER,
       defaultValue: 1,
       comment: "最少訂購數",

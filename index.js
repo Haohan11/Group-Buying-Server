@@ -13,7 +13,7 @@ import {
   goHash,
   connectToDataBase,
   createBulkConnectMiddleware,
-  logger
+  logger,
 } from "./model/helper.js";
 // import getUserPermission from "./controller/getUserPermission.js";
 
@@ -375,7 +375,6 @@ false &&
 app.get("/all-tables", authenticationMiddleware, async (req, res) => {
   try {
     const { sequelize } = req.app;
-
     const tables = await sequelize.query("Show Tables", {
       type: sequelize.QueryTypes.SHOWTABLES,
     });
@@ -385,6 +384,14 @@ app.get("/all-tables", authenticationMiddleware, async (req, res) => {
     res.response(500);
   }
 });
+
+app.get(
+  "/test",
+  createBulkConnectMiddleware(["Member","MemberPoint","MemberTag","MemberType","MemberContactType"], { alert: true }),
+  async (req, res) => {
+    return res.response(200);
+  }
+);
 
 app.get(
   "/get-index-item",
