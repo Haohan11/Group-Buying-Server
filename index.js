@@ -15,18 +15,15 @@ import {
   createBulkConnectMiddleware,
   logger,
 } from "./model/helper.js";
-// import getUserPermission from "./controller/getUserPermission.js";
 
 import { createCRUDRoutes } from "./CRUDroutes.js";
 
 import {
   connectDbMiddleWare,
   responseMiddleware,
-  authenticationMiddleware,
   resetAuthentication,
   addUserMiddleware,
   notFoundResponse,
-  establishAssociation,
 } from "./middleware/middleware.js";
 
 import staticPathName from "./model/staticPathName.js";
@@ -189,32 +186,8 @@ false &&
     }
   });
 
-// Add connection to res.app
+// Add connection `sequelize` to res.app
 app.use(connectDbMiddleWare);
-
-app.get("/alter-tables", async (req, res) => {
-  try {
-    const { sequelize } = req.app;
-    Object.entries(Schemas).forEach(
-      ([name, schema]) => !name.includes("_") && createSchema(sequelize, schema)
-    );
-    await sequelize.sync({ alter: true });
-    res.response(200);
-  } catch {
-    res.response(500);
-  }
-});
-
-app.get("/sync-tables", async (req, res) => {
-  try {
-    const { sequelize } = req.app;
-    Object.values(Schemas).forEach((schema) => createSchema(sequelize, schema));
-    await sequelize.sync({ alter: true });
-    res.response(200, "Success Sync tables");
-  } catch {
-    res.response(500);
-  }
-});
 
 // app.use(establishAssociation);
 
@@ -368,23 +341,6 @@ false &&
     }
   });
 
-// jwt token authentication
-// app.use(authenticationMiddleware);
-
-// app.use(addUserMiddleware);
-app.get("/all-tables", authenticationMiddleware, async (req, res) => {
-  try {
-    const { sequelize } = req.app;
-    const tables = await sequelize.query("Show Tables", {
-      type: sequelize.QueryTypes.SHOWTABLES,
-    });
-    res.response(200, tables);
-  } catch (error) {
-    console.log(error);
-    res.response(500);
-  }
-});
-
 app.get(
   "/test",
   createBulkConnectMiddleware(["Member","MemberPoint","MemberTag","MemberType","MemberContactType"], { alert: true }),
@@ -436,7 +392,7 @@ app.get(
 );
 
 createCRUDRoutes(app);
-logger("register routes finished.");
+logger("regist routes finished.");
 
 false &&
   app.post("/logout", async function (req, res) {

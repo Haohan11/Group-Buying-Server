@@ -10,6 +10,9 @@ import { controllers } from "./controller/controller.js";
 const createRouter = ({ path, schemas, actions }) => {
   const router = express.Router();
 
+  if (Array.isArray(schemas["all"]))
+    router.use(createBulkConnectMiddleware(schemas["all"]));
+
   [
     ["create", "post"],
     ["read", "get"],
@@ -18,16 +21,15 @@ const createRouter = ({ path, schemas, actions }) => {
   ].forEach(([action, method]) => {
     if (!actions?.[action]) return;
 
-    appendMiddleware: try {
-      if (!schemas || !schemas[action]) break appendMiddleware;
+    try {
+      if (!schemas || !schemas[action])
+        return router[method]("/", ...toArray(actions[action]));
 
       const connectMiddleware = createBulkConnectMiddleware(schemas[action]);
-      router.use(connectMiddleware);
+      router[method]("/", connectMiddleware, ...toArray(actions[action]));
     } catch (error) {
       console.warn(error);
     }
-
-    router[method]("/", ...toArray(actions[action]));
   });
 
   return { path: `/${path}`, router };

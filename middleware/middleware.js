@@ -6,6 +6,7 @@ import {
   createSchema,
   connectToDataBase,
   logger,
+  createModel,
 } from "../model/helper.js";
 
 export const responseMiddleware = (req, res, next) => {
@@ -26,8 +27,7 @@ export const addUserMiddleware = async (req, res, next) => {
   try {
     if (!req.app.User) {
       logger("========== Creating User Model ==========");
-      const User = createSchema(req.app.sequelize, Schemas.UserSchema);
-      await User.sync();
+      const User = await createModel(req.app.sequelize, "User");
       req.app.User = User;
       logger("========== Success created User Model ==========");
     }

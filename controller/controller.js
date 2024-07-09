@@ -231,7 +231,7 @@ const controllers = [
   {
     path: "stock",
     schemas: {
-      create: ["Stock", "StockMedia", "Grade_Price", "Role_Price"],
+      all: ["Stock", "StockMedia", "Grade_Price", "Role_Price"],
       read: ["StockCategory", "StockBrand", "StockAccounting", "Supplier"],
     },
     actions: {
@@ -482,9 +482,6 @@ const controllers = [
                 await Table.destroy({
                   where: {
                     stock_id,
-                    // [Op.or]: data.map(({ id, price }) => ({
-                    //   [Op.and]: [{ [colName]: id }, { price }],
-                    // })),
                   },
                 });
 
@@ -632,8 +629,7 @@ const controllers = [
   {
     path: "stock-brand",
     schemas: {
-      create: ["StockBrand"],
-      read: ["StockBrand"],
+      all: ["StockBrand"],
     },
     actions: {
       create: [
@@ -668,8 +664,7 @@ const controllers = [
   {
     path: "stock-category",
     schemas: {
-      read: ["StockCategory"],
-      create: ["StockCategory"],
+      all: ["StockCategory"],
     },
     actions: {
       create: [
@@ -720,8 +715,7 @@ const controllers = [
   {
     path: "stock-accounting",
     schemas: {
-      read: ["StockAccounting"],
-      create: ["StockAccounting"],
+      all: ["StockAccounting"],
     },
     actions: {
       create: [
@@ -788,10 +782,21 @@ const controllers = [
   {
     path: "supplier",
     schemas: {
-      read: ["Supplier", "Payment", "AccountMethod"],
-      create: ["Supplier"],
+      all: ["Supplier"],
+      read: ["Payment", "AccountMethod"],
     },
     actions: {
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralCreate("Supplier", {
+          defaultData: {
+            supplier_type_id: 1,
+            country_id: 1,
+          },
+        }),
+      ],
       read: [
         authenticationMiddleware,
         addUserMiddleware,
@@ -831,17 +836,6 @@ const controllers = [
           },
         }),
       ],
-      create: [
-        multer().none(),
-        authenticationMiddleware,
-        addUserMiddleware,
-        getGeneralCreate("Supplier", {
-          defaultData: {
-            supplier_type_id: 1,
-            country_id: 1,
-          },
-        }),
-      ],
       update: [
         multer().none(),
         authenticationMiddleware,
@@ -860,10 +854,7 @@ const controllers = [
   {
     path: "member-grade",
     schemas: {
-      read: ["MemberGrade"],
-      create: ["MemberGrade"],
-      update: ["MemberGrade"],
-      delete: ["MemberGrade"],
+      all: ["MemberGrade"],
     },
     actions: {
       create: [
@@ -898,10 +889,7 @@ const controllers = [
   {
     path: "member-role",
     schemas: {
-      read: ["MemberRole"],
-      create: ["MemberRole"],
-      update: ["MemberRole"],
-      delete: ["MemberRole"],
+      all: ["MemberRole"],
     },
     actions: {
       create: [
@@ -936,7 +924,7 @@ const controllers = [
   {
     path: "member-tag",
     schemas: {
-      read: ["MemberTag"],
+      all: ["MemberTag"],
     },
     actions: {
       create: [
