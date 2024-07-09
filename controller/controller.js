@@ -227,6 +227,7 @@ const generalDelete = (tableName, option) => {
 };
 
 const controllers = [
+  // stock
   {
     path: "stock",
     schemas: {
@@ -627,6 +628,7 @@ const controllers = [
       ],
     },
   },
+  // stock-brand
   {
     path: "stock-brand",
     schemas: {
@@ -662,6 +664,7 @@ const controllers = [
       ],
     },
   },
+  // stock-category
   {
     path: "stock-category",
     schemas: {
@@ -713,6 +716,7 @@ const controllers = [
       ],
     },
   },
+  // stock-accounting
   {
     path: "stock-accounting",
     schemas: {
@@ -748,6 +752,7 @@ const controllers = [
       ],
     },
   },
+  // payment
   {
     path: "payment",
     schemas: {
@@ -763,6 +768,7 @@ const controllers = [
       ],
     },
   },
+  // account-method
   {
     path: "account-method",
     schemas: {
@@ -778,6 +784,7 @@ const controllers = [
       ],
     },
   },
+  // supplier
   {
     path: "supplier",
     schemas: {
@@ -849,6 +856,7 @@ const controllers = [
       ],
     },
   },
+  // member-grade
   {
     path: "member-grade",
     schemas: {
@@ -886,6 +894,7 @@ const controllers = [
       ],
     },
   },
+  // member-role
   {
     path: "member-role",
     schemas: {
@@ -920,6 +929,41 @@ const controllers = [
         authenticationMiddleware,
         addUserMiddleware,
         generalDelete("MemberRole"),
+      ],
+    },
+  },
+  // member-tag
+  {
+    path: "member-tag",
+    schemas: {
+      read: ["MemberTag"],
+    },
+    actions: {
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralCreate("MemberTag"),
+      ],
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralRead("MemberTag", {
+          queryAttribute: ["id", "name", "code", "sorting", "description"],
+          searchAttribute: ["name", "code"],
+        }),
+      ],
+      update: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("MemberTag"),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("MemberTag"),
       ],
     },
   },
