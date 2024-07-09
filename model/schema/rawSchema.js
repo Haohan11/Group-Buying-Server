@@ -823,6 +823,16 @@ export const SupplierSchema = {
     tableName: "supplier",
     comment: "供應商主檔",
   },
+  hasMany: {
+    targetTable: "Stock",
+    option: {
+      foreignKey: {
+        name: "supplier_id",
+        type: DataTypes.INTEGER,
+        comment: "供應商ID",
+      },
+    },
+  },
 };
 
 export const SupplierContactPersonSchema = {
@@ -1094,8 +1104,7 @@ export const StockSchema = {
       comment: "商品類別ID",
     },
     supplier_id: {
-      type: DataTypes.STRING(36),
-      comment: "供應商ID",
+      type: DataTypes.INTEGER,
     },
     accounting_id: {
       type: DataTypes.STRING(36),
@@ -1226,6 +1235,20 @@ export const StockSchema = {
     tableName: "stock",
     comment: "商品主檔",
   },
+  belongsTo: [
+    {
+      targetTable: "Supplier",
+      option: {
+        foreignKey: {
+          name: "supplier_id",
+          type: DataTypes.INTEGER,
+          comment: "供應商ID",
+        },
+        onDelete: "RESTRICT",
+      },
+    },
+  ],
+
 };
 
 export const StockMediaSchema = {
