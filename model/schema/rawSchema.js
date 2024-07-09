@@ -559,6 +559,7 @@ export const MemberSchema = {
     comment: "會員",
   },
 };
+
 export const MemberTypeSchema={
   name: "member_type",
   cols: {
@@ -591,6 +592,7 @@ export const MemberPointSchema = {
     comment: "會員點數",
   },
 };
+
 export const MemberContactTypeSchema = {
   name: "member_contact_type",
   cols: {
