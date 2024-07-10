@@ -72,7 +72,7 @@ export const createBulkConnectMiddleware = (tableNames, syncOption) => {
     const { sequelize } = req.app;
     try {
       schemas.forEach((schema, index) => {
-        const Table = req.app[tableNames[index]] = createSchema(sequelize, schema);
+        const Table = req.app[tableNames[index]] ||= createSchema(sequelize, schema);
         const { hasOne, belongsTo, hasMany, belongsToMany } = schema;
         
         // loop all associate method
@@ -121,12 +121,6 @@ export const createBulkConnectMiddleware = (tableNames, syncOption) => {
           }
         );
       })
-      await sequelize.sync(syncOption);
-
-      schemas.forEach((schema, index) => {
-        if (req.app[tableNames[index]]) return;
-        req.app[tableNames[index]] = createSchema(sequelize, schema);
-      });
       await sequelize.sync(syncOption);
 
     } catch (error) {

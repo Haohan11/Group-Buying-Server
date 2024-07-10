@@ -1,5 +1,6 @@
 import { DataTypes, literal } from "sequelize";
 import { goHashSync } from "../helper.js";
+import { randomUUID } from "crypto";
 
 /**
  * use this format to create schema
@@ -509,7 +510,7 @@ export const MemberSchema = {
       comment: "發票_鄉鎮市區",
     },
     invoice_street: {
-      type: DataTypes.TEXT('long'),
+      type: DataTypes.TEXT("long"),
       comment: "發票_街區",
     },
     invoice_floor: {
@@ -521,7 +522,7 @@ export const MemberSchema = {
       comment: "發票_室",
     },
     invoice_address: {
-      type: DataTypes.TEXT('long'),
+      type: DataTypes.TEXT("long"),
       comment: "發票_地址",
     },
     contact_zip: {
@@ -537,7 +538,7 @@ export const MemberSchema = {
       comment: "聯絡_鄉鎮市區",
     },
     contact_street: {
-      type: DataTypes.TEXT('long'),
+      type: DataTypes.TEXT("long"),
       comment: "聯絡_街區",
     },
     contact_floor: {
@@ -549,10 +550,9 @@ export const MemberSchema = {
       comment: "聯絡_室",
     },
     contact_address: {
-      type: DataTypes.TEXT('long'),
+      type: DataTypes.TEXT("long"),
       comment: "聯絡_地址",
     },
-
   },
   option: {
     tableName: "member",
@@ -560,16 +560,14 @@ export const MemberSchema = {
   },
 };
 
-export const MemberTypeSchema={
+export const MemberTypeSchema = {
   name: "member_type",
-  cols: {
-
-  },
+  cols: {},
   option: {
     tableName: "member_type",
     comment: "會員類別",
   },
-}
+};
 
 export const MemberPointSchema = {
   name: "member_point",
@@ -625,7 +623,7 @@ export const MemberContactTypeSchema = {
       comment: "取消註冊時間",
     },
     picture: {
-      type: DataTypes.TEXT('long'),
+      type: DataTypes.TEXT("long"),
       comment: "圖片",
     },
     last_active_date: {
@@ -771,6 +769,19 @@ export const SupplierTypeSchema = {
 export const SupplierSchema = {
   name: "supplier",
   cols: {
+    id: {
+      type: DataTypes.STRING(36),
+      primaryKey: true,
+      comment: "供應商ID",
+      set(target) {
+        this.setDataValue(
+          "id",
+          typeof target !== "string" || target === "uuid_placeholder"
+            ? randomUUID()
+            : target.trim()
+        );
+      },
+    },
     company_id: {
       type: DataTypes.STRING(36),
       comment: "隸屬公司",
@@ -828,7 +839,7 @@ export const SupplierSchema = {
     option: {
       foreignKey: {
         name: "supplier_id",
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING(36),
         comment: "供應商ID",
       },
     },
@@ -932,107 +943,6 @@ export const SupplierMetaSchema = {
   },
 };
 
-export const StockBrandSchema = {
-  name: "stock_brand",
-  cols: {
-    company_id: {
-      type: DataTypes.STRING(36),
-      allowNull: false,
-      comment: "隸屬公司",
-    },
-  },
-  option: {
-    tableName: "stock_brand",
-    comment: "商品品牌",
-  },
-};
-
-export const StockCategorySchema = {
-  name: "stock_category",
-  cols: {
-    company_id: {
-      type: DataTypes.STRING(36),
-      allowNull: false,
-      comment: "隸屬公司",
-    },
-    is_recommended: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      comment: "是否為精選類別",
-    },
-    recommended_image: {
-      type: DataTypes.STRING(1024),
-      comment: "精選類別縮圖",
-      set(value) {
-        this.setDataValue("recommended_image", value ? value : undefined);
-      },
-    },
-    parent: {
-      type: DataTypes.STRING(36),
-      comment: "隸屬於",
-    },
-    tree_level: {
-      type: DataTypes.INTEGER,
-      defaultValue: 1,
-      comment: "階層",
-    },
-  },
-  option: {
-    tableName: "stock_category",
-    comment: "商品類別",
-  },
-};
-
-export const StockCategoryMediaSchema = {
-  name: "stock_category_media",
-  cols: {
-    stock_category_id: {
-      type: DataTypes.STRING(36),
-      allowNull: false,
-      comment: "類別id",
-    },
-    name: {
-      type: DataTypes.STRING(1024),
-      allowNull: false,
-      comment: "媒體名稱",
-    },
-    org_name: {
-      type: DataTypes.STRING(1024),
-      allowNull: false,
-      comment: "原始檔名",
-    },
-    media_type: {
-      type: DataTypes.STRING(10),
-      allowNull: false,
-      comment: "媒體類型 (image,audio,video)",
-    },
-  },
-  option: {
-    tableName: "stock_category_media",
-    comment: "商品分類-媒體",
-  },
-};
-
-export const StockUnitSchema = {
-  name: "stock_unit",
-  cols: {
-    is_serial_type: {
-      type: DataTypes.TINYINT,
-      defaultValue: 0,
-      comment: "是否為序號商品單位",
-    },
-    rate: {
-      type: DataTypes.INTEGER,
-      defaultValue: 1,
-      comment: "換算倍率(ex. 1l = 1000ml)",
-    },
-  },
-  option: {
-    tableName: "stock_unit",
-    comment: "商品單位",
-  },
-};
-
 export const TaxTypeSchema = {
   name: "tax_type",
   cols: {
@@ -1104,7 +1014,8 @@ export const StockSchema = {
       comment: "商品類別ID",
     },
     supplier_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING(36),
+      comment: "供應商ID",
     },
     accounting_id: {
       type: DataTypes.STRING(36),
@@ -1241,14 +1152,13 @@ export const StockSchema = {
       option: {
         foreignKey: {
           name: "supplier_id",
-          type: DataTypes.INTEGER,
+          type: DataTypes.STRING(36),
           comment: "供應商ID",
         },
         onDelete: "RESTRICT",
       },
     },
   ],
-
 };
 
 export const StockMediaSchema = {
@@ -1522,6 +1432,107 @@ export const StockAccountingSchema = {
   option: {
     tableName: "stock_accounting",
     comment: "記帳分類",
+  },
+};
+
+export const StockBrandSchema = {
+  name: "stock_brand",
+  cols: {
+    company_id: {
+      type: DataTypes.STRING(36),
+      allowNull: false,
+      comment: "隸屬公司",
+    },
+  },
+  option: {
+    tableName: "stock_brand",
+    comment: "商品品牌",
+  },
+};
+
+export const StockCategorySchema = {
+  name: "stock_category",
+  cols: {
+    company_id: {
+      type: DataTypes.STRING(36),
+      allowNull: false,
+      comment: "隸屬公司",
+    },
+    is_recommended: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      comment: "是否為精選類別",
+    },
+    recommended_image: {
+      type: DataTypes.STRING(1024),
+      comment: "精選類別縮圖",
+      set(value) {
+        this.setDataValue("recommended_image", value ? value : undefined);
+      },
+    },
+    parent: {
+      type: DataTypes.STRING(36),
+      comment: "隸屬於",
+    },
+    tree_level: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
+      comment: "階層",
+    },
+  },
+  option: {
+    tableName: "stock_category",
+    comment: "商品類別",
+  },
+};
+
+export const StockCategoryMediaSchema = {
+  name: "stock_category_media",
+  cols: {
+    stock_category_id: {
+      type: DataTypes.STRING(36),
+      allowNull: false,
+      comment: "類別id",
+    },
+    name: {
+      type: DataTypes.STRING(1024),
+      allowNull: false,
+      comment: "媒體名稱",
+    },
+    org_name: {
+      type: DataTypes.STRING(1024),
+      allowNull: false,
+      comment: "原始檔名",
+    },
+    media_type: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+      comment: "媒體類型 (image,audio,video)",
+    },
+  },
+  option: {
+    tableName: "stock_category_media",
+    comment: "商品分類-媒體",
+  },
+};
+
+export const StockUnitSchema = {
+  name: "stock_unit",
+  cols: {
+    is_serial_type: {
+      type: DataTypes.TINYINT,
+      defaultValue: 0,
+      comment: "是否為序號商品單位",
+    },
+    rate: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1,
+      comment: "換算倍率(ex. 1l = 1000ml)",
+    },
+  },
+  option: {
+    tableName: "stock_unit",
+    comment: "商品單位",
   },
 };
 

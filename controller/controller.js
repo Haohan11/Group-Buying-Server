@@ -145,11 +145,9 @@ const generalUpdate = (tableName, option) => {
   return async (req, res) => {
     const Table = req.app[tableName];
 
-    const id = parseInt(req.body.id);
+    const id = req.body.id;
 
-    if (isNaN(id)) {
-      return res.response(401, "Invalid id.");
-    }
+    if (!id) return res.response(401, "Invalid id.");
 
     try {
       const imagePath =
@@ -196,11 +194,9 @@ const generalDelete = (tableName, option) => {
   const { imageFieldName, extraHandler } = option || {};
   return async (req, res) => {
     const Table = req.app[tableName];
-    const id = parseInt(req.body.id);
+    const id = req.body.id;
 
-    if (isNaN(id)) {
-      return res.response(401, "Invalid id.");
-    }
+    if (!id) return res.response(401, "Invalid id.");
 
     try {
       const imagePath =
@@ -792,6 +788,7 @@ const controllers = [
         addUserMiddleware,
         getGeneralCreate("Supplier", {
           defaultData: {
+            id: "uuid_placeholder",
             supplier_type_id: 1,
             country_id: 1,
           },
