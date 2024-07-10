@@ -341,9 +341,9 @@ false &&
     }
   });
 
-app.get(
-  "/test",
-  createBulkConnectMiddleware(["Member","MemberPoint","MemberTag","MemberType","MemberContactType"], { alert: true }),
+false && app.get(
+  "/create-table",
+  createBulkConnectMiddleware([], { alert: true }),
   async (req, res) => {
     return res.response(200);
   }

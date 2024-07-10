@@ -54,7 +54,12 @@ const getGeneralCreate = (tableName, option) => {
 };
 
 const getGeneralRead = (tableName, option = {}) => {
-  const { queryAttribute = [], searchAttribute = [], listAdaptor } = option;
+  const {
+    queryAttribute = [],
+    searchAttribute = [],
+    listAdaptor,
+    extraWhere = {},
+  } = option;
   return async (req, res) => {
     logger("========== in generalRead ==========");
     const Table = req.app[tableName];
@@ -79,6 +84,7 @@ const getGeneralRead = (tableName, option = {}) => {
         ...(req.query.keyword && {
           [Op.or]: opArray,
         }),
+        ...extraWhere,
       },
     };
 
@@ -921,34 +927,76 @@ const controllers = [
   {
     path: "member-tag",
     schemas: {
-      all: ["MemberTag"],
+      all: ["Tag"],
     },
     actions: {
       create: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        getGeneralCreate("MemberTag"),
+        getGeneralCreate("Tag", {
+          defaultData: {
+            tag_type_id: "member_tag",
+          },
+        }),
       ],
       read: [
         authenticationMiddleware,
         addUserMiddleware,
-        getGeneralRead("MemberTag", {
-          queryAttribute: ["id", "name", "code", "sorting", "description"],
-          searchAttribute: ["name", "code"],
+        getGeneralRead("Tag", {
+          queryAttribute: ["id", "name", "description"],
+          searchAttribute: ["name"],
+          extraWhere: {
+            tag_type_id: "member_tag",
+          },
         }),
       ],
       update: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("MemberTag"),
+        generalUpdate("Tag"),
       ],
       delete: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("MemberTag"),
+        generalDelete("Tag"),
+      ],
+    },
+  },
+  // order-category
+  {
+    path: "order-category",
+    schemas: {
+      all: ["OrderCategory"],
+    },
+    actions: {
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralCreate("OrderCategory"),
+      ],
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralRead("OrderCategory", {
+          queryAttribute: ["id", "name", "description"],
+          searchAttribute: ["name"],
+        }),
+      ],
+      update: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("OrderCategory"),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("OrderCategory"),
       ],
     },
   },

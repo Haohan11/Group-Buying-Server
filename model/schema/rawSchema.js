@@ -17,9 +17,11 @@ import { randomUUID } from "crypto";
  *     tableName: "test",
  *   },
  * };
+ *
+ * Junction Schema should match the name format 
+ *  `Table1_Table2Schema` 
+ * for auto remove name col in Schema.js.
  */
-
-//--------- regular Schemas below ---
 
 export const CompanySchema = {
   name: "company",
@@ -637,7 +639,7 @@ export const MemberContactTypeSchema = {
   },
 };
 
-export const MemberTagSchema = {
+export const Member_TagSchema = {
   name: "member_tag",
   cols: {
     member_id: {
@@ -1639,6 +1641,15 @@ export const InventoryLogSchema = {
   },
 };
 
+export const OrderCategorySchema = {
+  name: "order_category",
+  cols: {},
+  option: {
+    tableName: "order_category",
+    comment: "訂單類別",
+  },
+};
+
 export const IndexItemTypeSchema = {
   name: "index_item_type",
   cols: {
@@ -1721,9 +1732,3 @@ export const IndexItemSchema = {
     comment: "首頁項目",
   },
 };
-
-//--------- regular Schemas above ---
-
-//--------- junction schema below ---
-
-//--------- junction schema above ---
