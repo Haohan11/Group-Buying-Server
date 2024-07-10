@@ -45,10 +45,18 @@ const connectToDB = async () => {
 };
 
 const { user: userData, indexItem: indexItemData } = initialConfig;
-if (!userData.data || !Array.isArray(userData.unique))
-  exit("User data set invalid.");
-
-if (!indexItemData) onelineLog("Index item data not set.");
+const initAuthor = [
+  "create_id",
+  "create_name",
+  "modify_id",
+  "modify_name",
+].reduce(
+  (dict, colName) => ({
+    ...dict,
+    [colName]: userData?.data?.[colName] ?? "system",
+  }),
+  {}
+);
 
 import Schemas from "./model/schema/schema.js";
 import { createSchema } from "./model/helper.js";
@@ -66,43 +74,52 @@ await (async () => {
 
   GenerateTable: {
     const { generateTable } = initialConfig;
-    if (!generateTable) break GenerateTable;
+    if (!generateTable) {
+      onelineLog("Skip generate table.");
+      break GenerateTable;
+    }
 
     try {
       log("Generating table...");
-      Object.values(Schemas).forEach((schema) => createSchema(sequelize, schema));
+      Object.values(Schemas).forEach((schema) =>
+        createSchema(sequelize, schema)
+      );
       await sequelize.sync({ alter: true });
       onelineLog("Table generated.");
     } catch (error) {
       console.warn("Table not generated.", error);
-      break GenerateTable;
     }
   }
 
-  /** Handle User below */
-  log("Create User...");
-  const { UserSchema } = Schemas;
-  if (!UserSchema) return exit("UserSchema not set.");
-
   try {
-    const User = sequelize.models.user || (await getModel(UserSchema));
+    /** Handle User below */
+    GenerateUser: {
+      if (!userData?.data || !Array.isArray(userData.unique)) {
+        onelineLog("Skip generate user due to user data or unique not set.");
+        break GenerateUser;
+      }
 
-    await User.destroy({
-      where: userData.unique.reduce(
-        (whereDict, keyName) => ({
-          ...whereDict,
-          [keyName]: userData.data[keyName],
-        }),
-        {}
-      ),
-    });
-    await User.create(userData.data);
-    onelineLog("User created.");
+      log("Creating User...");
+      const { UserSchema } = Schemas;
+      if (!UserSchema) return exit("UserSchema not set.");
+      const User = sequelize.models.user || (await getModel(UserSchema));
+
+      await User.destroy({
+        where: userData.unique.reduce(
+          (whereDict, keyName) => ({
+            ...whereDict,
+            [keyName]: userData.data[keyName],
+          }),
+          {}
+        ),
+      });
+      await User.create(userData.data);
+      onelineLog("User created.");
+    }
     /** Handle User above */
 
     /** Handle IndexItem below */
     HandleIndexItem: {
-      log("Create IndexItem...");
       const { IndexItemSchema, IndexItemTypeSchema } = Schemas;
       if (!indexItemData || !IndexItemSchema || !IndexItemTypeSchema) {
         onelineLog(
@@ -112,15 +129,7 @@ await (async () => {
         break HandleIndexItem;
       }
 
-      const initAuthor = [
-        "create_id",
-        "create_name",
-        "modify_id",
-        "modify_name",
-      ].reduce(
-        (dict, colName) => ({ ...dict, [colName]: userData.data[colName] }),
-        {}
-      );
+      log("Create IndexItem...");
 
       const IndexItem =
         sequelize.models.index_item || (await getModel(IndexItemSchema));
@@ -159,40 +168,46 @@ await (async () => {
     /** Handle IndexItem above */
 
     /** Handle insert data below */
-    const { insertData } = initialConfig;
-    if (!insertData) return onelineLog("No extra data insert.");
+    InsertData: {
+      const { insertData } = initialConfig;
+      if (!insertData || !Array.isArray(insertData)) {
+        onelineLog("No extra data insert.");
+        break InsertData;
+      }
 
-    log("Inserting extra data...");
-    await Promise.all(
-      Object.entries(insertData).map(async ([dataName, config]) => {
-        const {
-          modelName,
-          schemaName,
-          data,
-          destroy = true,
-          author = initAuthor,
-        } = config;
+      log("Inserting extra data...");
+      await Promise.all(
+        insertData.map(async (config) => {
+          const {
+            name,
+            modelName,
+            schemaName,
+            data,
+            destroy = true,
+            author = initAuthor,
+          } = config;
 
-        if (!Array.isArray(data))
-          return console.warn(`Insert data must receive array type.`);
+          if (!Array.isArray(data))
+            return console.warn(`Insert data must receive array type.`);
 
-        const InsertSchema = Schemas[`${schemaName}Schema`];
-        if (!InsertSchema)
-          return console.warn(
-            `Schema \`${schemaName}\` not found when insert ${dataName}.`
-          );
+          const InsertSchema = Schemas[`${schemaName}Schema`];
+          if (!InsertSchema)
+            return console.warn(
+              `Schema \`${schemaName}\` not found when insert ${dataName}.`
+            );
 
-        const Table =
-          sequelize.models[modelName] || (await getModel(InsertSchema));
+          const Table =
+            sequelize.models[modelName] || (await getModel(InsertSchema));
 
-        destroy && (await Table.destroy({ truncate: true }));
+          destroy && (await Table.destroy({ truncate: true }));
 
-        await Table.bulkCreate(data.map((item) => ({ ...item, ...author })));
+          await Table.bulkCreate(data.map((item) => ({ ...item, ...author })));
 
-        log(`${dataName} inserted.`);
-      })
-    );
-    onelineLog("Extra data inserted.");
+          log(`${name || modelName || schemaName} inserted.`);
+        })
+      );
+      onelineLog("Extra data inserted.");
+    }
     /** Handle insert data above */
   } catch (error) {
     exit(error);

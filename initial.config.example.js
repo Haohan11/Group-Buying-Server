@@ -1,5 +1,25 @@
+/** If your files is ready, you can just uncomment below in your initial.config.js */
 
-const config = {
+// import indexItem from "./insert-data/indexItem.js";
+// import userData from "./insert-data/userData.js";
+// import extraData from "./insert-data/extraData.js";
+
+// const config = {
+//   generateTable: true,
+//   indexItem,
+//   user: {
+//     data: userData,
+//     unique: ["account"],
+//   },
+//   insertData: extraData,
+//   showSequelizeLog: false,
+// };
+
+// export default config;
+
+/** If your files is ready, you can just uncomment above in your initial.config.js */
+
+const configDescription = {
   // 是否自動產生資料表 
   generateTable: true,
 
@@ -74,5 +94,3 @@ const config = {
   // 顯示 sequelize 訊息
   showSequelizeLog: false,
 };
-
-export default config;
