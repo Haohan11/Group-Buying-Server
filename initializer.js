@@ -1,5 +1,7 @@
-const log = console.log;
-const onelineLog = (message) => console.log(`${message}\n`);
+const indentSymbol = "#";
+const log = (message, indent = 0) =>
+  console.log(`${indentSymbol}${new Array(indent).fill(indentSymbol).join("")} ${message}`);
+const onelineLog = (message) => console.log(`${indentSymbol} ${message}\n`);
 const exit = (message) => {
   message !== undefined && onelineLog(message);
   process.exit();
@@ -75,7 +77,7 @@ await (async () => {
   GenerateTable: {
     const { generateTable } = initialConfig;
     if (!generateTable) {
-      onelineLog("Skip generate table.");
+      onelineLog("Skip generate tables.");
       break GenerateTable;
     }
 
@@ -85,9 +87,9 @@ await (async () => {
         createSchema(sequelize, schema)
       );
       await sequelize.sync({ alter: true });
-      onelineLog("Table generated.");
+      onelineLog("Tables generated.");
     } catch (error) {
-      console.warn("Table not generated.", error);
+      console.warn("Tables not generated.", error);
     }
   }
 
@@ -95,13 +97,13 @@ await (async () => {
     /** Handle User below */
     GenerateUser: {
       if (!userData?.data || !Array.isArray(userData.unique)) {
-        onelineLog("Skip generate user due to user data or unique not set.");
+        onelineLog("Skip generate `user` due to user data or unique not set.");
         break GenerateUser;
       }
 
-      log("Creating User...");
+      log("Creating `User`...");
       const { UserSchema } = Schemas;
-      if (!UserSchema) return exit("UserSchema not set.");
+      if (!UserSchema) return exit("`UserSchema` not set.");
       const User = sequelize.models.user || (await getModel(UserSchema));
 
       await User.destroy({
@@ -114,7 +116,7 @@ await (async () => {
         ),
       });
       await User.create(userData.data);
-      onelineLog("User created.");
+      onelineLog("`User` created.");
     }
     /** Handle User above */
 
@@ -123,13 +125,13 @@ await (async () => {
       const { IndexItemSchema, IndexItemTypeSchema } = Schemas;
       if (!indexItemData || !IndexItemSchema || !IndexItemTypeSchema) {
         onelineLog(
-          "IndexItem not create due to schema or indexItem data not set."
+          "`IndexItem` not create due to schema or indexItem data not set."
         );
 
         break HandleIndexItem;
       }
 
-      log("Create IndexItem...");
+      log("Creating `IndexItem` table and insert data...");
 
       const IndexItem =
         sequelize.models.index_item || (await getModel(IndexItemSchema));
@@ -163,7 +165,7 @@ await (async () => {
           await IndexItem.bulkCreate(insertData);
         })
       );
-      onelineLog("IndexItem created.");
+      onelineLog("`IndexItem` sussess establish.");
     }
     /** Handle IndexItem above */
 
@@ -199,11 +201,16 @@ await (async () => {
           const Table =
             sequelize.models[modelName] || (await getModel(InsertSchema));
 
-          destroy && (await Table.destroy({ truncate: true }));
+          if (destroy) {
+            log(`Destroying \`${name || modelName || schemaName}\`...`, 1);
+            await Table.drop();
+            log(`Creating \`${name || modelName || schemaName}\`...`, 1);
+            await Table.sync();
+            log(`Created \`${name || modelName || schemaName}\`...`, 1);
+          }
 
           await Table.bulkCreate(data.map((item) => ({ ...item, ...author })));
-
-          log(`${name || modelName || schemaName} inserted.`);
+          log(`\`${name || modelName || schemaName}\` data inserted.`);
         })
       );
       onelineLog("Extra data inserted.");
@@ -213,7 +220,7 @@ await (async () => {
     exit(error);
   }
 
-  onelineLog("Finish initializing.");
+  onelineLog("Finish initialization.");
 })();
 
 process.exit();

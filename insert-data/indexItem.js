@@ -8,6 +8,8 @@ const indexItem = [
       { route: "tag", name: "會員標籤維護" },
       { route: "grade", name: "會員等級維護" },
       { route: "role", name: "會員身分別維護" },
+      { route: "shipping", name: "出貨方式維護" },
+      { route: "payment", name: "付款方式維護" },
     ],
   },
   {
