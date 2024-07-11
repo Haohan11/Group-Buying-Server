@@ -868,14 +868,49 @@ const controllers = [
         getGeneralCreate("Member", {
           defaultData: {
             id: "uuid_placeholder",
-            member_type_id: 1,
-            country_id: 1,
+            country_id: "not_set",
+            code: "_holder",
             company_id: "_holder",
             member_type_id: "company",
-            member_level_id: "",
-            country_id: "",
-            sex_id: "",
-            join_date: "",
+            sex_id: "none",
+          },
+          extraHandler: async (member_id, req) => {
+            const { Member, User, Company } = req.app;
+            const {
+              uniform_number,
+              phone,
+              address,
+              company_title: title,
+              account,
+              password,
+              name,
+            } = req.body;
+
+            const companyData = await Company.create({
+              id: "uuid_placeholder",
+              name,
+              uniform_number,
+              phone,
+              address,
+              title,
+              ...req._author
+            });
+            const { id: company_id } = companyData;
+
+            const userData = await User.create({
+              name,
+              account,
+              password,
+              company_id,
+              ...req._author
+            });
+            const { id: user_id } = userData;
+
+            await Member.update(
+              { company_id, user_id },
+              { where: { id: member_id } }
+            );
+
           },
         }),
       ],
@@ -887,18 +922,18 @@ const controllers = [
           searchAttribute: ["name"],
         }),
       ],
-      update: [
-        multer().none(),
-        authenticationMiddleware,
-        addUserMiddleware,
-        generalUpdate("Member"),
-      ],
-      delete: [
-        multer().none(),
-        authenticationMiddleware,
-        addUserMiddleware,
-        generalDelete("Member"),
-      ],
+      // update: [
+      //   multer().none(),
+      //   authenticationMiddleware,
+      //   addUserMiddleware,
+      //   generalUpdate("Member"),
+      // ],
+      // delete: [
+      //   multer().none(),
+      //   authenticationMiddleware,
+      //   addUserMiddleware,
+      //   generalDelete("Member"),
+      // ],
     },
   },
   // member-level

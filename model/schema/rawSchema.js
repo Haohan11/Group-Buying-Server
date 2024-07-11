@@ -1,7 +1,26 @@
-import { DataTypes, literal } from "sequelize";
+import { DataTypes } from "sequelize";
 import { goHashSync } from "../helper.js";
 import { randomUUID } from "crypto";
-import { memoryStorage } from "multer";
+
+/**
+ * Returns an object representing a column with a UUID primary key.
+ *
+ * @param {Object} fields - Additional fields to include in the column object.
+ * @return {Object} An object representing a column with a UUID primary key.
+ */
+const getUUIdCol = (fields = {}) => ({
+  type: DataTypes.STRING(36),
+  primaryKey: true,
+  set(target) {
+    this.setDataValue(
+      "id",
+      typeof target !== "string" || target === "uuid_placeholder"
+        ? randomUUID()
+        : target.trim()
+    );
+  },
+  ...fields,
+});
 
 /**
  * use this format to create schema
@@ -27,6 +46,7 @@ import { memoryStorage } from "multer";
 export const CompanySchema = {
   name: "company",
   cols: {
+    id: getUUIdCol(),
     uniform_number: {
       type: DataTypes.STRING(20),
       comment: "統編",
@@ -46,7 +66,7 @@ export const CompanySchema = {
     title: {
       type: DataTypes.STRING(100),
       comment: "公司抬頭",
-    }
+    },
   },
   option: {
     tableName: "company",
@@ -364,14 +384,17 @@ export const UserSchema = {
     company_id: {
       type: DataTypes.STRING(36),
       comment: "隸屬公司",
+      allowNull: false,
     },
     account: {
       type: DataTypes.TEXT("long"),
       comment: "帳號",
+      allowNull: false,
     },
     password: {
       type: DataTypes.TEXT("long"),
       comment: "密碼",
+      allowNull: false,
       set(value) {
         this.setDataValue("password", goHashSync(value));
       },
@@ -409,13 +432,14 @@ export const UserSchema = {
 export const MemberSchema = {
   name: "member",
   cols: {
+    id: getUUIdCol(),
     company_id: {
       type: DataTypes.STRING(36),
       comment: "對應的公司ID",
       allowNull: false,
     },
     user_id: {
-      type: DataTypes.STRING(36),
+      type: DataTypes.INTEGER.UNSIGNED,
       comment: "UserID",
     },
     status_id: {
@@ -509,7 +533,7 @@ export const MemberSchema = {
     join_date: {
       type: DataTypes.DATE,
       comment: "入會日期",
-      allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
     upgrade_date: {
       type: DataTypes.DATE,
@@ -819,19 +843,7 @@ export const SupplierTypeSchema = {
 export const SupplierSchema = {
   name: "supplier",
   cols: {
-    id: {
-      type: DataTypes.STRING(36),
-      primaryKey: true,
-      comment: "供應商ID",
-      set(target) {
-        this.setDataValue(
-          "id",
-          typeof target !== "string" || target === "uuid_placeholder"
-            ? randomUUID()
-            : target.trim()
-        );
-      },
-    },
+    id: getUUIdCol(),
     company_id: {
       type: DataTypes.STRING(36),
       comment: "隸屬公司",
