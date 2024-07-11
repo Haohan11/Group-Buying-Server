@@ -959,48 +959,6 @@ const controllers = [
       ],
     },
   },
-  // member-tag
-  {
-    path: "member-tag",
-    schemas: {
-      all: ["Tag"],
-    },
-    actions: {
-      create: [
-        multer().none(),
-        authenticationMiddleware,
-        addUserMiddleware,
-        getGeneralCreate("Tag", {
-          defaultData: {
-            tag_type_id: "member_tag",
-          },
-        }),
-      ],
-      read: [
-        authenticationMiddleware,
-        addUserMiddleware,
-        getGeneralRead("Tag", {
-          queryAttribute: ["id", "name", "description"],
-          searchAttribute: ["name"],
-          extraWhere: {
-            tag_type_id: "member_tag",
-          },
-        }),
-      ],
-      update: [
-        multer().none(),
-        authenticationMiddleware,
-        addUserMiddleware,
-        generalUpdate("Tag"),
-      ],
-      delete: [
-        multer().none(),
-        authenticationMiddleware,
-        addUserMiddleware,
-        generalDelete("Tag"),
-      ],
-    },
-  },
   // member-payment
   {
     path: "member-payment",
@@ -1040,6 +998,41 @@ const controllers = [
         authenticationMiddleware,
         addUserMiddleware,
         generalDelete("Payment"),
+      ],
+    },
+  },
+  // member-shipping
+  {
+    path: "member-shipping",
+    schemas: {
+      all: ["MemberShipping"],
+    },
+    actions: {
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralCreate("MemberShipping"),
+      ],
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralRead("MemberShipping", {
+          queryAttribute: ["id", "name", "description"],
+          searchAttribute: ["name"],
+        }),
+      ],
+      update: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("MemberShipping"),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("MemberShipping"),
       ],
     },
   },

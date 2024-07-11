@@ -209,7 +209,7 @@ export const AccountMethodSchema = {
   },
 };
 
-export const departmentSchema = {
+export const DepartmentSchema = {
   name: "department",
   cols: {
     company_id: {
@@ -273,7 +273,7 @@ export const MediaTypeSchema = {
   },
 };
 
-export const countyDistrictSchema = {
+export const CountyDistrictSchema = {
   name: "county_district",
   cols: {
     county: {
@@ -304,7 +304,7 @@ export const SexSchema = {
   },
 };
 
-export const personTitleSchema = {
+export const PersonTitleSchema = {
   name: "person_title",
   cols: {},
   option: {
@@ -401,6 +401,7 @@ export const UserSchema = {
   },
 };
 
+/** Member Schema Begin */
 export const MemberSchema = {
   name: "member",
   cols: {
@@ -674,6 +675,15 @@ export const Member_TagSchema = {
   },
 };
 
+export const MemberShippingSchema = {
+  name: "mshipping",
+  cols: {},
+  option: {
+    tableName: "mshipping",
+    comment: "會員出貨方式",
+  },
+};
+
 export const MemberGradeSchema = {
   name: "member_grade",
   cols: {},
@@ -683,6 +693,17 @@ export const MemberGradeSchema = {
   },
 };
 
+export const MemberRoleSchema = {
+  name: "member_role",
+  cols: {},
+  option: {
+    tableName: "member_role",
+    comment: "會員角色",
+  },
+};
+/** Member Schema End */
+
+/** Stock price according to member grade */
 export const Grade_PriceSchema = {
   name: "grade_price",
   cols: {
@@ -702,15 +723,7 @@ export const Grade_PriceSchema = {
   },
 };
 
-export const MemberRoleSchema = {
-  name: "member_role",
-  cols: {},
-  option: {
-    tableName: "member_role",
-    comment: "會員角色",
-  },
-};
-
+/** Stock price according to member role */
 export const Role_PriceSchema = {
   name: "role_price",
   cols: {
@@ -776,6 +789,7 @@ export const PermissionTypeSchema = {
   },
 };
 
+/** Supplier Schema Start */
 export const SupplierTypeSchema = {
   name: "supplier_type",
   cols: {},
@@ -961,6 +975,7 @@ export const SupplierMetaSchema = {
     comment: "擴充supplier欄位用",
   },
 };
+/** Supplier Schema End */
 
 export const TaxTypeSchema = {
   name: "tax_type",
@@ -1016,6 +1031,7 @@ export const MbflagTypeSchema = {
   },
 };
 
+/** Stock Schema Start */
 export const StockSchema = {
   name: "stock",
   cols: {
@@ -1554,6 +1570,7 @@ export const StockUnitSchema = {
     comment: "商品單位",
   },
 };
+/** Stock Schema End */
 
 export const WarehouseTypeSchema = {
   name: "warehouse_type",
