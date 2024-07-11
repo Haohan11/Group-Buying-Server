@@ -748,9 +748,9 @@ const controllers = [
       ],
     },
   },
-  // payment
+  // supplier-payment
   {
-    path: "payment",
+    path: "supplier-payment",
     schemas: {
       read: ["Payment"],
     },
@@ -760,6 +760,7 @@ const controllers = [
         addUserMiddleware,
         getGeneralRead("Payment", {
           queryAttribute: ["id", "name"],
+          extraWhere: { belong: "supplier" },
         }),
       ],
     },
@@ -888,6 +889,41 @@ const controllers = [
       ],
     },
   },
+  // member-management
+  {
+    path: "member-management",
+    schemas: {
+      all: ["Member"],
+    },
+    actions: {
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralCreate("MemberRole"),
+      ],
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralRead("MemberRole", {
+          queryAttribute: ["id", "name", "description"],
+          searchAttribute: ["name"],
+        }),
+      ],
+      update: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("MemberRole"),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("MemberRole"),
+      ],
+    },
+  },
   // member-role
   {
     path: "member-role",
@@ -962,6 +998,48 @@ const controllers = [
         authenticationMiddleware,
         addUserMiddleware,
         generalDelete("Tag"),
+      ],
+    },
+  },
+  // member-payment
+  {
+    path: "member-payment",
+    schemas: {
+      all: ["Payment"],
+    },
+    actions: {
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralCreate("Payment", {
+          defaultData: {
+            belong: "member",
+          },
+        }),
+      ],
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralRead("Payment", {
+          queryAttribute: ["id", "name", "description"],
+          searchAttribute: ["name"],
+          extraWhere: {
+            belong: "member",
+          }
+        }),
+      ],
+      update: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("Payment"),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("Payment"),
       ],
     },
   },

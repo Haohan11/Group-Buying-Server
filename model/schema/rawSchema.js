@@ -1,6 +1,7 @@
 import { DataTypes, literal } from "sequelize";
 import { goHashSync } from "../helper.js";
 import { randomUUID } from "crypto";
+import { memoryStorage } from "multer";
 
 /**
  * use this format to create schema
@@ -18,8 +19,8 @@ import { randomUUID } from "crypto";
  *   },
  * };
  *
- * Junction Schema should match the name format 
- *  `Table1_Table2Schema` 
+ * Junction Schema should match the name format
+ *  `Table1_Table2Schema`
  * for auto remove name col in Schema.js.
  */
 
@@ -187,7 +188,11 @@ export const PaymentSchema = {
     payment_type_id: {
       type: DataTypes.STRING(36),
       index: true,
-      comment: "付款方式ID",
+      comment: "付款方式類別ID",
+    },
+    belong: {
+      type: DataTypes.STRING(50),
+      comment: "所屬",
     },
   },
   option: {
@@ -406,6 +411,18 @@ export const MemberSchema = {
     user_id: {
       type: DataTypes.STRING(36),
       comment: "UserID",
+    },
+    status_id: {
+      type: DataTypes.STRING(36),
+      comment: "會員狀態ID",
+    },
+    member_grade_id: {
+      type: DataTypes.STRING(36),
+      comment: "會員等級ID",
+    },
+    member_role_id: {
+      type: DataTypes.STRING(36),
+      comment: "會員角色ID",
     },
     member_type_id: {
       type: DataTypes.STRING(36),
@@ -1247,8 +1264,8 @@ export const StockPriceSchema = {
     },
     currencies_id: {
       type: DataTypes.STRING(36),
-      allowNull: false,
       comment: "貨幣ID",
+      allowNull: false,
     },
     price: {
       type: DataTypes.DOUBLE,

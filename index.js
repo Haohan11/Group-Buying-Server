@@ -342,10 +342,10 @@ false &&
   });
 
 false && app.get(
-  "/create-table",
+  "/alert-table",
   createBulkConnectMiddleware([], { alert: true }),
   async (req, res) => {
-    return res.response(200);
+    return res.response(200, "Success alert table.");
   }
 );
 
