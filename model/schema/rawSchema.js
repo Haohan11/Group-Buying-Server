@@ -43,6 +43,10 @@ export const CompanySchema = {
       type: DataTypes.STRING(100),
       comment: "聯絡人",
     },
+    title: {
+      type: DataTypes.STRING(100),
+      comment: "公司抬頭",
+    }
   },
   option: {
     tableName: "company",
@@ -408,6 +412,7 @@ export const MemberSchema = {
     company_id: {
       type: DataTypes.STRING(36),
       comment: "對應的公司ID",
+      allowNull: false,
     },
     user_id: {
       type: DataTypes.STRING(36),
@@ -417,21 +422,27 @@ export const MemberSchema = {
       type: DataTypes.STRING(36),
       comment: "會員狀態ID",
     },
-    member_grade_id: {
-      type: DataTypes.STRING(36),
-      comment: "會員等級ID",
-    },
     member_role_id: {
       type: DataTypes.STRING(36),
       comment: "會員角色ID",
     },
+    shipping_id: {
+      type: DataTypes.STRING(36),
+      comment: "出貨方式ID",
+    },
+    shipping_condition_id: {
+      type: DataTypes.STRING(36),
+      comment: "發貨條件ID",
+    },
     member_type_id: {
       type: DataTypes.STRING(36),
       comment: "會員類別ID",
+      allowNull: false,
     },
     member_level_id: {
       type: DataTypes.STRING(36),
       comment: "會員等級ID",
+      allowNull: false,
     },
     recommend_member_id: {
       type: DataTypes.STRING(36),
@@ -440,10 +451,12 @@ export const MemberSchema = {
     country_id: {
       type: DataTypes.STRING(36),
       comment: "國家ID",
+      allowNull: false,
     },
     sex_id: {
       type: DataTypes.STRING(36),
       comment: "性別ID",
+      allowNull: false,
     },
     person_title_id: {
       type: DataTypes.STRING(36),
@@ -496,6 +509,7 @@ export const MemberSchema = {
     join_date: {
       type: DataTypes.DATE,
       comment: "入會日期",
+      allowNull: false,
     },
     upgrade_date: {
       type: DataTypes.DATE,
@@ -508,14 +522,17 @@ export const MemberSchema = {
     accumulated_consumption: {
       type: DataTypes.DOUBLE,
       comment: "累積消費金額",
+      defaultValue: 0,
     },
     accumulated_return: {
       type: DataTypes.DOUBLE,
       comment: "累積退貨金額",
+      defaultValue: 0,
     },
     accumulated_revenue: {
       type: DataTypes.DOUBLE,
       comment: "累積業績金額",
+      defaultValue: 0,
     },
     invoice_zip: {
       type: DataTypes.STRING(10),
@@ -684,11 +701,11 @@ export const MemberShippingSchema = {
   },
 };
 
-export const MemberGradeSchema = {
-  name: "member_grade",
+export const MemberLevelSchema = {
+  name: "member_level",
   cols: {},
   option: {
-    tableName: "member_grade",
+    tableName: "member_level",
     comment: "會員等級",
   },
 };
@@ -703,14 +720,14 @@ export const MemberRoleSchema = {
 };
 /** Member Schema End */
 
-/** Stock price according to member grade */
-export const Grade_PriceSchema = {
-  name: "grade_price",
+/** Stock price according to member level */
+export const Level_PriceSchema = {
+  name: "level_price",
   cols: {
     stock_id: {
       type: DataTypes.STRING(36),
     },
-    member_grade_id: {
+    member_level_id: {
       type: DataTypes.STRING(36),
     },
     price: {
@@ -718,7 +735,7 @@ export const Grade_PriceSchema = {
     },
   },
   option: {
-    tableName: "grade_price",
+    tableName: "level_price",
     comment: "會員等級價格",
   },
 };

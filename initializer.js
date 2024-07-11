@@ -165,7 +165,7 @@ await (async () => {
           await IndexItem.bulkCreate(insertData);
         })
       );
-      onelineLog("`IndexItem` sussess establish.");
+      onelineLog("`IndexItem` success establish.");
     }
     /** Handle IndexItem above */
 

@@ -32,7 +32,7 @@ const configDescription = {
       indexItems: [
         { route: "management", name: "會員管理" },
         { route: "tag", name: "會員標籤維護" },
-        { route: "grade", name: "會員等級維護" },
+        { route: "level", name: "會員等級維護" },
         { route: "identity", name: "會員身分別維護" },
       ],
     },

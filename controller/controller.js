@@ -233,7 +233,7 @@ const controllers = [
   {
     path: "stock",
     schemas: {
-      all: ["Stock", "StockMedia", "Grade_Price", "Role_Price"],
+      all: ["Stock", "StockMedia", "Level_Price", "Role_Price"],
       read: ["StockCategory", "StockBrand", "StockAccounting", "Supplier"],
     },
     actions: {
@@ -254,15 +254,15 @@ const controllers = [
             tax_type_id: 1,
           },
           extraHandler: async (stock_id, req) => {
-            const { Stock, StockMedia, Grade_Price, Role_Price } = req.app;
+            const { Stock, StockMedia, Level_Price, Role_Price } = req.app;
 
             /* Handle price fields below */
             await Promise.all(
               [
                 {
-                  Table: Grade_Price,
-                  reqName: "grade_price",
-                  colName: "member_grade_id",
+                  Table: Level_Price,
+                  reqName: "level_price",
+                  colName: "member_level_id",
                 },
                 {
                   Table: Role_Price,
@@ -365,7 +365,7 @@ const controllers = [
               StockAccounting,
               Supplier,
               StockMedia,
-              Grade_Price,
+              Level_Price,
               Role_Price,
             } = req.app;
 
@@ -408,9 +408,9 @@ const controllers = [
                 await Promise.all(
                   [
                     {
-                      Table: Grade_Price,
-                      idField: "member_grade_id",
-                      fieldName: "grade_price",
+                      Table: Level_Price,
+                      idField: "member_level_id",
+                      fieldName: "level_price",
                     },
                     {
                       Table: Role_Price,
@@ -418,14 +418,14 @@ const controllers = [
                       fieldName: "role_price",
                     },
                   ].map(async ({ Table, idField, fieldName }) => {
-                    const gradePriceList = await Table.findAll({
+                    const levelPriceList = await Table.findAll({
                       where: { stock_id: stock.id },
                       attributes: [idField, "price"],
                     });
 
                     stock.setDataValue(
                       fieldName,
-                      gradePriceList.map(({ [idField]: id, price }) => ({
+                      levelPriceList.map(({ [idField]: id, price }) => ({
                         id,
                         price,
                       }))
@@ -460,15 +460,15 @@ const controllers = [
         generalUpdate("Stock", {
           imageFieldName: [{ name: "cover_image" }],
           extraHandler: async (stock_id, req) => {
-            const { Stock, StockMedia, Grade_Price, Role_Price } = req.app;
+            const { Stock, StockMedia, Level_Price, Role_Price } = req.app;
 
             /* Handle price fields below */
             await Promise.all(
               [
                 {
-                  Table: Grade_Price,
-                  reqName: "grade_price",
-                  colName: "member_grade_id",
+                  Table: Level_Price,
+                  reqName: "level_price",
+                  colName: "member_level_id",
                 },
                 {
                   Table: Role_Price,
@@ -597,11 +597,11 @@ const controllers = [
         generalDelete("Stock", {
           imageFieldName: ["cover_image"],
           extraHandler: async (stock_id, req) => {
-            const { StockMedia, Grade_Price, Role_Price } = req.app;
+            const { StockMedia, Level_Price, Role_Price } = req.app;
 
             /* Handle price fields below */
             await Promise.all(
-              [Grade_Price, Role_Price].map((Table) =>
+              [Level_Price, Role_Price].map((Table) =>
                 Table.destroy({ where: { stock_id } })
               )
             );
@@ -854,58 +854,35 @@ const controllers = [
       ],
     },
   },
-  // member-grade
-  {
-    path: "member-grade",
-    schemas: {
-      all: ["MemberGrade"],
-    },
-    actions: {
-      create: [
-        multer().none(),
-        authenticationMiddleware,
-        addUserMiddleware,
-        getGeneralCreate("MemberGrade"),
-      ],
-      read: [
-        authenticationMiddleware,
-        addUserMiddleware,
-        getGeneralRead("MemberGrade", {
-          queryAttribute: ["id", "name", "description"],
-          searchAttribute: ["name"],
-        }),
-      ],
-      update: [
-        multer().none(),
-        authenticationMiddleware,
-        addUserMiddleware,
-        generalUpdate("MemberGrade"),
-      ],
-      delete: [
-        multer().none(),
-        authenticationMiddleware,
-        addUserMiddleware,
-        generalDelete("MemberGrade"),
-      ],
-    },
-  },
   // member-management
   {
     path: "member-management",
     schemas: {
-      all: ["Member"],
+      all: ["Member", "User", "Company"],
     },
     actions: {
       create: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        getGeneralCreate("MemberRole"),
+        getGeneralCreate("Member", {
+          defaultData: {
+            id: "uuid_placeholder",
+            member_type_id: 1,
+            country_id: 1,
+            company_id: "_holder",
+            member_type_id: "company",
+            member_level_id: "",
+            country_id: "",
+            sex_id: "",
+            join_date: "",
+          },
+        }),
       ],
       read: [
         authenticationMiddleware,
         addUserMiddleware,
-        getGeneralRead("MemberRole", {
+        getGeneralRead("Member", {
           queryAttribute: ["id", "name", "description"],
           searchAttribute: ["name"],
         }),
@@ -914,13 +891,48 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("MemberRole"),
+        generalUpdate("Member"),
       ],
       delete: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("MemberRole"),
+        generalDelete("Member"),
+      ],
+    },
+  },
+  // member-level
+  {
+    path: "member-level",
+    schemas: {
+      all: ["MemberLevel"],
+    },
+    actions: {
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralCreate("MemberLevel"),
+      ],
+      read: [
+        authenticationMiddleware,
+        addUserMiddleware,
+        getGeneralRead("MemberLevel", {
+          queryAttribute: ["id", "name", "description"],
+          searchAttribute: ["name"],
+        }),
+      ],
+      update: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("MemberLevel"),
+      ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("MemberLevel"),
       ],
     },
   },
@@ -984,7 +996,7 @@ const controllers = [
           searchAttribute: ["name"],
           extraWhere: {
             belong: "member",
-          }
+          },
         }),
       ],
       update: [
