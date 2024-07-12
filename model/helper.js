@@ -71,61 +71,59 @@ export const createBulkConnectMiddleware = (tableNames, syncOption) => {
   return async (req, res, next) => {
     const { sequelize } = req.app;
     try {
-      await Promise.all(
-        schemas.map(async (schema, index) => {
-          const Table = (req.app[tableNames[index]] ||= await createModel(
-            sequelize,
-            tableNames[index]
-          ));
-          const { hasOne, belongsTo, hasMany, belongsToMany } = schema;
+      schemas.forEach((schema, index) => {
+        const Table = (req.app[tableNames[index]] = createSchema(
+          sequelize,
+          schema
+        ));
+        const { hasOne, belongsTo, hasMany, belongsToMany } = schema;
 
-          // loop all associate method
-          Object.entries({ hasOne, belongsTo, hasMany, belongsToMany }).forEach(
-            ([associName, associate]) => {
-              // check if associate valid
-              if (associate === undefined) return;
-              if (typeof associate !== "object" || associate === null)
+        // loop all associate method
+        Object.entries({ hasOne, belongsTo, hasMany, belongsToMany }).forEach(
+          ([associName, associate]) => {
+            // check if associate valid
+            if (associate === undefined) return;
+            if (typeof associate !== "object" || associate === null)
+              throw Error(
+                `Association ${associName} in ${tableNames[index]} is invalid.`
+              );
+
+            // loop single associate method
+            toArray(associate).forEach((associate, as_index) => {
+              //check if target valid
+              const { targetTable, option } = associate;
+              if (!targetTable)
                 throw Error(
-                  `Association ${associName} in ${tableNames[index]} is invalid.`
+                  `No associate target table provided at ${tableNames[index]}.${associName}[${as_index}]!`
                 );
 
-              // loop single associate method
-              toArray(associate).forEach((associate, as_index) => {
-                //check if target valid
-                const { targetTable, option } = associate;
-                if (!targetTable)
-                  throw Error(
-                    `No associate target table provided at ${tableNames[index]}.${associName}[${as_index}]!`
+              const targetSchema = Schemas[`${targetTable}Schema`];
+              if (!targetSchema)
+                throw Error(`Schema ${targetTable} doesn't exist!`);
+
+              const TargetTable = (req.app[targetTable] ||= createSchema(
+                sequelize,
+                targetSchema
+              ));
+
+              // handle junction model (for belongsToMany method)
+              if (option?.through) {
+                const { through } = option;
+                const throughSchema = Schemas[`${through}Schema`];
+                if (throughSchema) {
+                  option.through = req.app[through] ||= createSchema(
+                    sequelize,
+                    throughSchema
                   );
-
-                const targetSchema = Schemas[`${targetTable}Schema`];
-                if (!targetSchema)
-                  throw Error(`Schema ${targetTable} doesn't exist!`);
-
-                const TargetTable = (req.app[targetTable] ||= createSchema(
-                  sequelize,
-                  targetSchema
-                ));
-
-                // handle junction model (for belongsToMany method)
-                if (option?.through) {
-                  const { through } = option;
-                  const throughSchema = Schemas[`${through}Schema`];
-                  if (throughSchema) {
-                    option.through = req.app[through] ||= createSchema(
-                      sequelize,
-                      throughSchema
-                    );
-                  }
                 }
+              }
 
-                // build associate but havn't sync to database
-                Table[associName](TargetTable, option);
-              });
-            }
-          );
-        })
-      );
+              // build associate but havn't sync to database
+              Table[associName](TargetTable, option);
+            });
+          }
+        );
+      });
       await sequelize.sync(syncOption);
     } catch (error) {
       logger(
@@ -267,7 +265,7 @@ export const getPage = ({ total, size: qSize, page: qPage, start: qStart }) => {
   return { start, size, begin, totalPages, page };
 };
 
-export const addPadding = (() => {
+export const getAddPadding = (() => {
   const checkType = (target) => {
     const type = typeof target;
     if (type === "string") return true;
@@ -284,6 +282,8 @@ export const addPadding = (() => {
     };
   };
 })();
+
+export const addZeroPadding = getAddPadding("0");
 
 export const not0Falsy2Undefined = (target) =>
   target || target === 0 ? target : undefined;

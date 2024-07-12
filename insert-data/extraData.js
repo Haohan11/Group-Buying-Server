@@ -12,21 +12,36 @@ const insertData = [
     schemaName: "Payment",
     data: [
       {
+        id: "uuid_placeholder",
         name: "現金",
         belong: "supplier",
       },
       {
+        id: "uuid_placeholder",
         name: "支票",
         belong: "supplier",
       },
       {
+        id: "uuid_placeholder",
         name: "匯款",
         belong: "supplier",
       },
     ],
-    destroy: true,
+    destroy: false,
     author: adminAuthor,
   },
+  // {
+  //   name: "company",
+  //   modelName: "company",
+  //   schemaName: "Company",
+  //   data: [
+  //     {
+  //       id: "none",
+  //       name: "holder for no company",
+  //     },
+  //   ],
+  //   destroy: false,
+  // },
   // {
   //   name: "account_method",
   //   modelName: "account_method",

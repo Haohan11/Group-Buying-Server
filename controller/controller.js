@@ -14,6 +14,7 @@ import {
   filePathAppend,
   logger,
   toArray,
+  addZeroPadding,
 } from "../model/helper.js";
 
 const getGeneralCreate = (tableName, option) => {
@@ -248,7 +249,7 @@ const controllers = [
         getGeneralCreate("Stock", {
           imageFieldName: [{ name: "cover_image" }],
           defaultData: {
-            company_id: 1,
+            company_id: "none",
             stock_unit_id: 1,
             mbflag_type_id: 1,
             tax_type_id: 1,
@@ -638,7 +639,11 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        getGeneralCreate("StockBrand"),
+        getGeneralCreate("StockBrand", {
+          defaultData: {
+            company_id: "none",
+          },
+        }),
       ],
       read: [
         authenticationMiddleware,
@@ -677,6 +682,9 @@ const controllers = [
         addUserMiddleware,
         getGeneralCreate("StockCategory", {
           imageFieldName: [{ name: "recommended_image" }],
+          defaultData: {
+            company_id: "none",
+          },
         }),
       ],
       read: [
@@ -724,7 +732,11 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        getGeneralCreate("StockAccounting"),
+        getGeneralCreate("StockAccounting", {
+          defaultData: {
+            company_id: "none",
+          },
+        }),
       ],
       read: [
         authenticationMiddleware,
@@ -798,6 +810,7 @@ const controllers = [
             id: "uuid_placeholder",
             supplier_type_id: 1,
             country_id: 1,
+            company_id: "none",
           },
         }),
       ],
@@ -859,6 +872,7 @@ const controllers = [
     path: "member-management",
     schemas: {
       all: ["Member", "User", "Company"],
+      read: ["MemberLevel", "MemberRole", "MemberShipping", "Payment"],
     },
     actions: {
       create: [
@@ -870,20 +884,21 @@ const controllers = [
             id: "uuid_placeholder",
             country_id: "not_set",
             code: "_holder",
-            company_id: "_holder",
+            company_id: "none",
             member_type_id: "company",
             sex_id: "none",
           },
           extraHandler: async (member_id, req) => {
             const { Member, User, Company } = req.app;
             const {
+              name,
               uniform_number,
               phone,
               address,
               company_title: title,
               account,
               password,
-              name,
+              email,
             } = req.body;
 
             const companyData = await Company.create({
@@ -893,7 +908,7 @@ const controllers = [
               phone,
               address,
               title,
-              ...req._author
+              ...req._author,
             });
             const { id: company_id } = companyData;
 
@@ -902,15 +917,41 @@ const controllers = [
               account,
               password,
               company_id,
-              ...req._author
+              email,
+              ...req._author,
             });
             const { id: user_id } = userData;
 
+            const date = new Date();
+            const yearStr = `${date.getFullYear()}`;
+            const monthStr = addZeroPadding(`${date.getMonth() + 1}`, 2);
+            const dateStr = addZeroPadding(`${date.getDate()}`, 2);
+
+            const codePrefix = `MB${yearStr}${monthStr}${dateStr}`;
+
+            const codeData = await Member.findAll({
+              attributes: ["code"],
+              where: {
+                code: {
+                  [Op.like]: `${codePrefix}%`,
+                },
+              },
+            });
+
+            const serialNumber = codeData.reduce((max, item) => {
+              if (!item?.code || typeof item.code !== "string") return max;
+
+              const itemCode = parseInt(item.code.replace(codePrefix, ""));
+              return itemCode > max ? itemCode : max;
+            }, 0);
+            const codePostfix = addZeroPadding(`${serialNumber + 1}`, 3);
+
+            const code = codePrefix + codePostfix;
+
             await Member.update(
-              { company_id, user_id },
+              { company_id, user_id, code, uniform_number: null },
               { where: { id: member_id } }
             );
-
           },
         }),
       ],
@@ -918,16 +959,164 @@ const controllers = [
         authenticationMiddleware,
         addUserMiddleware,
         getGeneralRead("Member", {
-          queryAttribute: ["id", "name", "description"],
-          searchAttribute: ["name"],
+          queryAttribute: [
+            "id",
+            "user_id",
+            "company_id",
+            "status_id",
+            "name",
+            "code",
+            "email",
+            "phone",
+            "member_level_id",
+            "member_role_id",
+            "payment_id",
+            "shipping_id",
+            "shipping_condition_id",
+            "birthdate",
+            "description",
+          ],
+          searchAttribute: ["name", "code"],
+          listAdaptor: async (list, req) => {
+            const {
+              User,
+              Company,
+              MemberLevel,
+              MemberRole,
+              MemberShipping,
+              Payment,
+            } = req.app;
+
+            const statusDict = {
+              applying: "申請中",
+              enabled: "已啟用",
+              disabled: "已停用",
+            };
+
+            const shipCondiDict = {
+              prepaid: "先付款後取貨",
+              postpaid: "先取貨後付款",
+            };
+
+            return await Promise.all(
+              list.map(async (member) => {
+                const {
+                  status_id,
+                  user_id,
+                  company_id,
+                  member_level_id,
+                  member_role_id,
+                  shipping_id,
+                  shipping_condition_id,
+                  payment_id,
+                } = member;
+
+                const userData = await User.findByPk(user_id, {
+                  attributes: ["account"],
+                });
+
+                const companyData = await Company.findByPk(company_id, {
+                  attributes: ["uniform_number", "address", "title"],
+                });
+
+                const levelData = await MemberLevel.findByPk(member_level_id, {
+                  attributes: ["name"],
+                });
+
+                const roleData = await MemberRole.findByPk(member_role_id, {
+                  attributes: ["name"],
+                });
+
+                const shippingData = await MemberShipping.findByPk(
+                  shipping_id,
+                  {
+                    attributes: ["name"],
+                  }
+                );
+
+                const paymentData = await Payment.findByPk(payment_id, {
+                  attributes: ["name"],
+                });
+
+                const appendData = {
+                  account: userData?.account,
+                  uniform_number: companyData?.uniform_number,
+                  address: companyData?.address,
+                  company_title: companyData?.title,
+                  member_level: levelData?.name,
+                  member_role: roleData?.name,
+                  member_shipping: shippingData?.name,
+                  status: statusDict[status_id],
+                  shipping_condition: shipCondiDict[shipping_condition_id],
+                  payment: paymentData?.name,
+                };
+
+                Object.entries(appendData).forEach(([key, value]) => {
+                  value && member.setDataValue(key, value);
+                });
+
+                return member;
+              })
+            );
+          },
         }),
       ],
-      // update: [
-      //   multer().none(),
-      //   authenticationMiddleware,
-      //   addUserMiddleware,
-      //   generalUpdate("Member"),
-      // ],
+      update: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalUpdate("Member", {
+          extraHandler: async (member_id, req) => {
+            const { Member, User, Company } = req.app;
+            const {
+              name,
+              uniform_number,
+              phone,
+              address,
+              company_title: title,
+              account,
+              password,
+              email,
+            } = req.body;
+
+            const memberData = await Member.findByPk(member_id);
+            const { company_id, user_id } = memberData;
+
+            await Company.update(
+              {
+                name,
+                uniform_number,
+                phone,
+                address,
+                title,
+                ...req._author,
+              },
+              {
+                where: {
+                  id: company_id,
+                },
+              }
+            );
+
+            await User.update({
+              name,
+              account,
+              email,
+              ...(password && { password }),
+              ...req._author,
+            }, {
+              where: {
+                id: user_id,
+              },
+            });
+
+            await Member.update(
+              { uniform_number: null },
+              { where: { id: member_id } }
+            );
+          },
+        }),
+      ],
       // delete: [
       //   multer().none(),
       //   authenticationMiddleware,
@@ -1019,6 +1208,7 @@ const controllers = [
         addUserMiddleware,
         getGeneralCreate("Payment", {
           defaultData: {
+            id: "uuid_placeholder",
             belong: "member",
           },
         }),
@@ -1059,7 +1249,11 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        getGeneralCreate("MemberShipping"),
+        getGeneralCreate("MemberShipping", {
+          defaultData: {
+            id: "uuid_placeholder",
+          }
+        }),
       ],
       read: [
         authenticationMiddleware,

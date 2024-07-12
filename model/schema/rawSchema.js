@@ -72,6 +72,30 @@ export const CompanySchema = {
     tableName: "company",
     comment: "公司",
   },
+  hasMany: [
+    {
+      targetTable: "User",
+      option: {
+        foreignKey: {
+          name: "company_id",
+          type: DataTypes.STRING(36),
+          comment: "對應的公司ID",
+          allowNull: false,
+        },
+      },
+    },
+    {
+      targetTable: "Member",
+      option: {
+        foreignKey: {
+          name: "company_id",
+          type: DataTypes.STRING(36),
+          comment: "對應的公司ID",
+          allowNull: false,
+        },
+      },
+    },
+  ],
 };
 
 export const CompanyInvoiceSchema = {
@@ -209,6 +233,7 @@ export const PaymentTypeSchema = {
 export const PaymentSchema = {
   name: "payment",
   cols: {
+    id: getUUIdCol(),
     payment_type_id: {
       type: DataTypes.STRING(36),
       index: true,
@@ -381,6 +406,11 @@ export const TagSchema = {
 export const UserSchema = {
   name: "user",
   cols: {
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     company_id: {
       type: DataTypes.STRING(36),
       comment: "隸屬公司",
@@ -416,6 +446,9 @@ export const UserSchema = {
     email: {
       type: DataTypes.TEXT("long"),
       comment: "E-mail",
+      validate: {
+        isEmail: true,
+      }
     },
     email_verified_time: {
       type: DataTypes.DATE,
@@ -426,6 +459,31 @@ export const UserSchema = {
     tableName: "user",
     comment: "使用者",
   },
+  hasOne: [
+    {
+      targetTable: "Member",
+      option: {
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.INTEGER.UNSIGNED,
+          comment: "User ID",
+        },
+      },
+    },
+  ],
+  belongsTo: [
+    {
+      targetTable: "Company",
+      option: {
+        foreignKey: {
+          name: "company_id",
+          type: DataTypes.STRING(36),
+          comment: "對應的公司ID",
+          allowNull: false,
+        },
+      },
+    },
+  ],
 };
 
 /** Member Schema Begin */
@@ -477,6 +535,10 @@ export const MemberSchema = {
       comment: "國家ID",
       allowNull: false,
     },
+    payment_id: {
+      type: DataTypes.STRING(36),
+      comment: "付款方式",
+    },
     sex_id: {
       type: DataTypes.STRING(36),
       comment: "性別ID",
@@ -525,6 +587,9 @@ export const MemberSchema = {
     email: {
       type: DataTypes.STRING(100),
       comment: "Email",
+      validate: {
+        isEmail: true,
+      }
     },
     birthdate: {
       type: DataTypes.DATE,
@@ -619,6 +684,29 @@ export const MemberSchema = {
     tableName: "member",
     comment: "會員",
   },
+  belongsTo: [
+    {
+      targetTable: "User",
+      option: {
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.INTEGER.UNSIGNED,
+          comment: "User ID",
+        },
+      },
+    },
+    {
+      targetTable: "Company",
+      option: {
+        foreignKey: {
+          name: "company_id",
+          type: DataTypes.STRING(36),
+          comment: "對應的公司ID",
+          allowNull: false,
+        },
+      },
+    },
+  ],
 };
 
 export const MemberTypeSchema = {
@@ -717,10 +805,12 @@ export const Member_TagSchema = {
 };
 
 export const MemberShippingSchema = {
-  name: "mshipping",
-  cols: {},
+  name: "member_shipping",
+  cols: {
+    id: getUUIdCol()
+  },
   option: {
-    tableName: "mshipping",
+    tableName: "member_shipping",
     comment: "會員出貨方式",
   },
 };

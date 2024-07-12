@@ -40,7 +40,6 @@ export const addUserMiddleware = async (req, res, next) => {
       modify_name: name,
       create_id: account,
       modify_id: account,
-      company_id: 1,
     };
     logger("========== exit addUserMiddleware ==========");
     next();
