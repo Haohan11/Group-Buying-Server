@@ -11,7 +11,7 @@
     "sequelize": "^6.37.3"
   },
   "name": "youcanbuy",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",

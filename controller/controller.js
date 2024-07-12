@@ -198,7 +198,7 @@ const generalUpdate = (tableName, option) => {
 };
 
 const generalDelete = (tableName, option) => {
-  const { imageFieldName, extraHandler } = option || {};
+  const { imageFieldName, extraHandler, stopDestroy = false } = option || {};
   return async (req, res) => {
     const Table = req.app[tableName];
     const id = req.body.id;
@@ -218,8 +218,8 @@ const generalDelete = (tableName, option) => {
           );
         });
 
-      await Table.destroy({ where: { id } });
-      typeof extraHandler === "function" && (await extraHandler(id, req));
+        !stopDestroy && await Table.destroy({ where: { id } });
+        typeof extraHandler === "function" && (await extraHandler(id, req));
 
       res.response(200, `Success delete ${tableName}.`);
     } catch (error) {
@@ -1098,17 +1098,20 @@ const controllers = [
               }
             );
 
-            await User.update({
-              name,
-              account,
-              email,
-              ...(password && { password }),
-              ...req._author,
-            }, {
-              where: {
-                id: user_id,
+            await User.update(
+              {
+                name,
+                account,
+                email,
+                ...(password && { password }),
+                ...req._author,
               },
-            });
+              {
+                where: {
+                  id: user_id,
+                },
+              }
+            );
 
             await Member.update(
               { uniform_number: null },
@@ -1117,12 +1120,31 @@ const controllers = [
           },
         }),
       ],
-      // delete: [
-      //   multer().none(),
-      //   authenticationMiddleware,
-      //   addUserMiddleware,
-      //   generalDelete("Member"),
-      // ],
+      delete: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        generalDelete("Member", {
+          stopDestroy: true,
+          extraHandler: async (member_id, req) => {
+            const { Member, User, Company } = req.app;
+
+            const memberData = await Member.findByPk(member_id);
+            const { company_id, user_id } = memberData;
+            await Member.destroy({ where: { id: member_id } });
+
+            await User.destroy({
+              where: { id: user_id },
+            });
+
+            await Company.destroy({
+              where: {
+                id: company_id,
+              },
+            });
+          },
+        }),
+      ],
     },
   },
   // member-level
@@ -1252,7 +1274,7 @@ const controllers = [
         getGeneralCreate("MemberShipping", {
           defaultData: {
             id: "uuid_placeholder",
-          }
+          },
         }),
       ],
       read: [
