@@ -2,9 +2,13 @@ import express from "express";
 
 import {
   toArray,
-  createBulkConnectMiddleware,
   logger,
 } from "./model/helper.js";
+
+import { 
+  createBulkConnectMiddleware,
+} from "./model/schemaHelper.js";
+
 import { controllers } from "./controller/controller.js";
 
 const createRouter = ({ path, schemas, actions }) => {

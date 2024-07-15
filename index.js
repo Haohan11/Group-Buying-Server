@@ -12,9 +12,12 @@ import {
   createSchema,
   goHash,
   connectToDataBase,
-  createBulkConnectMiddleware,
   logger,
 } from "./model/helper.js";
+
+import { 
+  createBulkConnectMiddleware,
+} from "./model/schemaHelper.js";
 
 import { createCRUDRoutes } from "./CRUDroutes.js";
 

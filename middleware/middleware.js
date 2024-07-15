@@ -6,8 +6,11 @@ import {
   createSchema,
   connectToDataBase,
   logger,
-  createModel,
 } from "../model/helper.js";
+
+import { 
+  createModel,
+} from "../model/schemaHelper.js";
 
 export const responseMiddleware = (req, res, next) => {
   res.response = (statusCode, message, data) =>

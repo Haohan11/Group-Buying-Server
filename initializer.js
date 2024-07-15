@@ -96,7 +96,7 @@ await (async () => {
   try {
     /** Handle User below */
     GenerateUser: {
-      if (!userData?.data || !Array.isArray(userData.unique)) {
+      if (!userData?.data || !Array.isArray(userData?.unique)) {
         onelineLog("Skip generate `user` due to user data or unique not set.");
         break GenerateUser;
       }

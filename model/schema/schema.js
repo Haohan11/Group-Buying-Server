@@ -1,8 +1,10 @@
 import { DataTypes } from "sequelize";
 import * as Schemas from "./rawSchema.js";
+import { objectAppender } from "../helper.js";
 
 const getFixedField = (schemaName) => ({
-  cols: {
+  highOrderCols: {
+    id: undefined,
     code: {
       type: DataTypes.STRING(100),
     },
@@ -21,9 +23,11 @@ const getFixedField = (schemaName) => ({
         comment: "排序編號",
         validate: {
           isInt: true,
-        }
+        },
       },
     }),
+  },
+  cols: {
     description: {
       type: DataTypes.TEXT("long"),
       comment: "備註",
@@ -71,23 +75,23 @@ const getFixedField = (schemaName) => ({
 });
 
 const processedSchemas = Object.entries(Schemas).reduce(
-  (dict, [schemaName, schemaContent]) => ({
-    ...dict,
-    [schemaName]: {
-      ...schemaContent,
-      cols: Object.entries(getFixedField(schemaName).cols).reduce(
-        (cols, [fieldName, fieldContent]) => {
-          cols[fieldName] ??= fieldContent;
-          return cols;
+  (dict, [schemaName, schemaContent]) => {
+    const fixedField = getFixedField(schemaName);
+    return {
+      ...dict,
+      [schemaName]: {
+        ...schemaContent,
+        cols: {
+          ...fixedField.highOrderCols,
+          ...objectAppender(schemaContent.cols, fixedField.cols),
         },
-        schemaContent.cols
-      ),
-      option: {
-        ...getFixedField(schemaName).option,
-        ...schemaContent.option,
+        option: {
+          ...getFixedField(schemaName).option,
+          ...schemaContent.option,
+        },
       },
-    },
-  }),
+    };
+  },
   {}
 );
 
