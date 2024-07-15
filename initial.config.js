@@ -1,15 +1,11 @@
-// import indexItem from "./insert-data/indexItem.js";
-// import userData from "./insert-data/userData.js";
-// import extraData from "./insert-data/extraData.js";
+import indexItem from "./insert-data/indexItem.js";
+import insertData from "./insert-data/insertData.js";
 
 const config = {
   // generateTable: true,
-  // indexItem,
-  // user: {
-  //   data: userData,
-  //   unique: ["account"],
-  // },
-  // insertData: extraData,
+  recreateTable: true,
+  indexItem,
+  insertData,
   showSequelizeLog: false,
 };
 

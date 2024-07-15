@@ -4,7 +4,6 @@ import { objectAppender } from "../helper.js";
 
 const getFixedField = (schemaName) => ({
   highOrderCols: {
-    id: undefined,
     code: {
       type: DataTypes.STRING(100),
     },
@@ -82,6 +81,7 @@ const processedSchemas = Object.entries(Schemas).reduce(
       [schemaName]: {
         ...schemaContent,
         cols: {
+          ...(schemaContent.cols.id && { id: schemaContent.cols.id }),
           ...fixedField.highOrderCols,
           ...objectAppender(schemaContent.cols, fixedField.cols),
         },

@@ -1,6 +1,8 @@
 const indentSymbol = "#";
 const log = (message, indent = 0) =>
-  console.log(`${indentSymbol}${new Array(indent).fill(indentSymbol).join("")} ${message}`);
+  console.log(
+    `${indentSymbol}${new Array(indent).fill(indentSymbol).join("")} ${message}`
+  );
 const onelineLog = (message) => console.log(`${indentSymbol} ${message}\n`);
 const exit = (message) => {
   message !== undefined && onelineLog(message);
@@ -46,82 +48,108 @@ const connectToDB = async () => {
   }
 };
 
-const { user: userData, indexItem: indexItemData } = initialConfig;
-const initAuthor = [
-  "create_id",
-  "create_name",
-  "modify_id",
-  "modify_name",
-].reduce(
-  (dict, colName) => ({
-    ...dict,
-    [colName]: userData?.data?.[colName] ?? "system",
-  }),
-  {}
-);
+const initAuthor = {
+  create_id: "system",
+  create_name: "system",
+  modify_id: "system",
+  modify_name: "system",
+};
 
 import Schemas from "./model/schema/schema.js";
-import { createSchema } from "./model/helper.js";
+import { createSchema, toArray } from "./model/helper.js";
 
 await (async () => {
   onelineLog("Start initializing...");
   const sequelize = await connectToDB();
   if (!sequelize) exit();
 
-  const getModel = async (schema) => {
+  const getModel = async (schema, syncOption = { alter: true }) => {
     const Model = createSchema(sequelize, schema);
-    await Model.sync({ alter: true });
+    await Model.sync(syncOption);
     return Model;
   };
 
-  GenerateTable: {
-    const { generateTable } = initialConfig;
-    if (!generateTable) {
-      onelineLog("Skip generate tables.");
-      break GenerateTable;
-    }
+  const createTables = async ({ destroy = false }) => {
+    Object.values(Schemas)
+      .sort(({ order: order1 = 0 }, { order: order2 = 0 }) => order1 - order2)
+      .forEach(async (schema) => {
+        const Table = createSchema(sequelize, schema);
+        const { hasOne, belongsTo, hasMany, belongsToMany } = schema;
 
-    try {
-      log("Generating table...");
-      Object.values(Schemas).forEach((schema) =>
-        createSchema(sequelize, schema)
-      );
-      await sequelize.sync({ alter: true });
-      onelineLog("Tables generated.");
-    } catch (error) {
-      console.warn("Tables not generated.", error);
-    }
-  }
+        // loop all associate method
+        Object.entries({ hasOne, belongsTo, hasMany, belongsToMany }).forEach(
+          ([associName, associate]) => {
+            // check if associate valid
+            if (associate === undefined) return;
+            if (typeof associate !== "object" || associate === null)
+              throw Error(
+                `Association ${associName} in ${schema.name} is invalid.`
+              );
+
+            // loop single associate method
+            toArray(associate).forEach((associate, as_index) => {
+              //check if target valid
+              const { targetTable, option } = associate;
+              if (!targetTable)
+                throw Error(
+                  `No associate target table provided at ${schema.name}.${associName}[${as_index}]!`
+                );
+
+              const targetSchema = Schemas[`${targetTable}Schema`];
+              if (!targetSchema)
+                throw Error(`Schema ${targetTable} doesn't exist!`);
+
+              const TargetTable = createSchema(sequelize, targetSchema);
+
+              // handle junction model (for belongsToMany method)
+              if (option?.through) {
+                const { through } = option;
+                const throughSchema = Schemas[`${through}Schema`];
+                if (throughSchema) {
+                  option.through = createSchema(sequelize, throughSchema);
+                }
+              }
+
+              // build associate but havn't sync to database
+              Table[associName](TargetTable, option);
+            });
+          }
+        );
+      });
+
+    await sequelize.sync({ [destroy ? "force" : "alter"]: true });
+  };
 
   try {
-    /** Handle User below */
-    GenerateUser: {
-      if (!userData?.data || !Array.isArray(userData?.unique)) {
-        onelineLog("Skip generate `user` due to user data or unique not set.");
-        break GenerateUser;
+    /** Handle generate tables below */
+    GenerateTable: {
+      const { generateTable, recreateTable } = initialConfig;
+      if (!generateTable || recreateTable) {
+        onelineLog("Skip generate tables.");
+        break GenerateTable;
       }
 
-      log("Creating `User`...");
-      const { UserSchema } = Schemas;
-      if (!UserSchema) return exit("`UserSchema` not set.");
-      const User = sequelize.models.user || (await getModel(UserSchema));
-
-      await User.destroy({
-        where: userData.unique.reduce(
-          (whereDict, keyName) => ({
-            ...whereDict,
-            [keyName]: userData.data[keyName],
-          }),
-          {}
-        ),
-      });
-      await User.create(userData.data);
-      onelineLog("`User` created.");
+      log("Generating table...");
+      await createTables();
+      onelineLog("Tables generated.");
     }
-    /** Handle User above */
+    /** Handle generate tables above */
+
+    RecreateTable: {
+      const { recreateTable } = initialConfig;
+      if (!recreateTable) {
+        onelineLog("Skip recreate tables.");
+        break RecreateTable;
+      }
+
+      log("Recreating tables...");
+      await createTables({ destroy: true });
+      onelineLog("Tables recreated.");
+    }
 
     /** Handle IndexItem below */
     HandleIndexItem: {
+      const { indexItem: indexItemData } = initialConfig;
       const { IndexItemSchema, IndexItemTypeSchema } = Schemas;
       if (!indexItemData || !IndexItemSchema || !IndexItemTypeSchema) {
         onelineLog(
@@ -131,7 +159,7 @@ await (async () => {
         break HandleIndexItem;
       }
 
-      log("Creating `IndexItem` table and insert data...");
+      log("Creating `IndexItem` table and insert the data...");
 
       const IndexItem =
         sequelize.models.index_item || (await getModel(IndexItemSchema));
@@ -139,12 +167,9 @@ await (async () => {
         sequelize.models.index_item_type ||
         (await getModel(IndexItemTypeSchema));
 
-      await IndexItemType.destroy({
-        truncate: true,
-      });
-      await IndexItem.destroy({
-        truncate: true,
-      });
+      await IndexItem.sync({ force: true });
+      await IndexItemType.sync({ force: true });
+
       await Promise.all(
         indexItemData.map(async ({ name, icon, route, indexItems }) => {
           const { id: typeId } = await IndexItemType.create({

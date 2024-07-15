@@ -26,6 +26,7 @@ const getUUIdCol = (fields = {}) => ({
  * use this format to create schema
  *
  * export const TestSchema = {
+ *   order: 1,
  *   name: "test",
  *   cols: {
  *     test: {
@@ -37,6 +38,8 @@ const getUUIdCol = (fields = {}) => ({
  *     tableName: "test",
  *   },
  * };
+ * 
+ * greater order will be handle first.
  *
  * Junction Schema should match the name format
  *  `Table1_Table2Schema`
@@ -404,6 +407,7 @@ export const TagSchema = {
 };
 
 export const UserSchema = {
+  order: 1,
   name: "user",
   cols: {
     id: {
@@ -488,6 +492,7 @@ export const UserSchema = {
 
 /** Member Schema Begin */
 export const MemberSchema = {
+  order: 2,
   name: "member",
   cols: {
     id: getUUIdCol(),
@@ -874,7 +879,7 @@ export const Role_PriceSchema = {
   },
 };
 
-export const PermissionSchema = {
+const PermissionSchema = {
   name: "permission",
   cols: {
     permission_type_id: {
@@ -899,7 +904,7 @@ export const PermissionSchema = {
   ],
 };
 
-export const PermissionTypeSchema = {
+const PermissionTypeSchema = {
   name: "permission_type",
   cols: {
     is_create: {
