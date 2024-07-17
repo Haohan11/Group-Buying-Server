@@ -85,7 +85,7 @@ const getGeneralRead = (tableName, option = {}) => {
         ...(req.query.keyword && {
           [Op.or]: opArray,
         }),
-        ...extraWhere,
+        ...(typeof extraWhere === "function" ? extraWhere(req) : extraWhere),
       },
     };
 
@@ -218,8 +218,8 @@ const generalDelete = (tableName, option) => {
           );
         });
 
-        !stopDestroy && await Table.destroy({ where: { id } });
-        typeof extraHandler === "function" && (await extraHandler(id, req));
+      !stopDestroy && (await Table.destroy({ where: { id } }));
+      typeof extraHandler === "function" && (await extraHandler(id, req));
 
       res.response(200, `Success delete ${tableName}.`);
     } catch (error) {
