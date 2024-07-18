@@ -38,7 +38,7 @@ const getUUIdCol = (fields = {}) => ({
  *     tableName: "test",
  *   },
  * };
- * 
+ *
  * greater order will be handle first.
  *
  * Junction Schema should match the name format
@@ -452,7 +452,7 @@ export const UserSchema = {
       comment: "E-mail",
       validate: {
         isEmail: true,
-      }
+      },
     },
     email_verified_time: {
       type: DataTypes.DATE,
@@ -594,7 +594,7 @@ export const MemberSchema = {
       comment: "Email",
       validate: {
         isEmail: true,
-      }
+      },
     },
     birthdate: {
       type: DataTypes.DATE,
@@ -791,6 +791,53 @@ export const MemberContactTypeSchema = {
   },
 };
 
+export const MemberContactPersonSchema = {
+  name: "member_contact_person",
+  cols: {
+    member_id: {
+      type: DataTypes.STRING(36),
+      allowNull: false,
+    },
+    country_id: {
+      type: DataTypes.STRING(36),
+      allowNull: false,
+    },
+    name: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
+    name2: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
+    phone: {
+      type: DataTypes.STRING(20),
+    },
+    phone2: {
+      type: DataTypes.STRING(20),
+    },
+    mobile: {
+      type: DataTypes.STRING(20),
+    },
+    mobile2: {
+      type: DataTypes.STRING(20),
+    },
+    uniform_number: {
+      type: DataTypes.STRING(20),
+    },
+    residential_address: {
+      type: DataTypes.TEXT("long"),
+    },
+    contact_address: {
+      type: DataTypes.TEXT("long"),
+    },
+  },
+  option: {
+    tableName: "member_contact_person",
+    comment: "供應商-連絡人",
+  },
+};
+
 export const Member_TagSchema = {
   name: "member_tag",
   cols: {
@@ -812,7 +859,7 @@ export const Member_TagSchema = {
 export const MemberShippingSchema = {
   name: "member_shipping",
   cols: {
-    id: getUUIdCol()
+    id: getUUIdCol(),
   },
   option: {
     tableName: "member_shipping",
@@ -837,6 +884,7 @@ export const MemberRoleSchema = {
     comment: "會員角色",
   },
 };
+
 /** Member Schema End */
 
 /** Stock price according to member level */
@@ -1799,12 +1847,353 @@ export const InventoryLogSchema = {
   },
 };
 
-export const OrderCategorySchema = {
-  name: "order_category",
+export const SaleTypeSchema = {
+  name: "sale_type",
   cols: {},
   option: {
-    tableName: "order_category",
+    tableName: "sale_type",
     comment: "訂單類別",
+  },
+};
+
+export const SaleSchema =  {
+  name: "sale",
+  cols: {
+    id: getUUIdCol(),
+    company_id: {
+      type: DataTypes.STRING(36),
+      comment: "隸屬公司",
+      allowNull: false,
+    },
+    sale_point_id: {
+      type: DataTypes.STRING(36),
+      comment: "門市ID",
+      allowNull: false,
+    },
+    member_id: {
+      type: DataTypes.STRING(36),
+      comment: "會員ID",
+      allowNull: false,
+    },
+    member_id_2b: {
+      type: DataTypes.STRING(36),
+      comment: "購買商家的ID",
+    },
+    sale_type_id: {
+      type: DataTypes.STRING(36),
+      comment: "銷售單類型",
+      allowNull: false,
+    },
+    partner_id: {
+      type: DataTypes.STRING(36),
+      comment: "夥伴ID",
+    },
+    currencies_id: {
+      type: DataTypes.STRING(36),
+      comment: "幣別ID",
+      allowNull: false,
+    },
+    sale_related_id: {
+      type: DataTypes.STRING(36),
+      comment: "紀錄銷退或預購時相關的銷售單",
+    },
+    delivery_status_id: {
+      type: DataTypes.STRING(36),
+      defaultValue: "none",
+      comment: "出貨狀態",
+    },
+    sale_date: {
+      type: DataTypes.DATE,
+      comment: "銷售日期",
+      allowNull: false,
+    },
+    exchange_rate: {
+      type: DataTypes.DOUBLE,
+      defaultValue: 1,
+      comment: "匯率",
+    },
+    total_qty: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: "商品總數量",
+    },
+    total_non_tax_amount: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: "未稅價",
+    },
+    total_tax: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: "稅額",
+    },
+    total_tax_amount: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: "含稅總金額",
+    },
+    delivery_amount: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: "運費總金額",
+    },
+    service_charge: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: "服務費",
+    },
+    is_payment: {
+      type: DataTypes.TINYINT,
+      defaultValue: 0,
+      comment: "是否付款",
+    },
+    payment_time: {
+      type: DataTypes.DATE,
+      comment: "付款時間",
+    },
+    is_pick: {
+      type: DataTypes.TINYINT,
+      defaultValue: 0,
+      comment: "是否撿貨",
+    },
+    pick_id: {
+      type: DataTypes.STRING(36),
+      comment: "撿貨人員ID",
+    },
+    pick_name: {
+      type: DataTypes.STRING(20),
+      comment: "撿貨人員名稱",
+    },
+    pick_time: {
+      type: DataTypes.DATE,
+      comment: "撿貨時間",
+    },
+    is_shipping: {
+      type: DataTypes.TINYINT,
+      defaultValue: 0,
+      comment: "是否出貨",
+    },
+    shipping_id: {
+      type: DataTypes.STRING(36),
+      comment: "出貨人員ID",
+    },
+    shipping_name: {
+      type: DataTypes.STRING(20),
+      comment: "出貨人員名稱",
+    },
+    shipping_time: {
+      type: DataTypes.DATE,
+      comment: "出貨時間",
+    },
+    is_finish: {
+      type: DataTypes.TINYINT,
+      defaultValue: 0,
+      comment: "是否完成",
+    },
+    is_print: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: 0,
+      comment: "是否列印",
+    },
+    print_time: {
+      type: DataTypes.DATE,
+      comment: "列印時間",
+    },
+    webpay_status: {
+      type: DataTypes.BOOLEAN,
+      comment: "線上支付是否完成(0:未完成;1:已完成)，NULL為不是線上支付",
+    },
+    waiting_sec: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: "等待時間(秒)",
+    },
+  },
+  option: {
+    tableName: "sale",
+    comment: "銷售單",
+  },
+};
+
+export const SaleDetailSchema = {
+  name: "sale_detail",
+  cols: {
+    id: getUUIdCol(),
+    sale_id: {
+      type: DataTypes.STRING(36),
+      comment: "銷售單ID",
+      allowNull: false,
+    },
+    stock_id: {
+      type: DataTypes.STRING(36),
+      comment: "商品ID",
+      allowNull: false,
+    },
+    stock_serial_id: {
+      type: DataTypes.STRING(36),
+      comment: "商品序號ID",
+    },
+    stock_price_id: {
+      type: DataTypes.STRING(36),
+      comment: "商品價格ID",
+    },
+    org_unit_price: {
+      type: DataTypes.DOUBLE,
+      defaultValue: 0,
+      comment: "原幣單價",
+    },
+    unit_price: {
+      type: DataTypes.DOUBLE,
+      defaultValue: 0,
+      comment: "單價",
+    },
+    discount_rate: {
+      type: DataTypes.DOUBLE,
+      defaultValue: 100,
+      comment: "折扣",
+    },
+    discount_amount: {
+      type: DataTypes.DOUBLE,
+      defaultValue: 0,
+      comment: "折價",
+    },
+    price: {
+      type: DataTypes.DOUBLE,
+      defaultValue: 0,
+      comment: "售價",
+    },
+    qty: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: "數量",
+    },
+    non_tax_amount: {
+      type: DataTypes.DOUBLE,
+      defaultValue: 0,
+      comment: "未稅價",
+    },
+    tax: {
+      type: DataTypes.DOUBLE,
+      defaultValue: 0,
+      comment: "稅額",
+    },
+    tax_amount: {
+      type: DataTypes.DOUBLE,
+      defaultValue: 0,
+      comment: "總金額",
+    },
+    is_free: {
+      type: DataTypes.TINYINT,
+      defaultValue: 0,
+      comment: "是否為贈品",
+    },
+    is_return: {
+      type: DataTypes.TINYINT,
+      defaultValue: 0,
+      comment: "是否為退回",
+    },
+  },
+  option: {
+    tableName: "sale_detail",
+    comment: "銷售單明細",
+  },
+};
+
+export const SaleDetailDeliverySchema = {
+  name: "sale_detail_delivery",
+  cols: {
+    id: getUUIdCol(),
+    sale_id: {
+      type: DataTypes.STRING(36),
+      comment: "銷售單ID",
+      allowNull: false,
+    },
+    sale_detail_id: {
+      type: DataTypes.STRING(36),
+      comment: "銷售單明細ID",
+    },
+    delivery_id: {
+      type: DataTypes.STRING(36),
+      comment: "運送方式ID",
+    },
+    est_delivery_date_start: {
+      type: DataTypes.DATE,
+      comment: "預計寄送日期(起)",
+    },
+    est_delivery_date_end: {
+      type: DataTypes.DATE,
+      comment: "預計寄送日期(迄)",
+    },
+    delivery_date: {
+      type: DataTypes.DATE,
+      comment: "寄送日期",
+    },
+    delivery_code: {
+      type: DataTypes.STRING(100),
+      comment: "物流單號",
+    },
+    amount: {
+      type: DataTypes.DOUBLE,
+      defaultValue: 0,
+      comment: "運送費用",
+    },
+    receiver_name: {
+      type: DataTypes.STRING,
+      comment: "收件人姓名",
+    },
+    receiver_phone: {
+      type: DataTypes.STRING(20),
+      comment: "收件人電話",
+    },
+    receiver_email: {
+      type: DataTypes.STRING(100),
+      comment: "收件人email",
+    },
+    receiver_zip: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      comment: "收件地址_郵遞區號",
+    },
+    receiver_city: {
+      type: DataTypes.STRING(20),
+      comment: "收件地址_縣市",
+    },
+    receiver_area: {
+      type: DataTypes.STRING(20),
+      comment: "收件地址_鄉鎮市區",
+    },
+    receiver_street: {
+      type: DataTypes.TEXT,
+      comment: "收件地址_街區",
+    },
+    receiver_floor: {
+      type: DataTypes.STRING(20),
+      comment: "收件地址_樓",
+    },
+    receiver_room: {
+      type: DataTypes.STRING(20),
+      comment: "收件地址_室",
+    },
+    receiver_address: {
+      type: DataTypes.TEXT,
+      comment: "收件地址",
+    },
+    receiver_specify_date: {
+      type: DataTypes.DATE,
+      comment: "指定送達日",
+    },
+    receiver_time_period: {
+      type: DataTypes.STRING(100),
+      comment: "指定送達時段(1=>13點前 2=>14點到18點 3=>不指定)",
+    },
+    receiver_receive_date: {
+      type: DataTypes.DATE,
+      comment: "實際收到的日期",
+    },
+  },
+  option: {
+    tableName: "sale_detail_delivery",
+    comment: "銷售單明細寄送明細",
   },
 };
 

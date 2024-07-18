@@ -147,7 +147,7 @@ const getGeneralRead = (tableName, option = {}) => {
 };
 
 const generalUpdate = (tableName, option) => {
-  const { imageFieldName, extraHandler } = option || {};
+  const { imageFieldName, defaultData, extraHandler } = option || {};
 
   return async (req, res) => {
     const Table = req.app[tableName];
@@ -182,7 +182,7 @@ const generalUpdate = (tableName, option) => {
         : {};
 
       delete req.body.id;
-      const data = { ...req.body, ...req._author, ...imageField };
+      const data = { ...req.body, ...req._author, ...imageField, ...defaultData };
 
       await Table.update(data, { where: { id } });
       typeof extraHandler === "function" && (await extraHandler(id, req));
@@ -1299,23 +1299,23 @@ const controllers = [
       ],
     },
   },
-  // order-category
+  // sale-type
   {
-    path: "order-category",
+    path: "sale-type",
     schemas: {
-      all: ["OrderCategory"],
+      all: ["SaleType"],
     },
     actions: {
       create: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        getGeneralCreate("OrderCategory"),
+        getGeneralCreate("SaleType"),
       ],
       read: [
         authenticationMiddleware,
         addUserMiddleware,
-        getGeneralRead("OrderCategory", {
+        getGeneralRead("SaleType", {
           queryAttribute: ["id", "name", "description"],
           searchAttribute: ["name"],
         }),
@@ -1324,13 +1324,13 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("OrderCategory"),
+        generalUpdate("SaleType"),
       ],
       delete: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("OrderCategory"),
+        generalDelete("SaleType"),
       ],
     },
   },
