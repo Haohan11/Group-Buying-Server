@@ -220,7 +220,7 @@ await (async () => {
           const InsertSchema = Schemas[`${schemaName}Schema`];
           if (!InsertSchema)
             return console.warn(
-              `Schema \`${schemaName}\` not found when insert ${dataName}.`
+              `Schema \`${schemaName}\` not found when insert ${name || modelName || schemaName}.`
             );
 
           const Table =
