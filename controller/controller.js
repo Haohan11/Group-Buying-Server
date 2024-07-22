@@ -628,6 +628,147 @@ const controllers = [
       ],
     },
   },
+
+   // stock-single
+   {
+    path: "stock/single",
+    schemas: {
+      read: [
+        "Stock",
+        "StockMedia",
+        "Level_Price",
+        "Role_Price",
+        "StockCategory",
+        "StockBrand",
+        "StockAccounting",
+        "Supplier",
+      ],
+    },
+    actions: {
+      read: [
+        // authenticationMiddleware,
+        // addUserMiddleware,
+        getGeneralRead("Stock", {
+          queryAttribute: [
+            "id",
+            "cover_image",
+            "is_valid",
+            "is_preorder",
+            "is_nostock_sell",
+            "is_independent",
+            "name",
+            "code",
+            "barcode",
+            "specification",
+            "stock_category_id",
+            "stock_brand_id",
+            "accounting_id",
+            "supplier_id",
+            "min_order",
+            "order_step",
+            "preorder_count",
+            "price",
+            "purchase_price",
+            "description",
+            "introduction",
+          ],
+          searchAttribute: ["id"],
+          listAdaptor: async (list, req) => {
+            const {
+              StockCategory,
+              StockBrand,
+              StockAccounting,
+              StockMedia,
+              Supplier,
+              Level_Price,
+              Role_Price,
+              MemberLevel,
+              MemberRole,
+              MemberShipping,
+            } = req.app;
+
+            return await Promise.all(
+              list.map(async (stock) => {
+                /* add field name by query id below */
+                await Promise.all(
+                  [
+                    {
+                      Table: StockCategory,
+                      idField: "stock_category_id",
+                      fieldName: "category",
+                    },
+                    {
+                      Table: StockBrand,
+                      idField: "stock_brand_id",
+                      fieldName: "brand",
+                    },
+                    {
+                      Table: StockAccounting,
+                      idField: "accounting_id",
+                      fieldName: "accounting",
+                    },
+                    {
+                      Table: Supplier,
+                      idField: "supplier_id",
+                      fieldName: "supplier",
+                    },
+                  ].map(async ({ Table, idField, fieldName }) => {
+                    const result = await Table.findOne({
+                      attributes: ["name"],
+                      where: { id: stock[idField] },
+                    });
+                    stock.setDataValue(fieldName, result.name);
+                  })
+                );
+                /* add field name by query id above */
+
+                /* handle append price fields below */
+                await Promise.all(
+                  [
+                    {
+                      Table: Level_Price,
+                      idField: "member_level_id",
+                      fieldName: "level_price",
+                    },
+                    {
+                      Table: Role_Price,
+                      idField: "member_role_id",
+                      fieldName: "role_price",
+                    },
+                  ].map(async ({ Table, idField, fieldName }) => {
+                    const levelPriceList = await Table.findAll({
+                      where: { stock_id: stock.id },
+                      attributes: [idField, "price"],
+                    });
+
+                    stock.setDataValue(
+                      fieldName,
+                      levelPriceList.map(({ [idField]: id, price }) => ({
+                        id,
+                        price,
+                      }))
+                    );
+                  })
+                );
+                /* handle append price fields above */
+
+                const images = await StockMedia.findAll({
+                  attributes: ["name"],
+                  where: { stock_id: stock.id, code: null },
+                });
+                stock.setDataValue(
+                  "stock_image_preview",
+                  images.map((image) => image.name)
+                );
+
+                return stock;
+              })
+            );
+          },
+        }),
+      ],
+    },
+  },
   // stock-brand
   {
     path: "stock-brand",
