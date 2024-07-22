@@ -214,28 +214,30 @@ await (async () => {
             author = initAuthor,
           } = config;
 
+          const logName = name || modelName || schemaName;
+
           if (!Array.isArray(data))
             return console.warn(`Insert data must receive array type.`);
 
           const InsertSchema = Schemas[`${schemaName}Schema`];
           if (!InsertSchema)
             return console.warn(
-              `Schema \`${schemaName}\` not found when insert ${name || modelName || schemaName}.`
+              `Schema \`${schemaName}\` not found when insert ${logName}.`
             );
 
           const Table =
             sequelize.models[modelName] || (await getModel(InsertSchema));
 
           if (destroy) {
-            log(`Destroying \`${name || modelName || schemaName}\`...`, 1);
+            log(`Destroying \`${logName}\`...`, 1);
             await Table.drop();
-            log(`Creating \`${name || modelName || schemaName}\`...`, 1);
+            log(`Creating \`${logName}\`...`, 1);
             await Table.sync();
-            log(`Created \`${name || modelName || schemaName}\`...`, 1);
+            log(`Created \`${logName}\`...`, 1);
           }
 
           await Table.bulkCreate(data.map((item) => ({ ...item, ...author })));
-          log(`\`${name || modelName || schemaName}\` data inserted.`);
+          log(`\`${logName}\` data inserted.`);
         })
       );
       onelineLog("Extra data inserted.");
