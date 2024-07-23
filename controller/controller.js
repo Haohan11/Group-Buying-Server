@@ -182,7 +182,12 @@ const generalUpdate = (tableName, option) => {
         : {};
 
       delete req.body.id;
-      const data = { ...req.body, ...req._author, ...imageField, ...defaultData };
+      const data = {
+        ...req.body,
+        ...req._author,
+        ...imageField,
+        ...defaultData,
+      };
 
       await Table.update(data, { where: { id } });
       typeof extraHandler === "function" && (await extraHandler(id, req));
@@ -628,9 +633,8 @@ const controllers = [
       ],
     },
   },
-
-   // stock-single
-   {
+  // stock-single
+  {
     path: "stock/single",
     schemas: {
       read: [

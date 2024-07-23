@@ -25,6 +25,7 @@ export const connectToDataBase = async () => {
     host: DB_HOST,
     port: DB_PORT,
     dialect: "mysql",
+    logging: (msg) => console.log(`[${getCurrentTime()}] ${msg}`),
   });
 
   try {
@@ -244,6 +245,17 @@ export const objectAppender = (target, appender) =>
     result[key] ??= value;
     return result;
   }, target);
+
+export const getCurrentTime = () => {
+  const date = new Date();
+  const month = addZeroPadding(`${date.getMonth() + 1}`, 2);
+  const day = addZeroPadding(`${date.getDate()}`, 2);
+  const hour = addZeroPadding(`${date.getHours()}`, 2);
+  const minute = addZeroPadding(`${date.getMinutes()}`, 2);
+  const second = addZeroPadding(`${date.getSeconds()}`, 2);
+
+  return `${date.getFullYear()}-${month}-${day} ${hour}:${minute}:${second}`;
+};
 
 // export const getPermission = async (req, user) => {
 //   if (!req.app || !req.app.sequelize)
