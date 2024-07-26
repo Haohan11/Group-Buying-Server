@@ -13,7 +13,10 @@ import {
   goHash,
   connectToDataBase,
   logger,
+  overrideLog
 } from "./model/helper.js";
+
+overrideLog();
 
 import { 
   createBulkConnectMiddleware,

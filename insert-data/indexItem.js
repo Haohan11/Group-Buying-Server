@@ -50,13 +50,13 @@ const indexItem = [
   {
     name: "訂單管理",
     icon: "receipt",
-    route: "order",
+    route: "sale",
     indexItems: [
       { route: "merge", name: "訂單彙整作業" },
       { route: "management", name: "訂單作業" },
       { route: "dispatch", name: "派送/廠出作業" },
       { route: "delivery", name: "出貨作業" },
-      { route: "category", name: "訂單類別維護" },
+      { route: "type", name: "訂單類別維護" },
     ],
   },
 ];

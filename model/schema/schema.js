@@ -2,20 +2,22 @@ import { DataTypes } from "sequelize";
 import * as Schemas from "./rawSchema.js";
 import { objectAppender } from "../helper.js";
 
-const getFixedField = (schemaName) => ({
+const getFixedField = (schemaName, omitName) => ({
   highOrderCols: {
     code: {
       type: DataTypes.STRING(100),
     },
     ...(!schemaName.includes("_") && {
-      name: {
-        type: DataTypes.STRING(100),
-        comment: "名稱",
-        allowNull: false,
-        validate: {
-          len: [2, 35],
+      ...(!omitName && {
+        name: {
+          type: DataTypes.STRING(100),
+          comment: "名稱",
+          allowNull: false,
+          validate: {
+            len: [2, 35],
+          },
         },
-      },
+      }),
       sorting: {
         type: DataTypes.INTEGER,
         defaultValue: 1,
@@ -74,20 +76,21 @@ const getFixedField = (schemaName) => ({
 });
 
 const processedSchemas = Object.entries(Schemas).reduce(
-  (dict, [schemaName, schemaContent]) => {
-    const fixedField = getFixedField(schemaName);
+  (dict, [schemaName, { order, name, omitName, cols, option }]) => {
+    const fixedField = getFixedField(schemaName, omitName);
     return {
       ...dict,
       [schemaName]: {
-        ...schemaContent,
+        order,
+        name,
         cols: {
-          ...(schemaContent.cols.id && { id: schemaContent.cols.id }),
+          ...(cols.id && { id: cols.id }),
           ...fixedField.highOrderCols,
-          ...objectAppender(schemaContent.cols, fixedField.cols),
+          ...objectAppender(cols, fixedField.cols),
         },
         option: {
           ...getFixedField(schemaName).option,
-          ...schemaContent.option,
+          ...option,
         },
       },
     };

@@ -8,6 +8,11 @@ import crypto from "crypto";
 
 import staticPathName from "../model/staticPathName.js";
 
+export const overrideLog = () => {
+  const { log } = console;
+  console.log = (...message) => log(`[${getCurrentTime()}]`, ...message);
+};
+
 export const logger = (() => {
   const loggerOn = false;
   return (...message) => loggerOn && console.log(...message);
@@ -15,6 +20,11 @@ export const logger = (() => {
 
 export const toArray = (target) => (Array.isArray(target) ? target : [target]);
 
+/**
+ * Check if the given input is an array and has at least one element.
+ * @param {Array} arr - The array to be checked.
+ * @returns {boolean} - True if the input is an array and has at least one element, false otherwise.
+ */
 export const checkArray = (arr) => Array.isArray(arr) && arr.length > 0;
 
 export const connectToDataBase = async () => {
@@ -25,7 +35,6 @@ export const connectToDataBase = async () => {
     host: DB_HOST,
     port: DB_PORT,
     dialect: "mysql",
-    logging: (msg) => console.log(`[${getCurrentTime()}] ${msg}`),
   });
 
   try {

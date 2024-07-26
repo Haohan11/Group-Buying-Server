@@ -14,7 +14,9 @@ import {
   filePathAppend,
   logger,
   toArray,
+  checkArray,
   addZeroPadding,
+  getCurrentTime,
 } from "../model/helper.js";
 
 const getGeneralCreate = (tableName, option) => {
@@ -1442,6 +1444,111 @@ const controllers = [
         addUserMiddleware,
         generalDelete("MemberShipping"),
       ],
+    },
+  },
+  // sale
+  {
+    path: "sale-management",
+    schemas: {
+      create: ["Sale", "SaleDetail", "SaleDetailDelivery", "Company", "Member"],
+    },
+    actions: {
+      create: [
+        multer().none(),
+        authenticationMiddleware,
+        addUserMiddleware,
+        async (req, res) => {
+          try {
+            const { Sale, SaleDetail, SaleDetailDelivery, Member, Company } = req.app;
+            const data = req.body;
+
+            const { member_id } = data;
+            const memberData = await Member.findByPk(member_id);
+            if (!memberData) return res.response(401, `Invalid Member.`);
+
+            const { company_id } = memberData;
+            const companyData = await Company.findByPk(company_id);
+            if (!companyData) return res.response(401, `Invalid Company.`);
+
+            const person_list = JSON.parse(data.person_list);
+            if (!person_list) return res.response(401, `Invalid Person List.`);
+
+            const { id: sale_id } = await Sale.create({
+              id: "uuid_placeholder",
+              company_id,
+              member_id,
+              sale_point_id: "none",
+              sale_type_id: "none",
+              currencies_id: "NT",
+              sale_date: getCurrentTime(),
+              ...req._author,
+            });
+
+            await Promise.all(
+              toArray(person_list).map(async (person) => {
+                const { stockList } = person;
+                if(!checkArray(stockList)) return;
+
+                const detailsData = await SaleDetail.bulkCreate(
+                  stockList.map((stock) => {
+                    return {
+                      id: "uuid_placeholder",
+                      stock_id: stock.id,
+                      sale_id,
+                      ...req._author,
+                    };
+                  })
+                )
+
+                const deliverysData = await SaleDetailDelivery.bulkCreate(
+                  detailsData.map((detail) => {
+                    return {
+                      id: "uuid_placeholder",
+                      sale_id,
+                      sale_detail_id: detail.id,
+                      receiver_name: person.name,
+                      receiver_phone: person.phone,
+                      receiver_address: person.address,
+                      ...req._author,
+                    };
+                  })
+                )
+
+              })
+            );
+
+            // const { id } = await Table.create(data);
+            // typeof extraHandler === "function" && (await extraHandler(id, req));
+
+            res.response(200, `Success create Sale.`);
+          } catch (error) {
+            console.log(error);
+            return error.name === "SequelizeValidationError"
+              ? res.response(401, `Invalid ${error.errors[0].path}.`)
+              : res.response(500);
+          }
+        },
+      ],
+      // read: [
+      //   authenticationMiddleware,
+      //   addUserMiddleware,
+      //   getGeneralRead("SaleType", {
+      //     queryAttribute: ["id", "name", "description"],
+      //     searchAttribute: ["name"],
+      //   }),
+      // ],
+      // update: [
+      //   multer().none(),
+      //   authenticationMiddleware,
+      //   addUserMiddleware,
+      //   generalUpdate("SaleType"),
+      // ],
+      // delete: [
+      //   multer().none(),
+      //   authenticationMiddleware,
+      //   addUserMiddleware,
+      //   generalDelete("SaleType"),
+      // ],
     },
   },
   // sale-type

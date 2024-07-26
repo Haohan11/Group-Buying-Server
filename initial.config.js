@@ -3,9 +3,9 @@ import insertData from "./insert-data/insertData.js";
 
 const config = {
   // generateTable: true,
-  recreateTable: true,
-  indexItem,
-  insertData,
+  // recreateTable: true,
+  // indexItem,
+  // insertData,
   showSequelizeLog: false,
 };
 

@@ -237,7 +237,7 @@ await (async () => {
           }
 
           await Table.bulkCreate(data.map((item) => ({ ...item, ...author })));
-          log(`\`${logName}\` data inserted.`);
+          log(`\`${logName}\` data inserted.`, 1);
         })
       );
       onelineLog("Extra data inserted.");

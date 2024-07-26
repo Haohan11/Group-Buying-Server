@@ -39,7 +39,7 @@ const getUUIdCol = (fields = {}) => ({
  *   },
  * };
  *
- * greater order will be handle first.
+ * greater order will be handle first in initializer.js.
  *
  * Junction Schema should match the name format
  *  `Table1_Table2Schema`
@@ -1328,6 +1328,9 @@ export const StockSchema = {
       type: DataTypes.INTEGER,
       defaultValue: 0,
       comment: "預購商品庫存",
+      validate: {
+        isInt: true,
+      }
     },
     price: {
       type: DataTypes.INTEGER,
@@ -1858,6 +1861,7 @@ export const SaleTypeSchema = {
 
 export const SaleSchema =  {
   name: "sale",
+  omitName: true,
   cols: {
     id: getUUIdCol(),
     company_id: {
@@ -2017,6 +2021,7 @@ export const SaleSchema =  {
 
 export const SaleDetailSchema = {
   name: "sale_detail",
+  omitName: true,
   cols: {
     id: getUUIdCol(),
     sale_id: {
@@ -2101,6 +2106,7 @@ export const SaleDetailSchema = {
 
 export const SaleDetailDeliverySchema = {
   name: "sale_detail_delivery",
+  omitName: true,
   cols: {
     id: getUUIdCol(),
     sale_id: {
@@ -2138,7 +2144,7 @@ export const SaleDetailDeliverySchema = {
       comment: "運送費用",
     },
     receiver_name: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(255),
       comment: "收件人姓名",
     },
     receiver_phone: {
@@ -2175,7 +2181,7 @@ export const SaleDetailDeliverySchema = {
       comment: "收件地址_室",
     },
     receiver_address: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(1024),
       comment: "收件地址",
     },
     receiver_specify_date: {
@@ -2193,7 +2199,7 @@ export const SaleDetailDeliverySchema = {
   },
   option: {
     tableName: "sale_detail_delivery",
-    comment: "銷售單明細寄送明細",
+    comment: "銷售單寄送資訊",
   },
 };
 
