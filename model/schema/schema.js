@@ -13,9 +13,6 @@ const getFixedField = (schemaName, omitName) => ({
           type: DataTypes.STRING(100),
           comment: "名稱",
           allowNull: false,
-          validate: {
-            len: [2, 35],
-          },
         },
       }),
       sorting: {
@@ -76,13 +73,11 @@ const getFixedField = (schemaName, omitName) => ({
 });
 
 const processedSchemas = Object.entries(Schemas).reduce(
-  (dict, [schemaName, { order, name, omitName, cols, option }]) => {
+  (dict, [schemaName, { omitName, cols, option, ...rest }]) => {
     const fixedField = getFixedField(schemaName, omitName);
     return {
       ...dict,
       [schemaName]: {
-        order,
-        name,
         cols: {
           ...(cols.id && { id: cols.id }),
           ...fixedField.highOrderCols,
@@ -92,6 +87,7 @@ const processedSchemas = Object.entries(Schemas).reduce(
           ...getFixedField(schemaName).option,
           ...option,
         },
+        ...rest,
       },
     };
   },

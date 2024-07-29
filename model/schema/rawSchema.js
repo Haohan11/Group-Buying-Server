@@ -46,6 +46,77 @@ const getUUIdCol = (fields = {}) => ({
  * for auto remove name col in Schema.js.
  */
 
+const getCompany_idFK = (targetTable = "Company") => ({
+  targetTable,
+  option: {
+    foreignKey: {
+      name: "company_id",
+      type: DataTypes.STRING(36),
+      comment: "對應的公司ID",
+      allowNull: false,
+    },
+  },
+});
+
+const getCountry_idFK = (targetTable = "Country") => ({
+  targetTable,
+  option: {
+    foreignKey: {
+      name: "country_id",
+      type: DataTypes.STRING(36),
+      comment: "對應的國家ID",
+      allowNull: false,
+    },
+  },
+});
+
+const getMember_idFK = (targetTable = "Member") => ({
+  targetTable,
+  option: {
+    foreignKey: {
+      name: "member_id",
+      type: DataTypes.STRING(36),
+      allowNull: false,
+      comment: "會員ID",
+    },
+  },
+});
+
+const getStock_idFK = (targetTable = "Stock") => ({
+  targetTable,
+  option: {
+    foreignKey: {
+      name: "stock_id",
+      type: DataTypes.STRING(36),
+      allowNull: false,
+      comment: "商品id",
+    },
+  },
+});
+
+const getSale_idFK = (targetTable = "Sale") => ({
+  targetTable,
+  option: {
+    foreignKey: {
+      name: "sale_id",
+      type: DataTypes.STRING(36),
+      comment: "銷售單ID",
+      allowNull: false,
+    },
+  },
+});
+
+const getSaleDetail_idFK = (targetTable = "SaleDetail") => ({
+  targetTable,
+  option: {
+    foreignKey: {
+      name: "sale_detail_id",
+      type: DataTypes.STRING(36),
+      comment: "銷售單明細ID",
+    },
+  },
+});
+
 export const CompanySchema = {
   name: "company",
   cols: {
@@ -76,28 +147,9 @@ export const CompanySchema = {
     comment: "公司",
   },
   hasMany: [
-    {
-      targetTable: "User",
-      option: {
-        foreignKey: {
-          name: "company_id",
-          type: DataTypes.STRING(36),
-          comment: "對應的公司ID",
-          allowNull: false,
-        },
-      },
-    },
-    {
-      targetTable: "Member",
-      option: {
-        foreignKey: {
-          name: "company_id",
-          type: DataTypes.STRING(36),
-          comment: "對應的公司ID",
-          allowNull: false,
-        },
-      },
-    },
+    ...["User", "Member", "Supplier", "StockAccounting", "StockBrand"].map(
+      getCompany_idFK
+    ),
   ],
 };
 
@@ -164,6 +216,7 @@ export const SettingSchema = {
 export const CountrySchema = {
   name: "country",
   cols: {
+    id: getUUIdCol(),
     short_name: {
       type: DataTypes.STRING(100),
       comment: "簡稱",
@@ -177,6 +230,19 @@ export const CountrySchema = {
     tableName: "country",
     comment: "國籍",
   },
+  hasMany: [
+    ...[
+      "City",
+      "Lang",
+      "Currencies",
+      "Member",
+      "MemberContactPerson",
+      "Supplier",
+      "SupplierContactPerson",
+      "TaxType",
+      "StockPrice",
+    ].map(getCountry_idFK),
+  ],
 };
 
 export const CitySchema = {
@@ -191,6 +257,7 @@ export const CitySchema = {
     tableName: "city",
     comment: "城市",
   },
+  belongsTo: [getCountry_idFK()],
 };
 
 export const LangSchema = {
@@ -207,6 +274,7 @@ export const LangSchema = {
     tableName: "lang",
     comment: "語系",
   },
+  belongsTo: [getCountry_idFK()],
 };
 
 export const CurrenciesSchema = {
@@ -222,6 +290,7 @@ export const CurrenciesSchema = {
     tableName: "currencies",
     comment: "幣別",
   },
+  belongsTo: [getCountry_idFK()],
 };
 
 export const PaymentTypeSchema = {
@@ -475,19 +544,7 @@ export const UserSchema = {
       },
     },
   ],
-  belongsTo: [
-    {
-      targetTable: "Company",
-      option: {
-        foreignKey: {
-          name: "company_id",
-          type: DataTypes.STRING(36),
-          comment: "對應的公司ID",
-          allowNull: false,
-        },
-      },
-    },
-  ],
+  belongsTo: [getCompany_idFK()],
 };
 
 /** Member Schema Begin */
@@ -689,6 +746,7 @@ export const MemberSchema = {
     tableName: "member",
     comment: "會員",
   },
+  hasMany: [...["MemberContactPerson", "Sale"].map(getMember_idFK)],
   belongsTo: [
     {
       targetTable: "User",
@@ -700,17 +758,8 @@ export const MemberSchema = {
         },
       },
     },
-    {
-      targetTable: "Company",
-      option: {
-        foreignKey: {
-          name: "company_id",
-          type: DataTypes.STRING(36),
-          comment: "對應的公司ID",
-          allowNull: false,
-        },
-      },
-    },
+    getCompany_idFK(),
+    getCountry_idFK(),
   ],
 };
 
@@ -794,48 +843,61 @@ export const MemberContactTypeSchema = {
 export const MemberContactPersonSchema = {
   name: "member_contact_person",
   cols: {
+    id: getUUIdCol(),
     member_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
+      comment: "會員ID",
     },
     country_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
+      comment: "國籍ID",
     },
     name: {
       type: DataTypes.STRING(100),
       allowNull: false,
+      comment: "名稱",
     },
     name2: {
       type: DataTypes.STRING(100),
       allowNull: false,
+      comment: "簡稱",
     },
     phone: {
       type: DataTypes.STRING(20),
+      comment: "電話",
     },
     phone2: {
       type: DataTypes.STRING(20),
+      comment: "電話2",
     },
     mobile: {
       type: DataTypes.STRING(20),
+      comment: "手機",
     },
     mobile2: {
       type: DataTypes.STRING(20),
+      comment: "手機2",
     },
     uniform_number: {
       type: DataTypes.STRING(20),
+      comment: "統一編號",
     },
     residential_address: {
       type: DataTypes.TEXT("long"),
+      comment: "居住地址",
     },
     contact_address: {
       type: DataTypes.TEXT("long"),
+      comment: "聯絡地址",
     },
   },
   option: {
     tableName: "member_contact_person",
     comment: "供應商-連絡人",
   },
+  belongsTo: [getCountry_idFK(), getMember_idFK()],
 };
 
 export const Member_TagSchema = {
@@ -905,6 +967,7 @@ export const Level_PriceSchema = {
     tableName: "level_price",
     comment: "會員等級價格",
   },
+  belongsTo: [getStock_idFK()],
 };
 
 /** Stock price according to member role */
@@ -925,6 +988,7 @@ export const Role_PriceSchema = {
     tableName: "role_price",
     comment: "會員角色價格",
   },
+  belongsTo: [getStock_idFK()],
 };
 
 const PermissionSchema = {
@@ -1049,6 +1113,7 @@ export const SupplierSchema = {
       },
     },
   },
+  belongsTo: [getCompany_idFK(), getCountry_idFK()],
 };
 
 export const SupplierContactPersonSchema = {
@@ -1096,6 +1161,7 @@ export const SupplierContactPersonSchema = {
     tableName: "supplier_contact_person",
     comment: "供應商-連絡人",
   },
+  belongsTo: [getCountry_idFK()],
 };
 
 export const SupplierContactTypeSchema = {
@@ -1162,6 +1228,7 @@ export const TaxTypeSchema = {
     tableName: "tax_type",
     comment: "稅別",
   },
+  belongsTo: [getCountry_idFK()],
 };
 
 export const TaxRateSchema = {
@@ -1205,8 +1272,10 @@ export const MbflagTypeSchema = {
 
 /** Stock Schema Start */
 export const StockSchema = {
+  order: 3,
   name: "stock",
   cols: {
+    id: getUUIdCol(),
     company_id: {
       type: DataTypes.STRING(36),
       comment: "隸屬公司",
@@ -1330,7 +1399,7 @@ export const StockSchema = {
       comment: "預購商品庫存",
       validate: {
         isInt: true,
-      }
+      },
     },
     price: {
       type: DataTypes.INTEGER,
@@ -1369,6 +1438,7 @@ export const StockSchema = {
       },
     },
   ],
+  hasMany: [...["SaleDetail", "Level_Price", "Role_Price"].map(getStock_idFK)],
 };
 
 export const StockMediaSchema = {
@@ -1478,6 +1548,7 @@ export const StockPriceSchema = {
     tableName: "stock_price",
     comment: "商品價格",
   },
+  belongsTo: [getCountry_idFK()],
 };
 
 export const StockSerialSchema = {
@@ -1633,6 +1704,10 @@ export const StockAccountingSchema = {
         len: [1, 35],
       },
     },
+    code: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+    },
     company_id: {
       type: DataTypes.STRING(36),
       comment: "隸屬公司",
@@ -1643,6 +1718,7 @@ export const StockAccountingSchema = {
     tableName: "stock_accounting",
     comment: "記帳分類",
   },
+  belongsTo: [getCompany_idFK()],
 };
 
 export const StockBrandSchema = {
@@ -1658,6 +1734,7 @@ export const StockBrandSchema = {
     tableName: "stock_brand",
     comment: "商品品牌",
   },
+  belongsTo: [getCompany_idFK()],
 };
 
 export const StockCategorySchema = {
@@ -1859,7 +1936,7 @@ export const SaleTypeSchema = {
   },
 };
 
-export const SaleSchema =  {
+export const SaleSchema = {
   name: "sale",
   omitName: true,
   cols: {
@@ -2017,6 +2094,8 @@ export const SaleSchema =  {
     tableName: "sale",
     comment: "銷售單",
   },
+  hasMany: [...["SaleDetail", "SaleDetailDelivery"].map(getSale_idFK)],
+  belongsTo: [getCompany_idFK(), getMember_idFK()],
 };
 
 export const SaleDetailSchema = {
@@ -2102,6 +2181,8 @@ export const SaleDetailSchema = {
     tableName: "sale_detail",
     comment: "銷售單明細",
   },
+  hasMany: [getSaleDetail_idFK("SaleDetailDelivery")],
+  belongsTo: [getSale_idFK(), getStock_idFK()],
 };
 
 export const SaleDetailDeliverySchema = {
@@ -2201,6 +2282,7 @@ export const SaleDetailDeliverySchema = {
     tableName: "sale_detail_delivery",
     comment: "銷售單寄送資訊",
   },
+  belongsTo: [getSale_idFK(), getSaleDetail_idFK()],
 };
 
 export const IndexItemTypeSchema = {
