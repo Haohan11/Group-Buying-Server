@@ -4,8 +4,8 @@ const log = (message, indent = 0) =>
     `${indentSymbol}${new Array(indent).fill(indentSymbol).join("")} ${message}`
   );
 const onelineLog = (message) => console.log(`${indentSymbol} ${message}\n`);
-const exit = (message) => {
-  message !== undefined && onelineLog(message);
+const exit = (message, condition) => {
+  message !== condition && onelineLog(message);
   process.exit();
 };
 
@@ -56,7 +56,7 @@ const initAuthor = {
 };
 
 import Schemas from "./model/schema/schema.js";
-import { createSchema, toArray } from "./model/helper.js";
+import { createSchema, toArray, checkArray } from "./model/helper.js";
 
 await (async () => {
   onelineLog("Start initializing...");
@@ -69,14 +69,25 @@ await (async () => {
     return Model;
   };
 
-  const createTables = async ({ destroy = false }) => {
-    Object.values(Schemas)
+  const createTables = async ({ destroy = false, tables }) => {
+    const schemas = checkArray(tables)
+      ? /* filter out Schemas not inside tables by name */
+        tables.map(
+          (schemaName) =>
+            Schemas[`${schemaName}Schema`] ??
+            (() => {
+              throw new Error(`Schema \`${schemaName}\` not found.`);
+            })()
+        )
+      : Object.values(Schemas);
+
+    schemas
       .sort(({ order: order1 = 0 }, { order: order2 = 0 }) => order1 - order2)
-      .forEach(async (schema) => {
+      .forEach((schema) => {
         const Table = createSchema(sequelize, schema);
         const { hasOne, belongsTo, hasMany, belongsToMany } = schema;
 
-        // loop all associate method
+        /* loop all associate method */
         Object.entries({ hasOne, belongsTo, hasMany, belongsToMany }).forEach(
           ([associName, associate]) => {
             // check if associate valid
@@ -130,20 +141,25 @@ await (async () => {
       }
 
       log("Generating table...");
-      await createTables();
+      await createTables({
+        ...(Array.isArray(generateTable) && { tables: generateTable }),
+      });
       onelineLog("Tables generated.");
     }
     /** Handle generate tables above */
 
     RecreateTable: {
       const { recreateTable } = initialConfig;
-      if (!recreateTable) {
+      if (!recreateTable || recreateTable.length === 0) {
         onelineLog("Skip recreate tables.");
         break RecreateTable;
       }
 
       log("Recreating tables...");
-      await createTables({ destroy: true });
+      await createTables({
+        destroy: true,
+        ...(Array.isArray(recreateTable) && { tables: recreateTable }),
+      });
       onelineLog("Tables recreated.");
     }
 
@@ -203,43 +219,48 @@ await (async () => {
       }
 
       log("Inserting extra data...");
-      await Promise.all(
-        insertData.map(async (config) => {
-          const {
-            name,
-            modelName,
-            schemaName,
-            data,
-            destroy = true,
-            author = initAuthor,
-          } = config;
+      await insertData.reduce(async (prev, config) => {
+        if (prev) await prev;
 
-          const logName = name || modelName || schemaName;
+        const {
+          name,
+          modelName,
+          schemaName,
+          data,
+          destroy = true,
+          author = initAuthor,
+          skip,
+        } = config;
 
-          if (!Array.isArray(data))
-            return console.warn(`Insert data must receive array type.`);
+        const logName = name || modelName || schemaName;
 
-          const InsertSchema = Schemas[`${schemaName}Schema`];
-          if (!InsertSchema)
-            return console.warn(
-              `Schema \`${schemaName}\` not found when insert ${logName}.`
-            );
+        if (skip) return log(`Skip insert \`${logName}\` data.`, 1);
+        log(`Inserting \`${logName}\` data...`, 1);
 
-          const Table =
-            sequelize.models[modelName] || (await getModel(InsertSchema));
+        if (!Array.isArray(data))
+          return console.warn(`Insert data must receive array type.`);
 
-          if (destroy) {
-            log(`Destroying \`${logName}\`...`, 1);
-            await Table.drop();
-            log(`Creating \`${logName}\`...`, 1);
-            await Table.sync();
-            log(`Created \`${logName}\`...`, 1);
-          }
+        const InsertSchema = Schemas[`${schemaName}Schema`];
+        if (!InsertSchema)
+          return console.warn(
+            `Schema \`${schemaName}\` not found when insert ${logName}.`
+          );
 
-          await Table.bulkCreate(data.map((item) => ({ ...item, ...author })));
-          log(`\`${logName}\` data inserted.`, 1);
-        })
-      );
+        const Table =
+          sequelize.models[modelName] || (await getModel(InsertSchema));
+
+        if (destroy) {
+          log(`Destroying \`${logName}\`...`, 1);
+          await Table.drop();
+          log(`Creating \`${logName}\`...`, 1);
+          await Table.sync();
+          log(`Created \`${logName}\`...`, 1);
+        }
+
+        await Table.bulkCreate(data.map((item) => ({ ...item, ...author })));
+        log(`\`${logName}\` data inserted.`, 1);
+
+      }, null);
       onelineLog("Extra data inserted.");
     }
     /** Handle insert data above */
