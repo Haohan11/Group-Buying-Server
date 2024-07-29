@@ -256,6 +256,7 @@ const controllers = [
         getGeneralCreate("Stock", {
           imageFieldName: [{ name: "cover_image" }],
           defaultData: {
+            id: "uuid_placeholder",
             company_id: "none",
             stock_unit_id: 1,
             mbflag_type_id: 1,
@@ -956,7 +957,7 @@ const controllers = [
           defaultData: {
             id: "uuid_placeholder",
             supplier_type_id: 1,
-            country_id: 1,
+            country_id: "none",
             company_id: "none",
           },
         }),
@@ -1029,7 +1030,7 @@ const controllers = [
         getGeneralCreate("Member", {
           defaultData: {
             id: "uuid_placeholder",
-            country_id: "not_set",
+            country_id: "none",
             code: "_holder",
             company_id: "none",
             member_type_id: "company",
@@ -1450,7 +1451,14 @@ const controllers = [
   {
     path: "sale-management",
     schemas: {
-      create: ["Sale", "SaleDetail", "SaleDetailDelivery", "Company", "Member"],
+      create: [
+        "Sale",
+        "SaleDetail",
+        "SaleDetailDelivery",
+        "MemberContactPerson",
+        "Company",
+        "Member",
+      ],
     },
     actions: {
       create: [
@@ -1459,7 +1467,8 @@ const controllers = [
         addUserMiddleware,
         async (req, res) => {
           try {
-            const { Sale, SaleDetail, SaleDetailDelivery, Member, Company } = req.app;
+            const { Sale, SaleDetail, SaleDetailDelivery, Member, MemberContactPerson, Company } =
+              req.app;
             const data = req.body;
 
             const { member_id } = data;
@@ -1486,8 +1495,25 @@ const controllers = [
 
             await Promise.all(
               toArray(person_list).map(async (person) => {
-                const { stockList } = person;
-                if(!checkArray(stockList)) return;
+                const {
+                  stockList,
+                  name: personName,
+                  address: personAddress,
+                  phone: personPhone,
+                } = person;
+                
+                if (!checkArray(stockList)) return;
+
+                await MemberContactPerson.create({
+                  id: "uuid_placeholder",
+                  country_id: "none",
+                  member_id,
+                  name: personName,
+                  name2: personName,
+                  contact_address: personAddress,
+                  phone: personPhone,
+                  ...req._author,
+                });
 
                 const detailsData = await SaleDetail.bulkCreate(
                   stockList.map((stock) => {
@@ -1498,27 +1524,23 @@ const controllers = [
                       ...req._author,
                     };
                   })
-                )
+                );
 
-                const deliverysData = await SaleDetailDelivery.bulkCreate(
+                await SaleDetailDelivery.bulkCreate(
                   detailsData.map((detail) => {
                     return {
                       id: "uuid_placeholder",
                       sale_id,
                       sale_detail_id: detail.id,
-                      receiver_name: person.name,
-                      receiver_phone: person.phone,
-                      receiver_address: person.address,
+                      receiver_name: personName,
+                      receiver_phone: personPhone,
+                      receiver_address: personAddress,
                       ...req._author,
                     };
                   })
-                )
-
+                );
               })
             );
-
-            // const { id } = await Table.create(data);
-            // typeof extraHandler === "function" && (await extraHandler(id, req));
 
             res.response(200, `Success create Sale.`);
           } catch (error) {
