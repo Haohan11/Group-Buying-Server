@@ -11,6 +11,8 @@ import staticPathName from "../model/staticPathName.js";
 export const overrideLog = () => {
   const { log } = console;
   console.log = (...message) => log(`[${getCurrentTime()}]`, ...message);
+  console.ins = (name, ...message) =>
+    log(`================== Inspecting ${name} ==================`, ...message);
 };
 
 export const logger = (() => {
