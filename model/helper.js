@@ -37,6 +37,11 @@ export const connectToDataBase = async () => {
     host: DB_HOST,
     port: DB_PORT,
     dialect: "mysql",
+    pool: {
+      max: 50,
+      min: 0,
+      idle: 10000
+    }
   });
 
   try {

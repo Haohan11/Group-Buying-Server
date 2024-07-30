@@ -113,7 +113,7 @@ export const resetAuthentication = (req, res, next) => {
 
 export const connectDbMiddleWare = async (req, res, next) => {
   const sequelize = await connectToDataBase();
-  if (sequelize === false) res.response(500);
+  if (sequelize === false) return res.response(500);
 
   req.app.sequelize = sequelize;
   next();
