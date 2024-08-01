@@ -73,7 +73,7 @@ export const authenticationMiddleware = (req, res, next) => {
     result[0] = true;
   });
 
-  jwt.verify(token, "my_secret_key", function (err, decoded) {
+  jwt.verify(token, "back_secret_key", function (err, decoded) {
     if (err) return;
 
     const {

@@ -281,7 +281,7 @@ app.post(
       const exp =
         Math.floor(Date.now() / 1000) +
         (parseInt(process.env.EXPIRE_TIME) || 3600);
-      const token = jwt.sign({ payload, exp }, "my_secret_key");
+      const token = jwt.sign({ payload, exp }, "back_secret_key");
 
       res.response(200, {
         id: user.id,
