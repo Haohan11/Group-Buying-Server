@@ -649,6 +649,8 @@ const controllers = [
         "StockBrand",
         "StockAccounting",
         "Supplier",
+        "MemberLevel",
+        "MemberRole",
       ],
     },
     actions: {
@@ -693,7 +695,6 @@ const controllers = [
               MemberRole,
               MemberShipping,
             } = req.app;
-
             return await Promise.all(
               list.map(async (stock) => {
                 /* add field name by query id below */
@@ -728,37 +729,44 @@ const controllers = [
                   })
                 );
                 /* add field name by query id above */
-
                 /* handle append price fields below */
                 await Promise.all(
                   [
                     {
                       Table: Level_Price,
+                      targetTable: MemberLevel,
                       idField: "member_level_id",
                       fieldName: "level_price",
                     },
                     {
                       Table: Role_Price,
+                      targetTable: MemberRole,
                       idField: "member_role_id",
                       fieldName: "role_price",
                     },
-                  ].map(async ({ Table, idField, fieldName }) => {
+                  ].map(async ({ targetTable,Table, idField, fieldName }) => {
                     const levelPriceList = await Table.findAll({
                       where: { stock_id: stock.id },
                       attributes: [idField, "price"],
                     });
-
+                    const levelRoleName = await targetTable.findAll({
+                      attributes:["id","name"]
+                    })
+                    const levelRoleObj = levelRoleName.reduce((acc, { id, name }) => {
+                      return { ...acc, [id]: name };
+                    }, {});
+                    console.log('levelRoleName',levelRoleObj);
                     stock.setDataValue(
                       fieldName,
                       levelPriceList.map(({ [idField]: id, price }) => ({
                         id,
+                        name: levelRoleObj[id],
                         price,
                       }))
                     );
                   })
                 );
                 /* handle append price fields above */
-
                 const images = await StockMedia.findAll({
                   attributes: ["name"],
                   where: { stock_id: stock.id, code: null },
@@ -767,7 +775,6 @@ const controllers = [
                   "stock_image_preview",
                   images.map((image) => image.name)
                 );
-
                 return stock;
               })
             );
