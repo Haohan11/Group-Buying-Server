@@ -1420,6 +1420,10 @@ export const StockSchema = {
       type: DataTypes.TEXT("long"),
       comment: "商品介紹",
     },
+    short_desc: {
+      type: DataTypes.TEXT("long"),
+      comment: "簡單介紹",
+    },
   },
   option: {
     tableName: "stock",

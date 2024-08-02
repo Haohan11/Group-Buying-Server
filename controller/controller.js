@@ -365,6 +365,7 @@ const controllers = [
             "purchase_price",
             "description",
             "introduction",
+            "short_desc",
           ],
           searchAttribute: ["name"],
           listAdaptor: async (list, req) => {
