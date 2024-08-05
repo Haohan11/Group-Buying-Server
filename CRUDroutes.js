@@ -1,4 +1,5 @@
 import express from "express";
+import { routesSet } from "./globalVariable.js"; 
 
 import {
   toArray,
@@ -27,10 +28,10 @@ const createRouter = ({ path, schemas, actions }) => {
 
     try {
       if (!schemas || !schemas[action])
-        return router[method]("/", ...toArray(actions[action]));
+        return router[method]("/", actions[action]);
 
       const connectMiddleware = createBulkConnectMiddleware(schemas[action]);
-      router[method]("/", connectMiddleware, ...toArray(actions[action]));
+      router[method]("/", connectMiddleware, actions[action]);
     } catch (error) {
       console.warn(error);
     }
@@ -43,5 +44,7 @@ export const createCRUDRoutes = (app) =>
   controllers.forEach((controller) => {
     const { path, router } = createRouter(controller);
     app.use(path, router);
-    logger("register route:", controller.path);
+    
+    routesSet.add(path);
+    logger("register route:", path);
   });

@@ -11,12 +11,12 @@ import staticPathName from "../model/staticPathName.js";
 export const overrideLog = () => {
   const { log } = console;
   console.log = (...message) => log(`[${getCurrentTime()}]`, ...message);
-  console.ins = (name, ...message) =>
-    log(`================== Inspecting ${name} ==================`, ...message);
+  console.ins = (...message) =>
+    log(`================== Inspecting ================== ${[...message].join(" ")}\n`.repeat(5));
 };
 
 export const logger = (() => {
-  const loggerOn = false;
+  const loggerOn = process.argv.includes("--logger");
   return (...message) => loggerOn && console.log(...message);
 })();
 

@@ -50,7 +50,7 @@ const getGeneralCreate = (tableName, option) => {
     } catch (error) {
       console.log(error);
       return error.name === "SequelizeValidationError"
-        ? res.response(401, `Invalid ${error.errors[0].path}.`)
+        ? res.response(400, `Invalid ${error.errors[0].path}.`)
         : res.response(500);
     }
   };
@@ -156,7 +156,7 @@ const generalUpdate = (tableName, option) => {
 
     const id = req.body.id;
 
-    if (!id) return res.response(401, "Invalid id.");
+    if (!id) return res.response(400, "Invalid id.");
 
     try {
       const imagePath =
@@ -198,7 +198,7 @@ const generalUpdate = (tableName, option) => {
     } catch (error) {
       console.log(error);
       return error.name === "SequelizeValidationError"
-        ? res.response(401, `Invalid ${error.errors[0].path}.`)
+        ? res.response(400, `Invalid ${error.errors[0].path}.`)
         : res.response(500);
     }
   };
@@ -210,7 +210,7 @@ const generalDelete = (tableName, option) => {
     const Table = req.app[tableName];
     const id = req.body.id;
 
-    if (!id) return res.response(401, "Invalid id.");
+    if (!id) return res.response(400, "Invalid id.");
 
     try {
       const imagePath =
@@ -524,7 +524,7 @@ const controllers = [
                   persist: (req.body.introduction_image_persist
                     ? toArray(req.body.introduction_image_persist)
                     : []
-                  ).map((item) => item.replace("/", "\\")),
+                  ).map((item) => item.replaceAll("/", "\\")),
                   code: "intro",
                 },
               ].map(async ({ persist, code }) => {
@@ -745,18 +745,21 @@ const controllers = [
                       idField: "member_role_id",
                       fieldName: "role_price",
                     },
-                  ].map(async ({ targetTable,Table, idField, fieldName }) => {
+                  ].map(async ({ targetTable, Table, idField, fieldName }) => {
                     const levelPriceList = await Table.findAll({
                       where: { stock_id: stock.id },
                       attributes: [idField, "price"],
                     });
                     const levelRoleName = await targetTable.findAll({
-                      attributes:["id","name"]
-                    })
-                    const levelRoleObj = levelRoleName.reduce((acc, { id, name }) => {
-                      return { ...acc, [id]: name };
-                    }, {});
-                    console.log('levelRoleName',levelRoleObj);
+                      attributes: ["id", "name"],
+                    });
+                    const levelRoleObj = levelRoleName.reduce(
+                      (acc, { id, name }) => {
+                        return { ...acc, [id]: name };
+                      },
+                      {}
+                    );
+                    console.log("levelRoleName", levelRoleObj);
                     stock.setDataValue(
                       fieldName,
                       levelPriceList.map(({ [idField]: id, price }) => ({
@@ -1475,20 +1478,26 @@ const controllers = [
         addUserMiddleware,
         async (req, res) => {
           try {
-            const { Sale, SaleDetail, SaleDetailDelivery, Member, MemberContactPerson, Company } =
-              req.app;
+            const {
+              Sale,
+              SaleDetail,
+              SaleDetailDelivery,
+              Member,
+              MemberContactPerson,
+              Company,
+            } = req.app;
             const data = req.body;
 
             const { member_id } = data;
             const memberData = await Member.findByPk(member_id);
-            if (!memberData) return res.response(401, `Invalid Member.`);
+            if (!memberData) return res.response(400, `Invalid Member.`);
 
             const { company_id } = memberData;
             const companyData = await Company.findByPk(company_id);
-            if (!companyData) return res.response(401, `Invalid Company.`);
+            if (!companyData) return res.response(400, `Invalid Company.`);
 
             const person_list = JSON.parse(data.person_list);
-            if (!person_list) return res.response(401, `Invalid Person List.`);
+            if (!person_list) return res.response(400, `Invalid Person List.`);
 
             const { id: sale_id } = await Sale.create({
               id: "uuid_placeholder",
@@ -1509,7 +1518,7 @@ const controllers = [
                   address: personAddress,
                   phone: personPhone,
                 } = person;
-                
+
                 if (!checkArray(stockList)) return;
 
                 await MemberContactPerson.create({
@@ -1554,7 +1563,7 @@ const controllers = [
           } catch (error) {
             console.log(error);
             return error.name === "SequelizeValidationError"
-              ? res.response(401, `Invalid ${error.errors[0].path}.`)
+              ? res.response(400, `Invalid ${error.errors[0].path}.`)
               : res.response(500);
           }
         },

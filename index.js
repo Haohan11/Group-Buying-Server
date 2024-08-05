@@ -23,6 +23,7 @@ import {
 } from "./model/schemaHelper.js";
 
 import { createCRUDRoutes } from "./CRUDroutes.js";
+import { registRoutes } from "./routes/routes.js";
 
 import {
   connectDbMiddleWare,
@@ -397,7 +398,9 @@ app.get(
   }
 );
 
+logger("regist routes start.");
 createCRUDRoutes(app);
+registRoutes(app);
 logger("regist routes finished.");
 
 false &&
