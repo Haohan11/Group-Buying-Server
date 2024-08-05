@@ -4,7 +4,7 @@ import { logger, toArray } from "../model/helper.js";
 import { createBulkConnectMiddleware } from "../model/schemaHelper.js";
 
 const routes = [
-  // stock
+  // receiver
   {
     path: "receiver",
     children: [

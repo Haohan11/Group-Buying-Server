@@ -606,6 +606,7 @@ const controllers = [
         addUserMiddleware,
         generalDelete("Stock", {
           imageFieldName: ["cover_image"],
+          stopDestroy: true,
           extraHandler: async (stock_id, req) => {
             const { StockMedia, Level_Price, Role_Price } = req.app;
 
@@ -632,6 +633,8 @@ const controllers = [
               )
             );
             /* delete image above */
+
+            await Stock.destroy({ where: { id: stock_id } });
           },
         }),
       ],
