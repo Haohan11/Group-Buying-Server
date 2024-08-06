@@ -528,6 +528,7 @@ const controllers = [
                   code: "intro",
                 },
               ].map(async ({ persist, code }) => {
+                console.log("`stock updated`: =====================", persist, code)
                 const willDelete = await StockMedia.findAll({
                   where: {
                     stock_id,
