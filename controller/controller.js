@@ -172,7 +172,7 @@ const getGeneralUpdate = (tableName, option) => {
         ? imageFieldName.reduce((properties, { name, originalName }) => {
             if (!req.files[name] || !name) return properties;
             if (req.files[name][0].path) {
-              console.ins("`getGeneralUpdate`: unlink here.`") && fs.unlink(filePathAppend(imagePath[name]), (err) => {
+              !console.ins("`getGeneralUpdate`: unlink here.`") && fs.unlink(filePathAppend(imagePath[name]), (err) => {
                 err && console.log(err);
               });
               properties[name] = transFilePath(req.files[name][0].path);
@@ -219,7 +219,7 @@ const getGeneralDelete = (tableName, option) => {
 
       imagePath &&
         imageFieldName.forEach((name) => {
-          console.ins("`getGeneralDelete`: unlink here.`") && fs.unlink(
+          !console.ins("`getGeneralDelete`: unlink here.`") && fs.unlink(
             filePathAppend(imagePath[name]),
             (err) => err && console.log(err)
           );
@@ -547,7 +547,7 @@ const controllers = [
                 });
 
                 willDelete.forEach((data) =>
-                  console.ins("`stock updated`: unlink here.") && fs.unlink(
+                  !console.ins("`stock updated`: unlink here.") && fs.unlink(
                     filePathAppend(data.name),
                     (err) => err && console.log(err)
                   )
@@ -627,7 +627,7 @@ const controllers = [
 
             await StockMedia.destroy({ where: { stock_id } });
             willDelete.forEach((data) =>
-              console.ins("`delete stock`: unlink here.`") && fs.unlink(
+              !console.ins("`delete stock`: unlink here.`") && fs.unlink(
                 filePathAppend(data.name),
                 (err) => err && console.log(err)
               )
