@@ -521,10 +521,9 @@ const controllers = [
                   code: null,
                 },
                 {
-                  persist: (req.body.introduction_image_persist
+                  persist: req.body.introduction_image_persist
                     ? toArray(req.body.introduction_image_persist)
-                    : []
-                  ).map((item) => item.replaceAll("/", "\\")),
+                    : [],
                   code: "intro",
                 },
               ].map(async ({ persist, code }) => {

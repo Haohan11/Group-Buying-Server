@@ -12,7 +12,13 @@ export const overrideLog = () => {
   const { log } = console;
   console.log = (...message) => log(`[${getCurrentTime()}]`, ...message);
   console.ins = (...message) =>
-    log(`================== Inspecting ================== ${[...message].join(" ")}\n`.repeat(5));
+    log(
+      `[${getCurrentTime()}] ======================== Inspecting ======================== \n`.repeat(
+        5
+      ),
+      ...message,
+      "\n"
+    );
 };
 
 export const logger = (() => {
@@ -40,8 +46,8 @@ export const connectToDataBase = async () => {
     pool: {
       max: 50,
       min: 0,
-      idle: 10000
-    }
+      idle: 10000,
+    },
   });
 
   try {
@@ -246,7 +252,7 @@ export const queryParam2False = (target) =>
 export const filePathAppend = (path) =>
   `${staticPathName}/${path}`.replace(/\\/g, "/");
 
-export const transFilePath = (path) => path.replace(staticPathName, "");
+export const transFilePath = (path) => path.replace(/\\/g, "/").replace(staticPathName, "");
 
 export const formatTime = (time) =>
   time
