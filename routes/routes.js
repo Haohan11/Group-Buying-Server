@@ -1,3 +1,5 @@
+import { Op } from "sequelize";
+
 import { routesSet } from "../globalVariable.js";
 import { logger, toArray } from "../model/helper.js";
 
@@ -12,11 +14,24 @@ const routes = [
         path: ":memberId",
         method: "get",
         handlers: [
-          createBulkConnectMiddleware(["MemberContactPerson"]),
-          (req, res, next) => {
-            // const member_id = req.params.memberId;
+          createBulkConnectMiddleware(["Member", "MemberContactPerson"]),
+          async (req, res, next) => {
+            const { Member, MemberContactPerson } = req.app;
 
-            res.response(200);
+            const member_id = req.params.memberId;
+            const keyword = req.query.keyword;
+
+            const memberData = await Member.findByPk(member_id);
+            if (!memberData || !keyword) return next();
+
+            const personData = await MemberContactPerson.findAll({
+              where: {
+                member_id,
+                name: { [Op.like]: `%${keyword}%` },
+              },
+            });
+
+            res.response(200, personData);
           },
         ],
       },

@@ -148,7 +148,7 @@ const getGeneralRead = (tableName, option = {}) => {
   };
 };
 
-const generalUpdate = (tableName, option) => {
+const getGeneralUpdate = (tableName, option) => {
   const { imageFieldName, defaultData, extraHandler } = option || {};
 
   return async (req, res) => {
@@ -204,7 +204,7 @@ const generalUpdate = (tableName, option) => {
   };
 };
 
-const generalDelete = (tableName, option) => {
+const getGeneralDelete = (tableName, option) => {
   const { imageFieldName, extraHandler, stopDestroy = false } = option || {};
   return async (req, res) => {
     const Table = req.app[tableName];
@@ -467,7 +467,7 @@ const controllers = [
         ]),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("Stock", {
+        getGeneralUpdate("Stock", {
           imageFieldName: [{ name: "cover_image" }],
           extraHandler: async (stock_id, req) => {
             const { Stock, StockMedia, Level_Price, Role_Price } = req.app;
@@ -604,11 +604,11 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("Stock", {
+        getGeneralDelete("Stock", {
           imageFieldName: ["cover_image"],
           stopDestroy: true,
           extraHandler: async (stock_id, req) => {
-            const { StockMedia, Level_Price, Role_Price } = req.app;
+            const { Stock, StockMedia, Level_Price, Role_Price } = req.app;
 
             /* Handle price fields below */
             await Promise.all(
@@ -819,13 +819,13 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("StockBrand"),
+        getGeneralUpdate("StockBrand"),
       ],
       delete: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("StockBrand"),
+        getGeneralDelete("StockBrand"),
       ],
     },
   },
@@ -869,7 +869,7 @@ const controllers = [
         ]),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("StockCategory", {
+        getGeneralUpdate("StockCategory", {
           imageFieldName: [{ name: "recommended_image" }],
         }),
       ],
@@ -877,7 +877,7 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("StockCategory", {
+        getGeneralDelete("StockCategory", {
           imageFieldName: ["recommended_image"],
         }),
       ],
@@ -912,13 +912,13 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("StockAccounting"),
+        getGeneralUpdate("StockAccounting"),
       ],
       delete: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("StockAccounting"),
+        getGeneralDelete("StockAccounting"),
       ],
     },
   },
@@ -1019,13 +1019,13 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("Supplier"),
+        getGeneralUpdate("Supplier"),
       ],
       delete: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("Supplier"),
+        getGeneralDelete("Supplier"),
       ],
     },
   },
@@ -1227,7 +1227,7 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("Member", {
+        getGeneralUpdate("Member", {
           extraHandler: async (member_id, req) => {
             const { Member, User, Company } = req.app;
             const {
@@ -1286,7 +1286,7 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("Member", {
+        getGeneralDelete("Member", {
           stopDestroy: true,
           extraHandler: async (member_id, req) => {
             const { Member, User, Company } = req.app;
@@ -1334,13 +1334,13 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("MemberLevel"),
+        getGeneralUpdate("MemberLevel"),
       ],
       delete: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("MemberLevel"),
+        getGeneralDelete("MemberLevel"),
       ],
     },
   },
@@ -1369,13 +1369,13 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("MemberRole"),
+        getGeneralUpdate("MemberRole"),
       ],
       delete: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("MemberRole"),
+        getGeneralDelete("MemberRole"),
       ],
     },
   },
@@ -1412,13 +1412,13 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("Payment"),
+        getGeneralUpdate("Payment"),
       ],
       delete: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("Payment"),
+        getGeneralDelete("Payment"),
       ],
     },
   },
@@ -1451,13 +1451,13 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("MemberShipping"),
+        getGeneralUpdate("MemberShipping"),
       ],
       delete: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("MemberShipping"),
+        getGeneralDelete("MemberShipping"),
       ],
     },
   },
@@ -1583,13 +1583,13 @@ const controllers = [
       //   multer().none(),
       //   authenticationMiddleware,
       //   addUserMiddleware,
-      //   generalUpdate("SaleType"),
+      //   getGeneralUpdate("SaleType"),
       // ],
       // delete: [
       //   multer().none(),
       //   authenticationMiddleware,
       //   addUserMiddleware,
-      //   generalDelete("SaleType"),
+      //   getGeneralDelete("SaleType"),
       // ],
     },
   },
@@ -1618,13 +1618,13 @@ const controllers = [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalUpdate("SaleType"),
+        getGeneralUpdate("SaleType"),
       ],
       delete: [
         multer().none(),
         authenticationMiddleware,
         addUserMiddleware,
-        generalDelete("SaleType"),
+        getGeneralDelete("SaleType"),
       ],
     },
   },
