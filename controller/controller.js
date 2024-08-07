@@ -239,7 +239,7 @@ const getGeneralDelete = (tableName, option) => {
 const controllers = [
   // stock
   {
-    path: "stock",
+    path: "stock-backend",
     schemas: {
       all: ["Stock", "StockMedia", "Level_Price", "Role_Price"],
       read: ["StockCategory", "StockBrand", "StockAccounting", "Supplier"],
