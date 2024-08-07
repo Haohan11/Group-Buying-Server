@@ -252,7 +252,8 @@ export const queryParam2False = (target) =>
 export const filePathAppend = (path) =>
   `${staticPathName}/${path}`.replace(/\\/g, "/");
 
-export const transFilePath = (path) => path.replace(/\\/g, "/").replace(staticPathName, "");
+export const transFilePath = (path) =>
+  path.replace(/\\/g, "/").replace(staticPathName, "");
 
 export const formatTime = (time) =>
   time
@@ -277,6 +278,23 @@ export const getCurrentTime = () => {
   const second = addZeroPadding(`${date.getSeconds()}`, 2);
 
   return `${date.getFullYear()}-${month}-${day} ${hour}:${minute}:${second}`;
+};
+
+export const serverErrorWrapper = (middleware) => async (req, res, next) => {
+  try {
+    await middleware(req, res, next);
+  } catch (error) {
+    console.log(
+      `Error catch by \`serverErrorWrapper\` ${
+        res.headersSent
+        ? "without sending response"
+        : "with sending response (500)"
+      }: `,
+      error
+    );
+
+    if (!res.headersSent) res.response(500);
+  }
 };
 
 // export const getPermission = async (req, user) => {
