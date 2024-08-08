@@ -81,14 +81,12 @@ const getGeneralRead = (tableName, option = {}) => {
     const onlyDisable = queryParam2False(req.query.onlyDisable);
 
     const whereOption = {
-      where: {
-        ...(onlyEnable && { enable: true }),
-        ...(onlyDisable && { enable: false }),
-        ...(req.query.keyword && {
-          [Op.or]: opArray,
-        }),
-        ...(typeof extraWhere === "function" ? extraWhere(req) : extraWhere),
-      },
+      ...(onlyEnable && { enable: true }),
+      ...(onlyDisable && { enable: false }),
+      ...(req.query.keyword && {
+        [Op.or]: opArray,
+      }),
+      ...(typeof extraWhere === "function" ? extraWhere(req) : extraWhere),
     };
 
     const createSort =
@@ -111,7 +109,7 @@ const getGeneralRead = (tableName, option = {}) => {
     );
 
     try {
-      const total = await Table.count(whereOption);
+      const total = await Table.count({ where: whereOption });
       const { start, size, begin, totalPages } = getPage({
         total,
         ...req.query,
@@ -121,7 +119,7 @@ const getGeneralRead = (tableName, option = {}) => {
         offset: begin,
         limit: size,
         attributes: queryAttribute,
-        ...whereOption,
+        where: whereOption,
         ...(filterArray.length > 0 && { order: filterArray }),
       });
 
