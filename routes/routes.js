@@ -12,6 +12,8 @@ import {
   getPage,
 } from "../model/helper.js";
 
+import { frontAuthMiddleware } from "../middleware/middleware.js";
+
 import { createConnectMiddleware } from "../model/schemaHelper.js";
 
 const routes = [
@@ -98,9 +100,11 @@ const routes = [
     path: "stock",
     children: [
       {
+        /** For frontend fetch stock data */
         path: "all",
         method: "get",
         handlers: [
+          frontAuthMiddleware,
           createConnectMiddleware([
             "Member",
             "Stock",
@@ -227,7 +231,7 @@ const routes = [
           ]),
           serverErrorWrapper(async (req, res) => {
             const { Member, Stock, Level_Price, Role_Price } = req.app;
-            const { stock_id, keyword } = req.query;
+            const { keyword } = req.query;
 
             const role_fk = "member_role_id";
             const level_fk = "member_level_id";
