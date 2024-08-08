@@ -1,9 +1,14 @@
 import { Op } from "sequelize";
 
 import { routesSet } from "../globalVariable.js";
-import { logger, toArray, serverErrorWrapper } from "../model/helper.js";
+import {
+  logger,
+  toArray,
+  serverErrorWrapper,
+  getPage,
+} from "../model/helper.js";
 
-import { createBulkConnectMiddleware } from "../model/schemaHelper.js";
+import { createConnectMiddleware } from "../model/schemaHelper.js";
 
 const routes = [
   // receiver
@@ -14,7 +19,7 @@ const routes = [
         path: ":memberId",
         method: "get",
         handlers: [
-          createBulkConnectMiddleware(["Member", "MemberContactPerson"]),
+          createConnectMiddleware(["Member", "MemberContactPerson"]),
           serverErrorWrapper(async (req, res, next) => {
             const { Member, MemberContactPerson } = req.app;
 
@@ -45,7 +50,7 @@ const routes = [
         path: ":memberId",
         method: "get",
         handlers: [
-          createBulkConnectMiddleware([
+          createConnectMiddleware([
             "Member",
             "Stock",
             "Level_Price",
@@ -92,6 +97,21 @@ const routes = [
               )
             );
 
+            const keywordTargets = ["name", "code", "short_desc"];
+            const whereOption = {
+              ...(keyword && {
+                [Op.or]: keywordTargets.map((fieldName) => ({
+                  [fieldName]: { [Op.like]: `%${keyword}%` },
+                })),
+              }),
+            };
+
+            const total = await Stock.count({ where: whereOption });
+            const { start, size, begin, totalPages } = getPage({
+              total,
+              ...req.query,
+            });
+
             const stockData = await Stock.findAll({
               attributes: [
                 "id",
@@ -117,15 +137,9 @@ const routes = [
                 "introduction",
                 "short_desc",
               ],
-              where: {
-                ...(keyword && {
-                  [Op.or]: ["name", "code", "short_desc"].map(
-                    (fieldName) => ({
-                      [fieldName]: { [Op.like]: `%${keyword}%` },
-                    })
-                  ),
-                }),
-              },
+              where: whereOption,
+              offset: begin,
+              limit: size,
             });
 
             const stockList = stockData.map((stock) => {
@@ -138,7 +152,14 @@ const routes = [
               return stock;
             });
 
-            res.response(200, stockList);
+            res.response(200, {
+              start,
+              size,
+              begin,
+              total,
+              totalPages,
+              list: stockList,
+            });
           }),
         ],
       },
@@ -153,7 +174,9 @@ export const registRoutes = (app) => {
         app[route.method](`${parentPath}/${route.path}`, route.handlers);
 
         routesSet.add(`${parentPath}/${route.path}`);
-        logger(`register route: ${parentPath}/${route.path}`);
+        logger(
+          `\`registRoutes: \` register route: ${parentPath}/${route.path}`
+        );
       }
 
       if (route.children)
@@ -164,6 +187,6 @@ export const registRoutes = (app) => {
   try {
     loopRoutes(routes);
   } catch (error) {
-    console.log(error);
+    console.log("`registRoutes` error: ", error);
   }
 };
