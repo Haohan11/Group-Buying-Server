@@ -1,7 +1,7 @@
 import fs from "fs";
 import multer from "multer";
 import {
-  authenticationMiddleware,
+  backAuthMiddleware,
   addUserMiddleware,
 } from "../middleware/middleware.js";
 
@@ -249,7 +249,7 @@ const controllers = [
           { name: "stock_image" },
           { name: "introduction_image" },
         ]),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralCreate("Stock", {
           imageFieldName: [{ name: "cover_image" }],
@@ -338,7 +338,7 @@ const controllers = [
         }),
       ],
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("Stock", {
           queryAttribute: [
@@ -463,7 +463,7 @@ const controllers = [
           { name: "stock_image" },
           { name: "introduction_image" },
         ]),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralUpdate("Stock", {
           imageFieldName: [{ name: "cover_image" }],
@@ -599,7 +599,7 @@ const controllers = [
       ],
       delete: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralDelete("Stock", {
           imageFieldName: ["cover_image"],
@@ -656,7 +656,7 @@ const controllers = [
     },
     actions: {
       read: [
-        // authenticationMiddleware,
+        // backAuthMiddleware,
         // addUserMiddleware,
         getGeneralRead("Stock", {
           queryAttribute: [
@@ -796,7 +796,7 @@ const controllers = [
     actions: {
       create: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralCreate("StockBrand", {
           defaultData: {
@@ -805,7 +805,7 @@ const controllers = [
         }),
       ],
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("StockBrand", {
           queryAttribute: ["id", "name", "description"],
@@ -814,13 +814,13 @@ const controllers = [
       ],
       update: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralUpdate("StockBrand"),
       ],
       delete: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralDelete("StockBrand"),
       ],
@@ -837,7 +837,7 @@ const controllers = [
         createUploadImage("stock-category-thumbnail").fields([
           { name: "recommended_image" },
         ]),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralCreate("StockCategory", {
           imageFieldName: [{ name: "recommended_image" }],
@@ -847,7 +847,7 @@ const controllers = [
         }),
       ],
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("StockCategory", {
           queryAttribute: [
@@ -864,7 +864,7 @@ const controllers = [
         createUploadImage("stock-category-thumbnail").fields([
           { name: "recommended_image" },
         ]),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralUpdate("StockCategory", {
           imageFieldName: [{ name: "recommended_image" }],
@@ -872,7 +872,7 @@ const controllers = [
       ],
       delete: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralDelete("StockCategory", {
           imageFieldName: ["recommended_image"],
@@ -889,7 +889,7 @@ const controllers = [
     actions: {
       create: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralCreate("StockAccounting", {
           defaultData: {
@@ -898,7 +898,7 @@ const controllers = [
         }),
       ],
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("StockAccounting", {
           queryAttribute: ["id", "name", "code", "sorting", "description"],
@@ -907,13 +907,13 @@ const controllers = [
       ],
       update: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralUpdate("StockAccounting"),
       ],
       delete: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralDelete("StockAccounting"),
       ],
@@ -927,7 +927,7 @@ const controllers = [
     },
     actions: {
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("Payment", {
           queryAttribute: ["id", "name"],
@@ -944,7 +944,7 @@ const controllers = [
     },
     actions: {
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("AccountMethod", {
           queryAttribute: ["id", "name"],
@@ -962,7 +962,7 @@ const controllers = [
     actions: {
       create: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralCreate("Supplier", {
           defaultData: {
@@ -974,7 +974,7 @@ const controllers = [
         }),
       ],
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("Supplier", {
           queryAttribute: [
@@ -1014,13 +1014,13 @@ const controllers = [
       ],
       update: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralUpdate("Supplier"),
       ],
       delete: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralDelete("Supplier"),
       ],
@@ -1036,7 +1036,7 @@ const controllers = [
     actions: {
       create: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralCreate("Member", {
           defaultData: {
@@ -1115,7 +1115,7 @@ const controllers = [
         }),
       ],
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("Member", {
           queryAttribute: [
@@ -1222,7 +1222,7 @@ const controllers = [
       ],
       update: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralUpdate("Member", {
           extraHandler: async (member_id, req) => {
@@ -1281,7 +1281,7 @@ const controllers = [
       ],
       delete: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralDelete("Member", {
           stopDestroy: true,
@@ -1315,12 +1315,12 @@ const controllers = [
     actions: {
       create: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralCreate("MemberLevel"),
       ],
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("MemberLevel", {
           queryAttribute: ["id", "name", "description"],
@@ -1329,13 +1329,13 @@ const controllers = [
       ],
       update: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralUpdate("MemberLevel"),
       ],
       delete: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralDelete("MemberLevel"),
       ],
@@ -1350,12 +1350,12 @@ const controllers = [
     actions: {
       create: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralCreate("MemberRole"),
       ],
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("MemberRole", {
           queryAttribute: ["id", "name", "description"],
@@ -1364,13 +1364,13 @@ const controllers = [
       ],
       update: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralUpdate("MemberRole"),
       ],
       delete: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralDelete("MemberRole"),
       ],
@@ -1385,7 +1385,7 @@ const controllers = [
     actions: {
       create: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralCreate("Payment", {
           defaultData: {
@@ -1395,7 +1395,7 @@ const controllers = [
         }),
       ],
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("Payment", {
           queryAttribute: ["id", "name", "description"],
@@ -1407,13 +1407,13 @@ const controllers = [
       ],
       update: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralUpdate("Payment"),
       ],
       delete: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralDelete("Payment"),
       ],
@@ -1428,7 +1428,7 @@ const controllers = [
     actions: {
       create: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralCreate("MemberShipping", {
           defaultData: {
@@ -1437,7 +1437,7 @@ const controllers = [
         }),
       ],
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("MemberShipping", {
           queryAttribute: ["id", "name", "description"],
@@ -1446,13 +1446,13 @@ const controllers = [
       ],
       update: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralUpdate("MemberShipping"),
       ],
       delete: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralDelete("MemberShipping"),
       ],
@@ -1474,7 +1474,7 @@ const controllers = [
     actions: {
       create: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         async (req, res) => {
           try {
@@ -1569,7 +1569,7 @@ const controllers = [
         },
       ],
       // read: [
-      //   authenticationMiddleware,
+      //   backAuthMiddleware,
       //   addUserMiddleware,
       //   getGeneralRead("SaleType", {
       //     queryAttribute: ["id", "name", "description"],
@@ -1578,13 +1578,13 @@ const controllers = [
       // ],
       // update: [
       //   multer().none(),
-      //   authenticationMiddleware,
+      //   backAuthMiddleware,
       //   addUserMiddleware,
       //   getGeneralUpdate("SaleType"),
       // ],
       // delete: [
       //   multer().none(),
-      //   authenticationMiddleware,
+      //   backAuthMiddleware,
       //   addUserMiddleware,
       //   getGeneralDelete("SaleType"),
       // ],
@@ -1599,12 +1599,12 @@ const controllers = [
     actions: {
       create: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralCreate("SaleType"),
       ],
       read: [
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralRead("SaleType", {
           queryAttribute: ["id", "name", "description"],
@@ -1613,13 +1613,13 @@ const controllers = [
       ],
       update: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralUpdate("SaleType"),
       ],
       delete: [
         multer().none(),
-        authenticationMiddleware,
+        backAuthMiddleware,
         addUserMiddleware,
         getGeneralDelete("SaleType"),
       ],
