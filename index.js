@@ -19,7 +19,7 @@ import {
 overrideLog();
 
 import { 
-  createBulkConnectMiddleware,
+  createConnectMiddleware,
 } from "./model/schemaHelper.js";
 
 import { createCRUDRoutes } from "./CRUDroutes.js";
@@ -257,7 +257,7 @@ app.use(connectDbMiddleWare);
 
 app.post(
   "/login",
-  createBulkConnectMiddleware(["User"]),
+  createConnectMiddleware(["User"]),
   async function (req, res) {
     try {
       const { account, password } = req.body;
@@ -350,7 +350,7 @@ false &&
 
 false && app.get(
   "/alter-table",
-  createBulkConnectMiddleware([], { alter: true }),
+  createConnectMiddleware([], { alter: true }),
   async (req, res) => {
     return res.response(200, "Success alter table.");
   }
@@ -358,7 +358,7 @@ false && app.get(
 
 app.get(
   "/get-index-item",
-  createBulkConnectMiddleware(["IndexItem", "IndexItemType"]),
+  createConnectMiddleware(["IndexItem", "IndexItemType"]),
   async (req, res) => {
     const { IndexItem, IndexItemType } = req.app;
 

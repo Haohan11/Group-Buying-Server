@@ -7,7 +7,7 @@ import {
 } from "./model/helper.js";
 
 import { 
-  createBulkConnectMiddleware,
+  createConnectMiddleware,
 } from "./model/schemaHelper.js";
 
 import { controllers } from "./controller/controller.js";
@@ -16,7 +16,7 @@ const createRouter = ({ path, schemas, actions }) => {
   const router = express.Router();
 
   if (Array.isArray(schemas["all"]))
-    router.use(createBulkConnectMiddleware(schemas["all"]));
+    router.use(createConnectMiddleware(schemas["all"]));
 
   [
     ["create", "post"],
@@ -30,7 +30,7 @@ const createRouter = ({ path, schemas, actions }) => {
       if (!schemas || !schemas[action])
         return router[method]("/", actions[action]);
 
-      const connectMiddleware = createBulkConnectMiddleware(schemas[action]);
+      const connectMiddleware = createConnectMiddleware(schemas[action]);
       router[method]("/", connectMiddleware, actions[action]);
     } catch (error) {
       console.warn(error);
