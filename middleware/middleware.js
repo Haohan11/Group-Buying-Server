@@ -1,16 +1,13 @@
 import jwt from "jsonwebtoken";
-import Schemas from "../model/schema/schema.js";
 
 import {
   customResponse,
-  createSchema,
   connectToDataBase,
   logger,
+  serverErrorWrapper,
 } from "../model/helper.js";
 
-import { 
-  createModel,
-} from "../model/schemaHelper.js";
+import { createModel } from "../model/schemaHelper.js";
 
 export const responseMiddleware = (req, res, next) => {
   res.response = (statusCode, message, data) =>
@@ -46,70 +43,43 @@ export const addUserMiddleware = async (req, res, next) => {
     };
     logger("========== exit addUserMiddleware ==========");
     next();
-  } catch {
+  } catch (error) {
+    console.log("`addUserMiddleware: `", error);
     res.response(500);
   }
 };
 
-export const authenticationMiddleware = (req, res, next) => {
-  logger("========= in authentication middleware =========");
-  let token;
-  try {
-    token = req.headers["authorization"].split(" ")[1];
-  } catch (e) {
-    token = "";
-  }
+export const backAuthMiddleware = serverErrorWrapper((req, res, next) => {
+  const token = req.headers?.["authorization"]?.split(" ")?.[1];
+  if (!token) return res.response(401);
 
-  const result = [false, false];
-
-  jwt.verify(token, "front_secret_key", function (err, decoded) {
-    if (err) return;
+  jwt.verify(token, process.env.BACK_SECRET_KEY, function (err, decoded) {
+    if (err) return res.response(401);
 
     const {
       payload: { user_account },
     } = decoded;
 
     req._user = { user_account };
-    result[0] = true;
+    next();
   });
+}, "backAuthMiddleware");
 
-  jwt.verify(token, "back_secret_key", function (err, decoded) {
-    if (err) return;
+export const frontAuthMiddleware = serverErrorWrapper((req, res, next) => {
+  const token = req.headers?.["authorization"]?.split(" ")?.[1];
+  if (!token) return res.response(401);
+
+  jwt.verify(token, process.env.FRONT_SECRET_KEY, function (err, decoded) {
+    if (err) return res.response(401);
 
     const {
-      payload: { user_account },
+      payload: { user_account, member_id },
     } = decoded;
 
-    req._user = { user_account };
-
-    result[1] = true;
+    req._user = { account: user_account, member_id };
+    next();
   });
-  
-  logger("========= exit authentication middleware =========");
-  
-  result.includes(true) ? next() : res.response(401);
-};
-
-export const resetAuthentication = (req, res, next) => {
-  let token;
-  try {
-    token = req.headers["authorization"].split(" ")[1];
-  } catch (e) {
-    token = "";
-  }
-
-  jwt.verify(token, "reset_secret_key", function (err, decoded) {
-    if (err) {
-      return res.response(401);
-    } else {
-      const {
-        payload: { user_account },
-      } = decoded;
-      req._user = { user_account };
-      next();
-    }
-  });
-};
+}, "frontAuthMiddleware");
 
 export const connectDbMiddleWare = async (req, res, next) => {
   const sequelize = await connectToDataBase();
