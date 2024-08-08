@@ -176,7 +176,7 @@ const routes = [
               +levelPriceData.price || Infinity,
               +rolePriceData.price || Infinity
             );
-            lowPrice !== Infinity && stockData.setDataValue("price", lowPrice);
+            lowPrice !== Infinity && stockData.setDataValue("member_price", lowPrice);
 
             res.response(200, stockData);
           }),
