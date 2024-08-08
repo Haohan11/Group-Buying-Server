@@ -1,3 +1,7 @@
+import versionText from "../versionText.js";
+
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 
 import { routesSet } from "../globalVariable.js";
@@ -11,6 +15,53 @@ import {
 import { createConnectMiddleware } from "../model/schemaHelper.js";
 
 const routes = [
+  // verson
+  {
+    path: "version",
+    method: "get",
+    handlers: async (req, res) =>
+      res.response(200, `Current version: ${versionText}`),
+  },
+  // index-item
+  {
+    path: "get-index-item",
+    method: "get",
+    handlers: [
+      createConnectMiddleware(["IndexItem", "IndexItemType"]),
+      serverErrorWrapper(async (req, res) => {
+        const { IndexItem, IndexItemType } = req.app;
+
+        const indexItemTypes = await IndexItemType.findAll({
+          attributes: ["id", "name", "icon", "route"],
+        });
+
+        const list = await Promise.all(
+          indexItemTypes.map(async ({ id, name, icon, route }) => {
+            const indexItems = await IndexItem.findAll({
+              attributes: ["id", "name", "route", "table_name"],
+              where: {
+                index_item_type_id: id,
+              },
+            });
+            return {
+              id,
+              name,
+              icon,
+              route,
+              indexItems: indexItems.map((item) => ({
+                id: item.id,
+                name: item.name,
+                route: item.route,
+                tableName: item.table_name,
+              })),
+            };
+          })
+        );
+
+        res.response(200, list);
+      }, "get-index-item"),
+    ],
+  },
   // receiver
   {
     path: "receiver",
@@ -58,7 +109,7 @@ const routes = [
           ]),
           serverErrorWrapper(async (req, res, next) => {
             const { Member, Stock, Level_Price, Role_Price } = req.app;
-            const keyword = req.query.keyword;
+            const { stock_id, keyword } = req.query;
 
             const role_fk = "member_role_id";
             const level_fk = "member_level_id";
@@ -165,6 +216,92 @@ const routes = [
       },
     ],
   },
+  // login-front
+  {
+    path: "login-front",
+    method: "post",
+    handlers: [
+      createConnectMiddleware(["User", "Member"]),
+      serverErrorWrapper(async (req, res) => {
+        const { account, password } = req.body;
+
+        const { User, Member } = req.app;
+
+        const user = await User.findOne({
+          where: {
+            account,
+          },
+        });
+        if (!user?.id) return res.response(403, "帳號錯誤");
+
+        const isPasswordCorrect = bcrypt.compareSync(password, user.password);
+        if (!isPasswordCorrect) return res.response(403, "密碼錯誤");
+
+        const member = await Member.findOne({
+          where: {
+            user_id: user.id,
+          },
+        });
+        if (!member?.id) return res.response(403, "NoMember");
+
+        const payload = {
+          user_account: account,
+          user_password: password,
+          member_id: member.id,
+        };
+        const exp =
+          Math.floor(Date.now() / 1000) +
+          (parseInt(process.env.FRONT_EXPIRE_TIME) || 3600);
+        const token = jwt.sign({ payload, exp }, process.env.FRONT_SECRET_KEY);
+
+        res.response(200, {
+          token: token,
+          token_type: "bearer",
+          _exp: exp,
+        });
+      }, "login-front"),
+    ],
+  },
+  // login-back
+  {
+    path: "login-back",
+    method: "post",
+    handlers: [
+      createConnectMiddleware(["User"]),
+      serverErrorWrapper(async function (req, res) {
+        const { account, password } = req.body;
+
+        const { User } = req.app;
+
+        const user = await User.findOne({
+          where: {
+            account,
+          },
+        });
+        if (!user) return res.response(404, "帳號錯誤");
+
+        const isPasswordCorrect = bcrypt.compareSync(password, user.password);
+        if (!isPasswordCorrect) return res.response(403, "密碼錯誤");
+
+        const payload = {
+          user_account: account,
+          user_password: password,
+        };
+        const exp =
+          Math.floor(Date.now() / 1000) +
+          (parseInt(process.env.EXPIRE_TIME) || 3600);
+        const token = jwt.sign({ payload, exp }, process.env.BACK_SECRET_KEY);
+
+        res.response(200, {
+          // id: user.id,
+          // name: user.name,
+          token: token,
+          token_type: "bearer",
+          _exp: exp,
+        });
+      }, "login-back"),
+    ],
+  },
 ];
 
 export const registRoutes = (app) => {
@@ -174,9 +311,7 @@ export const registRoutes = (app) => {
         app[route.method](`${parentPath}/${route.path}`, route.handlers);
 
         routesSet.add(`${parentPath}/${route.path}`);
-        logger(
-          `\`registRoutes: \` register route: ${parentPath}/${route.path}`
-        );
+        logger(`\`registRoutes\` register route: ${parentPath}/${route.path}`);
       }
 
       if (route.children)
