@@ -110,11 +110,12 @@ const routes = [
           createConnectMiddleware([
             "Member",
             "Stock",
+            "StockMedia",
             "Level_Price",
             "Role_Price",
           ]),
           serverErrorWrapper(async (req, res) => {
-            const { Member, Stock, Level_Price, Role_Price } = req.app;
+            const { Member, Stock, StockMedia, Level_Price, Role_Price } = req.app;
             const { stockId } = req.query;
 
             const role_fk = "member_role_id";
@@ -155,6 +156,16 @@ const routes = [
             });
 
             if (!stockData) return res.response(404);
+
+            const stockImages = await StockMedia.findAll({
+              attributes: ["name"],
+              where: {
+                stock_id: stockId,
+                code: null,
+              },
+            });
+
+            stockData.setDataValue("stock_image", stockImages.map(data => data.name));
 
             const [levelPriceData, rolePriceData] = await Promise.all(
               [
@@ -397,6 +408,7 @@ const routes = [
       }, "login-back"),
     ],
   },
+  // sign-in
 ];
 
 export const registRoutes = (app) => {
