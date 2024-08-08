@@ -98,6 +98,124 @@ const routes = [
     path: "stock",
     children: [
       {
+        path: "all",
+        method: "get",
+        handlers: [
+          createConnectMiddleware([
+            "Member",
+            "Stock",
+            "Level_Price",
+            "Role_Price",
+          ]),
+          serverErrorWrapper(async (req, res) => {
+            const { member_id } = req._user;
+            const { Member, Stock, Level_Price, Role_Price } = req.app;
+            const { keyword } = req.query;
+
+            const role_fk = "member_role_id";
+            const level_fk = "member_level_id";
+
+            const memberData = await Member.findByPk(member_id, {
+              attributes: ["id", "name", role_fk, level_fk],
+            });
+            if (!memberData) return res.response(404);
+
+            const [levelPriceData, rolePriceData] = await Promise.all(
+              [
+                { Table: Level_Price, fk: level_fk },
+                { Table: Role_Price, fk: role_fk },
+              ].map(
+                async ({ Table, fk }) =>
+                  await Table.findAll({
+                    attributes: ["stock_id", "price"],
+                    where: {
+                      [fk]: memberData[fk],
+                    },
+                  })
+              )
+            );
+
+            const [levelPriceDict, rolePriceDict] = [
+              levelPriceData,
+              rolePriceData,
+            ].map((priceData) =>
+              priceData.reduce(
+                (dict, data) =>
+                  !isNaN(+data.price)
+                    ? dict.set(data.stock_id, +data.price)
+                    : dict,
+                new Map()
+              )
+            );
+
+            const keywordTargets = ["name", "code", "short_desc"];
+            const whereOption = {
+              ...(keyword && {
+                [Op.or]: keywordTargets.map((fieldName) => ({
+                  [fieldName]: { [Op.like]: `%${keyword}%` },
+                })),
+              }),
+            };
+
+            const total = await Stock.count({ where: whereOption });
+            const { start, size, begin, totalPages } = getPage({
+              total,
+              ...req.query,
+            });
+
+            const stockData = await Stock.findAll({
+              attributes: [
+                "id",
+                "cover_image",
+                "is_valid",
+                "is_preorder",
+                "is_nostock_sell",
+                "is_independent",
+                "name",
+                "code",
+                "barcode",
+                "specification",
+                "stock_category_id",
+                "stock_brand_id",
+                "accounting_id",
+                "supplier_id",
+                "min_order",
+                "order_step",
+                "preorder_count",
+                "price",
+                "purchase_price",
+                "description",
+                "introduction",
+                "short_desc",
+              ],
+              where: whereOption,
+              offset: begin,
+              limit: size,
+            });
+
+            const stockList = stockData.map((stock) => {
+              const lowPrice = Math.min(
+                +levelPriceDict.get(stock.id) || Infinity,
+                +rolePriceDict.get(stock.id) || Infinity
+              );
+              lowPrice !== Infinity && stock.setDataValue("price", lowPrice);
+
+              return stock;
+            });
+
+            res.response(200, {
+              start,
+              size,
+              begin,
+              total,
+              totalPages,
+              list: stockList,
+            });
+          }),
+        ],
+      },
+      {
+        /** For backend fetch stock data */
         path: ":memberId",
         method: "get",
         handlers: [
@@ -107,7 +225,7 @@ const routes = [
             "Level_Price",
             "Role_Price",
           ]),
-          serverErrorWrapper(async (req, res, next) => {
+          serverErrorWrapper(async (req, res) => {
             const { Member, Stock, Level_Price, Role_Price } = req.app;
             const { stock_id, keyword } = req.query;
 
