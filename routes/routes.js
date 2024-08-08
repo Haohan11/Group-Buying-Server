@@ -12,7 +12,10 @@ import {
   getPage,
 } from "../model/helper.js";
 
-import { frontAuthMiddleware } from "../middleware/middleware.js";
+import {
+  frontAuthMiddleware,
+  backAuthMiddleware,
+} from "../middleware/middleware.js";
 
 import { createConnectMiddleware } from "../model/schemaHelper.js";
 
@@ -100,8 +103,7 @@ const routes = [
     path: "stock",
     children: [
       {
-        /** For frontend fetch stock data */
-        path: "all",
+        path: "single",
         method: "get",
         handlers: [
           frontAuthMiddleware,
@@ -112,62 +114,20 @@ const routes = [
             "Role_Price",
           ]),
           serverErrorWrapper(async (req, res) => {
-            const { member_id } = req._user;
             const { Member, Stock, Level_Price, Role_Price } = req.app;
-            const { keyword } = req.query;
+            const { stockId } = req.query;
 
             const role_fk = "member_role_id";
             const level_fk = "member_level_id";
+
+            const member_id = req._user.member_id;
 
             const memberData = await Member.findByPk(member_id, {
               attributes: ["id", "name", role_fk, level_fk],
             });
             if (!memberData) return res.response(404);
 
-            const [levelPriceData, rolePriceData] = await Promise.all(
-              [
-                { Table: Level_Price, fk: level_fk },
-                { Table: Role_Price, fk: role_fk },
-              ].map(
-                async ({ Table, fk }) =>
-                  await Table.findAll({
-                    attributes: ["stock_id", "price"],
-                    where: {
-                      [fk]: memberData[fk],
-                    },
-                  })
-              )
-            );
-
-            const [levelPriceDict, rolePriceDict] = [
-              levelPriceData,
-              rolePriceData,
-            ].map((priceData) =>
-              priceData.reduce(
-                (dict, data) =>
-                  !isNaN(+data.price)
-                    ? dict.set(data.stock_id, +data.price)
-                    : dict,
-                new Map()
-              )
-            );
-
-            const keywordTargets = ["name", "code", "short_desc"];
-            const whereOption = {
-              ...(keyword && {
-                [Op.or]: keywordTargets.map((fieldName) => ({
-                  [fieldName]: { [Op.like]: `%${keyword}%` },
-                })),
-              }),
-            };
-
-            const total = await Stock.count({ where: whereOption });
-            const { start, size, begin, totalPages } = getPage({
-              total,
-              ...req.query,
-            });
-
-            const stockData = await Stock.findAll({
+            const stockData = await Stock.findByPk(stockId, {
               attributes: [
                 "id",
                 "cover_image",
@@ -192,37 +152,46 @@ const routes = [
                 "introduction",
                 "short_desc",
               ],
-              where: whereOption,
-              offset: begin,
-              limit: size,
             });
 
-            const stockList = stockData.map((stock) => {
-              const lowPrice = Math.min(
-                +levelPriceDict.get(stock.id) || Infinity,
-                +rolePriceDict.get(stock.id) || Infinity
-              );
-              lowPrice !== Infinity && stock.setDataValue("price", lowPrice);
+            if (!stockData) return res.response(404);
 
-              return stock;
-            });
+            const [levelPriceData, rolePriceData] = await Promise.all(
+              [
+                { Table: Level_Price, fk: level_fk },
+                { Table: Role_Price, fk: role_fk },
+              ].map(
+                async ({ Table, fk }) =>
+                  await Table.findOne({
+                    attributes: ["price"],
+                    where: {
+                      [fk]: memberData[fk],
+                      stock_id: stockId,
+                    },
+                  })
+              )
+            );
 
-            res.response(200, {
-              start,
-              size,
-              begin,
-              total,
-              totalPages,
-              list: stockList,
-            });
+            const lowPrice = Math.min(
+              +levelPriceData.price || Infinity,
+              +rolePriceData.price || Infinity
+            );
+            lowPrice !== Infinity && stockData.setDataValue("price", lowPrice);
+
+            res.response(200, stockData);
           }),
         ],
       },
       {
-        /** For backend fetch stock data */
+        /** Use `/all` route for frontend fetch */
         path: ":memberId",
         method: "get",
         handlers: [
+          async (req, res, next) => {
+            req.params.memberId === "all"
+              ? frontAuthMiddleware(req, res, next)
+              : backAuthMiddleware(req, res, next);
+          },
           createConnectMiddleware([
             "Member",
             "Stock",
@@ -236,7 +205,11 @@ const routes = [
             const role_fk = "member_role_id";
             const level_fk = "member_level_id";
 
-            const member_id = req.params.memberId;
+            const member_id =
+              req.params.memberId === "all"
+                ? req._user.member_id
+                : req.params.memberId;
+
             const memberData = await Member.findByPk(member_id, {
               attributes: ["id", "name", role_fk, level_fk],
             });
