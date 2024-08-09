@@ -99,9 +99,9 @@ const getSale_idFK = (targetTable = "Sale") => ({
   option: {
     foreignKey: {
       name: "sale_id",
-      type: DataTypes.STRING(36),
-      comment: "銷售單ID",
+      type: DataTypes.STRING(13),
       allowNull: false,
+      comment: "銷售單ID",
     },
   },
 });
@@ -113,6 +113,17 @@ const getSaleDetail_idFK = (targetTable = "SaleDetail") => ({
       name: "sale_detail_id",
       type: DataTypes.STRING(36),
       comment: "銷售單明細ID",
+    },
+  },
+});
+
+const getReceiver_idFK = (targetTable = "MemberContactPerson") => ({
+  targetTable,
+  option: {
+    foreignKey: {
+      name: "receiver_id",
+      type: DataTypes.STRING(36),
+      comment: "收貨人ID",
     },
   },
 });
@@ -897,6 +908,7 @@ export const MemberContactPersonSchema = {
     tableName: "member_contact_person",
     comment: "供應商-連絡人",
   },
+  hasMany: [getReceiver_idFK("SaleDetailDelivery")],
   belongsTo: [getCountry_idFK(), getMember_idFK()],
 };
 
@@ -1944,7 +1956,11 @@ export const SaleSchema = {
   name: "sale",
   omitName: true,
   cols: {
-    id: getUUIdCol(),
+    id: {
+      type: DataTypes.STRING(13),
+      primaryKey: true,
+      comment: "銷售單ID",
+    },
     company_id: {
       type: DataTypes.STRING(36),
       comment: "隸屬公司",
@@ -1957,12 +1973,16 @@ export const SaleSchema = {
     },
     member_id: {
       type: DataTypes.STRING(36),
-      comment: "會員ID",
       allowNull: false,
+      comment: "會員ID",
     },
     member_id_2b: {
       type: DataTypes.STRING(36),
       comment: "購買商家的ID",
+    },
+    main_receiver_id: {
+      type: DataTypes.STRING(36),
+      comment: "主收件人ID",
     },
     sale_type_id: {
       type: DataTypes.STRING(36),
@@ -1991,6 +2011,13 @@ export const SaleSchema = {
       type: DataTypes.DATE,
       comment: "銷售日期",
       allowNull: false,
+      get() {
+        return this.getDataValue("sale_date")
+          ?.toISOString()
+          ?.replace(/T/, " ")
+          ?.replace(/\..+/, "")
+          ?.replace(/-/g, "/");
+      }
     },
     exchange_rate: {
       type: DataTypes.DOUBLE,
@@ -2108,9 +2135,9 @@ export const SaleDetailSchema = {
   cols: {
     id: getUUIdCol(),
     sale_id: {
-      type: DataTypes.STRING(36),
-      comment: "銷售單ID",
+      type: DataTypes.STRING(13),
       allowNull: false,
+      comment: "銷售單ID",
     },
     stock_id: {
       type: DataTypes.STRING(36),
@@ -2228,6 +2255,10 @@ export const SaleDetailDeliverySchema = {
       defaultValue: 0,
       comment: "運送費用",
     },
+    receiver_id: {
+      type: DataTypes.STRING(255),
+      comment: "收件人姓名",
+    },
     receiver_name: {
       type: DataTypes.STRING(255),
       comment: "收件人姓名",
@@ -2286,7 +2317,7 @@ export const SaleDetailDeliverySchema = {
     tableName: "sale_detail_delivery",
     comment: "銷售單寄送資訊",
   },
-  belongsTo: [getSale_idFK(), getSaleDetail_idFK()],
+  belongsTo: [getSale_idFK(), getSaleDetail_idFK(), getReceiver_idFK()],
 };
 
 export const IndexItemTypeSchema = {

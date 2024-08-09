@@ -2,8 +2,8 @@ import indexItem from "./insert-data/indexItem.js";
 import insertData from "./insert-data/insertData.js";
 
 const config = {
-  // generateTable: ["Stock"],
-  // recreateTable: true,
+  // generateTable: [],
+  // recreateTable: [],
   // indexItem,
   // insertData,
   showSequelizeLog: false,

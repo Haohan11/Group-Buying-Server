@@ -17,6 +17,7 @@ import {
   checkArray,
   addZeroPadding,
   getCurrentTime,
+  serverErrorWrapper,
 } from "../model/helper.js";
 
 const getGeneralCreate = (tableName, option) => {
@@ -64,51 +65,52 @@ const getGeneralRead = (tableName, option = {}) => {
     extraWhere = {},
   } = option;
   return async (req, res) => {
-    logger("========== in generalRead ==========");
-    const Table = req.app[tableName];
-    queryAttribute.includes("create_time") ||
-      queryAttribute.push("create_time");
-
-    const keywordArray = searchAttribute.map((item) => ({
-      [item]: { [Op.like]: `%${req.query.keyword}%` },
-    }));
-
-    const opArray = keywordArray.filter((item) =>
-      queryAttribute.includes(Object.keys(item)[0])
-    );
-
-    const onlyEnable = queryParam2False(req.query.onlyEnable);
-    const onlyDisable = queryParam2False(req.query.onlyDisable);
-
-    const whereOption = {
-      ...(onlyEnable && { enable: true }),
-      ...(onlyDisable && { enable: false }),
-      ...(req.query.keyword && {
-        [Op.or]: opArray,
-      }),
-      ...(typeof extraWhere === "function" ? extraWhere(req) : extraWhere),
-    };
-
-    const createSort =
-      req.query.sort === undefined ||
-      req.query.sort === "undefined" ||
-      req.query.sort === ""
-        ? []
-        : ["create_time", req.query.sort];
-    const nameSort =
-      req.query.item === undefined ||
-      req.query.item === "undefined" ||
-      req.query.item === ""
-        ? []
-        : ["name", req.query.item];
-
-    const sortArray = [createSort, nameSort];
-
-    const filterArray = sortArray.filter((item) =>
-      queryAttribute.includes(item[0])
-    );
-
     try {
+      logger("========== in generalRead ==========");
+      const Table = req.app[tableName];
+      if (!Table) throw new Error("Table not found.");
+      queryAttribute.includes("create_time") ||
+        queryAttribute.push("create_time");
+
+      const keywordArray = searchAttribute.map((item) => ({
+        [item]: { [Op.like]: `%${req.query.keyword}%` },
+      }));
+
+      const opArray = keywordArray.filter((item) =>
+        queryAttribute.includes(Object.keys(item)[0])
+      );
+
+      const onlyEnable = queryParam2False(req.query.onlyEnable);
+      const onlyDisable = queryParam2False(req.query.onlyDisable);
+
+      const whereOption = {
+        ...(onlyEnable && { enable: true }),
+        ...(onlyDisable && { enable: false }),
+        ...(req.query.keyword && {
+          [Op.or]: opArray,
+        }),
+        ...(typeof extraWhere === "function" ? extraWhere(req) : extraWhere),
+      };
+
+      const createSort =
+        req.query.sort === undefined ||
+        req.query.sort === "undefined" ||
+        req.query.sort === ""
+          ? []
+          : ["create_time", req.query.sort];
+      const nameSort =
+        req.query.item === undefined ||
+        req.query.item === "undefined" ||
+        req.query.item === ""
+          ? []
+          : ["name", req.query.item];
+
+      const sortArray = [createSort, nameSort];
+
+      const filterArray = sortArray.filter((item) =>
+        queryAttribute.includes(item[0])
+      );
+
       const total = await Table.count({ where: whereOption });
       const { start, size, begin, totalPages } = getPage({
         total,
@@ -1316,10 +1318,11 @@ const controllers = [
         "Sale",
         "SaleDetail",
         "SaleDetailDelivery",
+        "Member",
         "MemberContactPerson",
         "Company",
-        "Member",
       ],
+      read: ["Sale", "SaleDetail", "SaleDetailDelivery", "Member", "Stock"],
     },
     actions: {
       create: [
@@ -1349,8 +1352,36 @@ const controllers = [
             const person_list = JSON.parse(data.person_list);
             if (!person_list) return res.response(400, `Invalid Person List.`);
 
+            /** generate sale code with format: SALYYMMDD00001 */
+            const date = new Date();
+            const yearStr = `${date.getFullYear()}`.slice(-2);
+            const monthStr = `${date.getMonth() + 1}`.padStart(2, "0");
+            const dateStr = `${date.getDate()}`.padStart(2, "0");
+            const codePrefix = `SAL${yearStr}${monthStr}${dateStr}`;
+
+            const codeData = await Sale.findAll({
+              attributes: ["code"],
+              where: {
+                code: {
+                  [Op.like]: `${codePrefix}%`,
+                },
+              },
+            });
+
+            const serialNumber = codeData.reduce((max, item) => {
+              if (!item?.code || typeof item.code !== "string") return max;
+
+              const itemCode = parseInt(item.code.replace(codePrefix, ""));
+              return itemCode > max ? itemCode : max;
+            }, 0);
+            const codePostfix = `${serialNumber + 1}`.padStart(5, "0");
+
+            const code = codePrefix + codePostfix;
+            /** generate sale code end */
+
             const { id: sale_id } = await Sale.create({
-              id: "uuid_placeholder",
+              id: Date.now(),
+              code,
               company_id,
               member_id,
               sale_point_id: "none",
@@ -1363,16 +1394,17 @@ const controllers = [
             await Promise.all(
               toArray(person_list).map(async (person) => {
                 const {
+                  id: person_id,
                   stockList,
                   name: personName,
                   address: personAddress,
                   phone: personPhone,
+                  main_reciever,
                 } = person;
 
                 if (!checkArray(stockList)) return;
 
-                await MemberContactPerson.create({
-                  id: "uuid_placeholder",
+                const personData = {
                   country_id: "none",
                   member_id,
                   name: personName,
@@ -1380,17 +1412,51 @@ const controllers = [
                   contact_address: personAddress,
                   phone: personPhone,
                   ...req._author,
-                });
+                };
+
+                const isNewPerson = person_id[0] === "_";
+                const MCPGate = isNewPerson
+                  ? {
+                      action: "create",
+                      data: {
+                        id: "uuid_placeholder",
+                        ...personData,
+                      },
+                    }
+                  : {
+                      action: "update",
+                      data: {
+                        id: person_id,
+                        ...personData,
+                      },
+                      option: {
+                        where: {
+                          id: person_id,
+                        },
+                      },
+                    };
+                const MCPdata = await MemberContactPerson[MCPGate.action](
+                  MCPGate.data,
+                  MCPGate.option
+                );
+
+                const receiver_id = isNewPerson ? MCPdata.id : person_id;
+                main_reciever &&
+                  (await Sale.update(
+                    { main_receiver_id: receiver_id },
+                    { where: { id: sale_id } }
+                  ));
 
                 const detailsData = await SaleDetail.bulkCreate(
-                  stockList.map((stock) => {
-                    return {
-                      id: "uuid_placeholder",
-                      stock_id: stock.id,
-                      sale_id,
-                      ...req._author,
-                    };
-                  })
+                  stockList.map(({ id, qty, unit_price, price }) => ({
+                    id: "uuid_placeholder",
+                    stock_id: id,
+                    qty,
+                    unit_price,
+                    price,
+                    sale_id,
+                    ...req._author,
+                  }))
                 );
 
                 await SaleDetailDelivery.bulkCreate(
@@ -1399,6 +1465,7 @@ const controllers = [
                       id: "uuid_placeholder",
                       sale_id,
                       sale_detail_id: detail.id,
+                      receiver_id,
                       receiver_name: personName,
                       receiver_phone: personPhone,
                       receiver_address: personAddress,
@@ -1411,20 +1478,154 @@ const controllers = [
 
             res.response(200, `Success create Sale.`);
           } catch (error) {
-            console.log(error);
+            console.log("Create Sale Error: ", error);
             return error.name === "SequelizeValidationError"
               ? res.response(400, `Invalid ${error.errors[0].path}.`)
               : res.response(500);
           }
         },
       ],
-      // read: [
-      //   backAuthMiddleware,
-      //   addUserMiddleware,
-      //   getGeneralRead("SaleType", {
-      //     queryAttribute: ["id", "name", "description"],
-      //     searchAttribute: ["name"],
-      //   }),
+      read: [
+        backAuthMiddleware,
+        addUserMiddleware,
+        serverErrorWrapper(async (req, res) => {
+          const { Sale, SaleDetail, SaleDetailDelivery, Stock, Member } =
+            req.app;
+
+          const total = await Sale.count();
+          const { size, begin, totalPages } = getPage({
+            total,
+            ...req.query,
+          });
+
+          const saleData = await Sale.findAll({
+            attributes: ["id", "code", "member_id", "sale_date"],
+            offset: begin,
+            limit: size,
+          });
+
+          const memberData = await Member.findAll({
+            attributes: ["id", "code", "name"],
+            where: {
+              id: {
+                [Op.in]: saleData.map(({ member_id }) => member_id),
+              },
+            },
+          });
+
+          const memberDict = memberData.reduce(
+            (memberMap, member) => memberMap.set(member.id, member.dataValues),
+            new Map()
+          );
+
+          const list = await Promise.all(
+            saleData.map(
+              async ({ id: sale_id, code, member_id, sale_date }) => {
+                const saleDetailData = await SaleDetail.findAll({
+                  attributes: ["id", "stock_id", "qty", "unit_price", "price"],
+                  where: {
+                    sale_id,
+                  },
+                });
+
+                const stockData = await Stock.findAll({
+                  attributes: [
+                    "id",
+                    "cover_image",
+                    "name",
+                    "code",
+                    "barcode",
+                    "specification",
+                    "stock_category_id",
+                    "stock_brand_id",
+                    "accounting_id",
+                    "supplier_id",
+                    "purchase_price",
+                    "short_desc",
+                  ],
+                  where: {
+                    id: {
+                      [Op.in]: saleDetailData.map(({ stock_id }) => stock_id),
+                    },
+                  },
+                });
+                const stockDict = stockData.reduce(
+                  (stockMap, stock) => stockMap.set(stock.id, stock.dataValues),
+                  new Map()
+                );
+
+                const personData = await saleDetailData.reduce(
+                  async (
+                    polymer,
+                    { id: sale_detail_id, stock_id, qty, unit_price, price }
+                  ) => {
+                    const receiverData = await polymer;
+
+                    const saleDeliveryData = await SaleDetailDelivery.findOne({
+                      attributes: [
+                        "receiver_id",
+                        "receiver_name",
+                        "receiver_phone",
+                        "receiver_address",
+                      ],
+                      where: {
+                        sale_id,
+                        sale_detail_id,
+                      },
+                    });
+
+                    if (!saleDeliveryData?.receiver_id) return receiverData;
+
+                    const {
+                      receiver_id: id,
+                      receiver_name: name,
+                      receiver_phone: phone,
+                      receiver_address: address,
+                    } = saleDeliveryData;
+
+                    receiverData.has(id)
+                      ? receiverData.get(id).stockList.push({
+                          ...stockDict.get(stock_id),
+                          qty,
+                          unit_price,
+                          price,
+                        })
+                      : receiverData.set(id, {
+                          id,
+                          name,
+                          phone,
+                          address,
+                          stockList: [
+                            {
+                              ...stockDict.get(stock_id),
+                              qty,
+                              unit_price,
+                              price,
+                            },
+                          ],
+                        });
+
+                    return receiverData;
+                  },
+                  new Map()
+                );
+
+                return {
+                  id: sale_id,
+                  code,
+                  member_id,
+                  member_name: memberDict.get(member_id).name,
+                  member_code: memberDict.get(member_id).code,
+                  sale_date,
+                  person_list: new Array(...personData.values()),
+                };
+              }
+            )
+          );
+
+          res.response(200, { totalPages, list });
+        }, "Read Sale"),
+      ],
       // ],
       // update: [
       //   multer().none(),
