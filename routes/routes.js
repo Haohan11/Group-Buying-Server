@@ -194,7 +194,7 @@ const routes = [
         ],
       },
       {
-        /** Use `/all` route for frontend fetch */
+        /** `/all` for frontend `/:memberId` for backend */
         path: ":memberId",
         method: "get",
         handlers: [

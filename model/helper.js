@@ -33,29 +33,32 @@ export const toArray = (target) => (Array.isArray(target) ? target : [target]);
  */
 export const checkArray = (arr) => Array.isArray(arr) && arr.length > 0;
 
-export const connectToDataBase = async () => {
-  dotenv.config();
-  const { DB_NAME, DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT } = process.env;
-
-  const sequelize = new Sequelize(DB_NAME, DB_USERNAME, DB_PASSWORD, {
-    host: DB_HOST,
-    port: DB_PORT,
-    dialect: "mysql",
-    pool: {
-      max: 50,
-      min: 0,
-      idle: 10000,
-    },
-  });
-
-  try {
-    await sequelize.authenticate();
-    console.log("Connection has been established successfully.");
-    return sequelize;
-  } catch (error) {
-    console.error("Unable to connect to the database:", error);
-    return false;
-  }
+export const connection = {
+  sequelize: null,
+  async connect() {
+    try {
+      dotenv.config();
+      const { DB_NAME, DB_USERNAME, DB_PASSWORD, DB_HOST, DB_PORT } =
+        process.env;
+      const sequelize = new Sequelize(DB_NAME, DB_USERNAME, DB_PASSWORD, {
+        host: DB_HOST,
+        port: DB_PORT,
+        dialect: "mysql",
+      });
+      await sequelize.authenticate();
+      console.log("Connection has been established successfully.");
+      return sequelize;
+    } catch (error) {
+      console.log(
+        "`connection.connect` Failed to connect to the database: ",
+        error
+      );
+      return null;
+    }
+  },
+  async get() {
+    return (this.sequelize ??= await this.connect());
+  },
 };
 
 /** create sequelize model by "schema structure" and "without sync" */

@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 
 import {
   customResponse,
-  connectToDataBase,
+  connection,
   logger,
   serverErrorWrapper,
 } from "../model/helper.js";
@@ -49,22 +49,6 @@ export const addUserMiddleware = async (req, res, next) => {
   }
 };
 
-export const backAuthMiddleware = serverErrorWrapper((req, res, next) => {
-  const token = req.headers?.["authorization"]?.split(" ")?.[1];
-  if (!token) return res.response(401);
-
-  jwt.verify(token, process.env.BACK_SECRET_KEY, function (err, decoded) {
-    if (err) return res.response(401);
-
-    const {
-      payload: { user_account },
-    } = decoded;
-
-    req._user = { user_account };
-    next();
-  });
-}, "backAuthMiddleware");
-
 export const frontAuthMiddleware = serverErrorWrapper((req, res, next) => {
   const token = req.headers?.["authorization"]?.split(" ")?.[1];
   if (!token) return res.response(401);
@@ -81,9 +65,25 @@ export const frontAuthMiddleware = serverErrorWrapper((req, res, next) => {
   });
 }, "frontAuthMiddleware");
 
+export const backAuthMiddleware = serverErrorWrapper((req, res, next) => {
+  const token = req.headers?.["authorization"]?.split(" ")?.[1];
+  if (!token) return res.response(401);
+
+  jwt.verify(token, process.env.BACK_SECRET_KEY, function (err, decoded) {
+    if (err) return res.response(401);
+
+    const {
+      payload: { user_account },
+    } = decoded;
+
+    req._user = { user_account };
+    next();
+  });
+}, "backAuthMiddleware");
+
 export const connectDbMiddleWare = async (req, res, next) => {
-  const sequelize = await connectToDataBase();
-  if (sequelize === false) return res.response(500);
+  const sequelize = await connection.get();
+  if (!sequelize) return res.response(500);
 
   req.app.sequelize = sequelize;
   next();

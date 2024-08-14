@@ -1323,6 +1323,7 @@ const controllers = [
         "Company",
       ],
       read: ["Sale", "SaleDetail", "SaleDetailDelivery", "Member", "Stock"],
+      update: ["Sale", "SaleDetail", "SaleDetailDelivery"],
     },
     actions: {
       create: [
@@ -1349,8 +1350,11 @@ const controllers = [
             const companyData = await Company.findByPk(company_id);
             if (!companyData) return res.response(400, `Invalid Company.`);
 
-            const person_list = JSON.parse(data.person_list);
-            if (!person_list) return res.response(400, `Invalid Person List.`);
+            if (!data.person_list)
+              return res.response(400, `Invalid Person List.`);
+            const person_list = Array.isArray(data.person_list)
+              ? data.person_list.map(JSON.parse)
+              : JSON.parse(data.person_list);
 
             /** generate sale code with format: SALYYMMDD00001 */
             const date = new Date();
@@ -1399,7 +1403,7 @@ const controllers = [
                   name: personName,
                   address: personAddress,
                   phone: personPhone,
-                  main_reciever,
+                  main_receiver,
                 } = person;
 
                 if (!checkArray(stockList)) return;
@@ -1441,22 +1445,28 @@ const controllers = [
                 );
 
                 const receiver_id = isNewPerson ? MCPdata.id : person_id;
-                main_reciever &&
+                main_receiver &&
                   (await Sale.update(
                     { main_receiver_id: receiver_id },
                     { where: { id: sale_id } }
                   ));
 
                 const detailsData = await SaleDetail.bulkCreate(
-                  stockList.map(({ id, qty, unit_price, price }) => ({
-                    id: "uuid_placeholder",
-                    stock_id: id,
-                    qty,
-                    unit_price,
-                    price,
-                    sale_id,
-                    ...req._author,
-                  }))
+                  stockList.reduce(
+                    (list, { id, qty, unit_price, price }) =>
+                      +qty === 0
+                        ? list
+                        : list.concat({
+                            id: "uuid_placeholder",
+                            stock_id: id,
+                            qty,
+                            unit_price,
+                            price,
+                            sale_id,
+                            ...req._author,
+                          }),
+                    []
+                  )
                 );
 
                 await SaleDetailDelivery.bulkCreate(
@@ -1499,7 +1509,13 @@ const controllers = [
           });
 
           const saleData = await Sale.findAll({
-            attributes: ["id", "code", "member_id", "sale_date"],
+            attributes: [
+              "id",
+              "code",
+              "member_id",
+              "sale_date",
+              "main_receiver_id",
+            ],
             offset: begin,
             limit: size,
           });
@@ -1520,7 +1536,13 @@ const controllers = [
 
           const list = await Promise.all(
             saleData.map(
-              async ({ id: sale_id, code, member_id, sale_date }) => {
+              async ({
+                id: sale_id,
+                code,
+                member_id,
+                sale_date,
+                main_receiver_id,
+              }) => {
                 const saleDetailData = await SaleDetail.findAll({
                   attributes: ["id", "stock_id", "qty", "unit_price", "price"],
                   where: {
@@ -1595,6 +1617,7 @@ const controllers = [
                           name,
                           phone,
                           address,
+                          main_receiver: id === main_receiver_id,
                           stockList: [
                             {
                               ...stockDict.get(stock_id),
@@ -1626,7 +1649,15 @@ const controllers = [
           res.response(200, { totalPages, list });
         }, "Read Sale"),
       ],
-      // ],
+      update: [
+        multer().none(),
+        backAuthMiddleware,
+        addUserMiddleware,
+        serverErrorWrapper(async (req, res) => {
+          console.ins(req.body)
+          res.response(200);
+        }, "Update Sale"),
+      ],
       // update: [
       //   multer().none(),
       //   backAuthMiddleware,
