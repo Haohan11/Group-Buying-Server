@@ -1653,17 +1653,316 @@ const controllers = [
         multer().none(),
         backAuthMiddleware,
         addUserMiddleware,
-        serverErrorWrapper(async (req, res) => {
-          console.ins(req.body)
-          res.response(200);
-        }, "Update Sale"),
+        async (req, res) => {
+          try {
+            const {
+              Sale,
+              SaleDetail,
+              SaleDetailDelivery,
+              Member,
+              MemberContactPerson,
+              Company,
+            } = req.app;
+            const data = req.body;
+
+            const { id: sale_id } = data;
+            if (!sale_id) return res.response(400, `Invalid Sale.`);
+            const saleData = await Sale.findByPk(sale_id, {
+              attributes: ["member_id", "company_id"],
+            });
+            if (!saleData) return res.response(400, `Invalid Sale.`);
+
+            const { member_id: old_member_id } = saleData;
+            const { member_id: new_member_id } = data;
+            const isNewMember = old_member_id === new_member_id;
+            const member_id = new_member_id;
+
+            const memberData = isNewMember
+              ? await Member.findByPk(new_member_id, {
+                  attributes: ["company_id"],
+                })
+              : { company_id: saleData.company_id };
+            if (!memberData) return res.response(400, `Invalid Member.`);
+
+            const { company_id } = memberData;
+            if (!company_id) return res.response(400, `Invalid Company.`);
+            const companyData = isNewMember
+              ? await Company.findByPk(company_id)
+              : {};
+            if (!companyData) return res.response(400, `Invalid Company.`);
+
+            if (!data.person_list)
+              return res.response(400, `Invalid Person List.`);
+            const person_list = Array.isArray(data.person_list)
+              ? data.person_list.map(JSON.parse)
+              : JSON.parse(data.person_list);
+
+            if (isNewMember) {
+              await Sale.update(
+                {
+                  company_id,
+                  member_id,
+                  sale_point_id: "none",
+                  sale_type_id: "none",
+                  currencies_id: "NT",
+                  sale_date: getCurrentTime(),
+                  ...req._author,
+                },
+                {
+                  where: {
+                    id: sale_id,
+                  },
+                }
+              );
+
+              await SaleDetailDelivery.destroy({ where: { sale_id } });
+              await SaleDetail.destroy({ where: { sale_id } });
+            }
+
+            const personIds = person_list.map(({ id }) => id);
+
+            deleteNotInPerson: {
+              if (isNewMember) break deleteNotInPerson;
+
+              const willDelete = await SaleDetailDelivery.findAll({
+                attributes: ["id", "sale_detail_id"],
+                where: {
+                  sale_id,
+                  receiver_id: {
+                    [Op.notIn]: personIds,
+                  },
+                },
+              });
+
+              if (!checkArray(willDelete)) break deleteNotInPerson;
+
+              await SaleDetailDelivery.destroy({
+                where: {
+                  id: willDelete.map(({ id }) => id),
+                },
+              });
+              await SaleDetail.destroy({
+                where: {
+                  id: willDelete.map(({ sale_detail_id }) => sale_detail_id),
+                },
+              });
+            }
+
+            await Promise.all(
+              toArray(person_list).map(async (person) => {
+                const {
+                  id: person_id,
+                  stockList,
+                  name: personName,
+                  address: personAddress,
+                  phone: personPhone,
+                  main_receiver,
+                } = person;
+
+                if (!checkArray(stockList)) return;
+
+                const personData = {
+                  country_id: "none",
+                  member_id,
+                  name: personName,
+                  name2: personName,
+                  contact_address: personAddress,
+                  phone: personPhone,
+                  ...req._author,
+                };
+
+                const isNewPerson = person_id[0] === "_";
+                const MCPGate = isNewPerson
+                  ? {
+                      action: "create",
+                      data: {
+                        id: "uuid_placeholder",
+                        ...personData,
+                      },
+                    }
+                  : {
+                      action: "update",
+                      data: {
+                        id: person_id,
+                        ...personData,
+                      },
+                      option: {
+                        where: {
+                          id: person_id,
+                        },
+                      },
+                    };
+                const MCPdata = await MemberContactPerson[MCPGate.action](
+                  MCPGate.data,
+                  MCPGate.option
+                );
+
+                const receiver_id = isNewPerson ? MCPdata.id : person_id;
+                main_receiver &&
+                  (await Sale.update(
+                    { main_receiver_id: receiver_id },
+                    { where: { id: sale_id } }
+                  ));
+
+                if (isNewMember || isNewPerson) {
+                  const detailsData = await SaleDetail.bulkCreate(
+                    stockList.reduce(
+                      (list, { id, qty, unit_price, price }) =>
+                        +qty === 0
+                          ? list
+                          : list.concat({
+                              id: "uuid_placeholder",
+                              stock_id: id,
+                              qty,
+                              unit_price,
+                              price,
+                              sale_id,
+                              ...req._author,
+                            }),
+                      []
+                    )
+                  );
+
+                  await SaleDetailDelivery.bulkCreate(
+                    detailsData.map((detail) => {
+                      return {
+                        id: "uuid_placeholder",
+                        sale_id,
+                        sale_detail_id: detail.id,
+                        receiver_id,
+                        receiver_name: personName,
+                        receiver_phone: personPhone,
+                        receiver_address: personAddress,
+                        ...req._author,
+                      };
+                    })
+                  );
+
+                  return;
+                }
+
+                const { stockIds, newStockList } = stockList.reduce(
+                  (dict, stock) =>
+                    +stock.qty === 0
+                      ? dict
+                      : {
+                          stockIds: dict.stockIds.concat(stock.id),
+                          newStockList: dict.newStockList.concat(stock),
+                        },
+                  { stockIds: [], newStockList: [] }
+                );
+
+                const detailData = await SaleDetail.findAll({
+                  attributes: ["id"],
+                  where: {
+                    stock_id: {
+                      [Op.notIn]: stockIds,
+                    },
+                  },
+                });
+                const willdelete = await SaleDetailDelivery.findAll({
+                  attributes: ["id", "sale_detail_id"],
+                  where: {
+                    sale_id,
+                    receiver_id,
+                    sale_detail_id: detailData.map(({ id }) => id),
+                  },
+                });
+
+                await SaleDetailDelivery.destroy({
+                  where: {
+                    id: willdelete.map(({ id }) => id),
+                  },
+                });
+                await SaleDetail.destroy({
+                  where: {
+                    id: willdelete.map(({ sale_detail_id }) => sale_detail_id),
+                  },
+                });
+
+                await Promise.all(
+                  newStockList.map(
+                    async ({ id: stock_id, qty, unit_price, price }) => {
+                      const oldDetail = await SaleDetail.findOne({
+                        attributes: ["id"],
+                        where: {
+                          stock_id,
+                          sale_id,
+                          receiver_id,
+                        },
+                      });
+
+                      const sale_detail_id = oldDetail?.id;
+                      const action = sale_detail_id ? "update" : "create";
+
+                      const saleDetailGate = {
+                        update: [
+                          {
+                            qty,
+                            price,
+                            ...req._author,
+                          },
+                          { where: { id: sale_detail_id } },
+                        ],
+                        create: [
+                          {
+                            id: "uuid_placeholder",
+                            stock_id,
+                            qty,
+                            unit_price,
+                            price,
+                            sale_id,
+                            ...req._author,
+                          },
+                        ],
+                      };
+
+                      const detailDeliveryGate = {
+                        update: [
+                          {
+                            receiver_id,
+                            receiver_name: personName,
+                            receiver_phone: personPhone,
+                            receiver_address: personAddress,
+                            ...req._author,
+                          },
+                          {
+                            where: {
+                              sale_detail_id,
+                            },
+                          },
+                        ],
+                        create: [
+                          {
+                            id: "uuid_placeholder",
+                            sale_id,
+                            sale_detail_id,
+                            receiver_id,
+                            receiver_name: personName,
+                            receiver_phone: personPhone,
+                            receiver_address: personAddress,
+                            ...req._author,
+                          },
+                        ],
+                      };
+
+                      await SaleDetail[action](...saleDetailGate[action]);
+                      await SaleDetailDelivery[action](...detailDeliveryGate[action]);
+                    }
+                  )
+                );
+              })
+            );
+
+            res.response(200, `Success update Sale.`);
+          } catch (error) {
+            console.log("Update Sale Error: ", error);
+            return error.name === "SequelizeValidationError"
+              ? res.response(400, `Invalid ${error.errors[0].path}.`)
+              : res.response(500);
+          }
+        },
       ],
-      // update: [
-      //   multer().none(),
-      //   backAuthMiddleware,
-      //   addUserMiddleware,
-      //   getGeneralUpdate("SaleType"),
-      // ],
       // delete: [
       //   multer().none(),
       //   backAuthMiddleware,
