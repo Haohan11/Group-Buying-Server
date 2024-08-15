@@ -2017,7 +2017,7 @@ export const SaleSchema = {
           ?.replace(/T/, " ")
           ?.replace(/\..+/, "")
           ?.replace(/-/g, "/");
-      }
+      },
     },
     exchange_rate: {
       type: DataTypes.DOUBLE,
@@ -2401,4 +2401,21 @@ export const IndexItemSchema = {
     tableName: "index_item",
     comment: "首頁項目",
   },
+};
+
+export const DeliverySchema = {
+  name: "delivery",
+  cols: {
+    id: getUUIdCol(),
+    delivery_type_id: {
+      type: DataTypes.STRING(36),
+      allowNull: false,
+      comment: "寄送方式屬性",
+    },
+  },
+  option: {
+    tableName: "delivery",
+    comment: "寄送方式",
+  },
+  // belongsTo: [getDelivery_type_idFK()],
 };

@@ -19,7 +19,7 @@ const insertData = [
     name: "company",
     modelName: "company",
     schemaName: "Company",
-    skip: false,
+    skip: true,
     data: [{ id: "none", name: "holder for no company" }],
     destroy: false,
   },
@@ -27,7 +27,7 @@ const insertData = [
     name: "user",
     modelName: "user",
     schemaName: "User",
-    skip: false,
+    skip: true,
     data: [
       {
         user_type: 0,
@@ -43,7 +43,7 @@ const insertData = [
     name: "country",
     modelName: "country",
     schemaName: "Country",
-    skip: false,
+    skip: true,
     data: [{ id: "none", name: "holder for no country" }],
     destroy: false,
   },
@@ -51,7 +51,7 @@ const insertData = [
     name: "stock_brand",
     modelName: "stock_brand",
     schemaName: "StockBrand",
-    skip: false,
+    skip: true,
     data: [
       {
         name: "default insert brand",
@@ -64,7 +64,7 @@ const insertData = [
     name: "stock_accounting",
     modelName: "stock_accounting",
     schemaName: "StockAccounting",
-    skip: false,
+    skip: true,
     data: [
       {
         name: "default insert x",
@@ -83,7 +83,7 @@ const insertData = [
     name: "member_level",
     modelName: "member_level",
     schemaName: "MemberLevel",
-    skip: false,
+    skip: true,
     data: [
       {
         name: "di_ur",
@@ -104,7 +104,7 @@ const insertData = [
     name: "member_role",
     modelName: "member_role",
     schemaName: "MemberRole",
-    skip: false,
+    skip: true,
     data: [
       {
         name: "di_vip",
@@ -125,7 +125,7 @@ const insertData = [
     name: "member_shipping",
     modelName: "member_shipping",
     schemaName: "MemberShipping",
-    skip: false,
+    skip: true,
     data: [
       {
         id: "uuid_placeholder",
@@ -142,7 +142,7 @@ const insertData = [
     name: "payment_method",
     modelName: "payment",
     schemaName: "Payment",
-    skip: false,
+    skip: true,
     data: [
       {
         id: "uuid_placeholder",
@@ -167,7 +167,7 @@ const insertData = [
     name: "account_method",
     modelName: "account_method",
     schemaName: "AccountMethod",
-    skip: false,
+    skip: true,
     data: [
       {
         name: "日結",
@@ -180,6 +180,28 @@ const insertData = [
       },
       {
         name: "出貨前付款",
+      },
+    ],
+    destroy: false,
+    author: adminAuthor,
+  },
+  {
+    name: "delivery",
+    modelName: "delivery",
+    schemaName: "Delivery",
+    skip: false,
+    data: [
+      {
+        id: "board",
+        name: "板出",
+        code: "board",
+        delivery_type_id: "none",
+      },
+      {
+        id: "home",
+        name: "宅配",
+        code: "home",
+        delivery_type_id: "none",
       },
     ],
     destroy: false,
