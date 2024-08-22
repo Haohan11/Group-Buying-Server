@@ -717,13 +717,15 @@ const controllers = [
             return await Promise.all(
               list.map(async (category) => {
                 const parent_id = category.parent;
-                if (!parent_id) return category;
+                if (!parent_id) {
+                  category.setDataValue("parent_name", "無");
+                  return category;
+                }
 
                 const parentData = await StockCategory.findByPk(
                   category.parent
                 );
-                if (parentData.name) category.setDataValue("parent_name", parentData.name);
-
+                category.setDataValue("parent_name", parentData?.name || "無");
                 return category;
               })
             );

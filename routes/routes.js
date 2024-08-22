@@ -210,22 +210,29 @@ const routes = [
               attributes: ["id", "name", "parent"],
             });
 
-            const { result } = categoryData.reduce((polymer, { id, name, parent }) => {
-              const { dict, result } = polymer;
-              dict.has(id)
-                ? (dict.get(id).name = name)
-                : dict.set(id, { id, name, children: [] });
+            const { result } = categoryData.reduce(
+              (polymer, { id, name, parent: parent_id }) => {
+                const { dict, result } = polymer;
+                dict.has(id)
+                  ? (dict.get(id).name = name)
+                  : dict.set(id, { id, name, children: [] });
 
-              if (parent) {
-                dict.has(parent)
-                  ? dict.get(parent).children.push(dict.get(id))
-                  : dict.set(parent, { parent, children: [dict.get(id)] });
-              }
+                if (parent_id) {
+                  dict.has(parent_id)
+                    ? dict.get(parent_id).children.push(dict.get(id))
+                    : dict.set(parent_id, {
+                        id: parent_id,
+                        name: null,
+                        children: [dict.get(id)],
+                      });
+                }
 
-              !parent && result.push(dict.get(id));
+                !parent_id && result.push(dict.get(id));
 
-              return polymer;
-            }, {result: [], dict: new Map()});
+                return polymer;
+              },
+              { result: [], dict: new Map() }
+            );
 
             res.response(200, result);
           }),

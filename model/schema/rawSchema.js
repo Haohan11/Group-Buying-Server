@@ -1804,7 +1804,33 @@ export const StockCategorySchema = {
     tableName: "stock_category",
     comment: "商品類別",
   },
-  hasMany: [getStockCategory_idFK("Stock")],
+  belongsTo: [
+    {
+      targetTable: "StockCategory",
+      option: {
+        foreignKey: {
+          name: "parent",
+          type: DataTypes.STRING(36),
+          allowNull: true,
+        },
+        onDelete: "SET NULL",
+      },
+    },
+  ],
+  hasMany: [
+    {
+      targetTable: "StockCategory",
+      option: {
+        foreignKey: {
+          name: "parent",
+          type: DataTypes.STRING(36),
+          allowNull: true,
+        },
+        onDelete: "SET NULL",
+      },
+    },
+    getStockCategory_idFK("Stock"),
+  ],
 };
 
 export const StockCategoryMediaSchema = {
