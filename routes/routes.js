@@ -115,7 +115,8 @@ const routes = [
             "Role_Price",
           ]),
           serverErrorWrapper(async (req, res) => {
-            const { Member, Stock, StockMedia, Level_Price, Role_Price } = req.app;
+            const { Member, Stock, StockMedia, Level_Price, Role_Price } =
+              req.app;
             const { stockId } = req.query;
 
             const role_fk = "member_role_id";
@@ -165,7 +166,10 @@ const routes = [
               },
             });
 
-            stockData.setDataValue("stock_image", stockImages.map(data => data.name));
+            stockData.setDataValue(
+              "stock_image",
+              stockImages.map((data) => data.name)
+            );
 
             const [levelPriceData, rolePriceData] = await Promise.all(
               [
@@ -187,9 +191,43 @@ const routes = [
               +levelPriceData.price || Infinity,
               +rolePriceData.price || Infinity
             );
-            lowPrice !== Infinity && stockData.setDataValue("member_price", lowPrice);
+            lowPrice !== Infinity &&
+              stockData.setDataValue("member_price", lowPrice);
 
             res.response(200, stockData);
+          }),
+        ],
+      },
+      {
+        path: "category",
+        method: "get",
+        handlers: [
+          frontAuthMiddleware,
+          createConnectMiddleware(["StockCategory"]),
+          serverErrorWrapper(async (req, res) => {
+            const { StockCategory } = req.app;
+            const categoryData = await StockCategory.findAll({
+              attributes: ["id", "name", "parent"],
+            });
+
+            const { result } = categoryData.reduce((polymer, { id, name, parent }) => {
+              const { dict, result } = polymer;
+              dict.has(id)
+                ? (dict.get(id).name = name)
+                : dict.set(id, { id, name, children: [] });
+
+              if (parent) {
+                dict.has(parent)
+                  ? dict.get(parent).children.push(dict.get(id))
+                  : dict.set(parent, { parent, children: [dict.get(id)] });
+              }
+
+              !parent && result.push(dict.get(id));
+
+              return polymer;
+            }, {result: [], dict: new Map()});
+
+            res.response(200, result);
           }),
         ],
       },
