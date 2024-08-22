@@ -94,6 +94,18 @@ const getStock_idFK = (targetTable = "Stock") => ({
   },
 });
 
+const getStockCategory_idFK = (targetTable = "StockCategory") => ({
+  targetTable,
+  option: {
+    foreignKey: {
+      name: "stock_category_id",
+      type: DataTypes.STRING(36),
+      allowNull: false,
+      comment: "商品類別id",
+    },
+  },
+});
+
 const getSale_idFK = (targetTable = "Sale") => ({
   targetTable,
   option: {
@@ -1453,6 +1465,7 @@ export const StockSchema = {
         onDelete: "RESTRICT",
       },
     },
+    getStockCategory_idFK(),
   ],
   hasMany: [...["SaleDetail", "Level_Price", "Role_Price"].map(getStock_idFK)],
 };
@@ -1756,6 +1769,7 @@ export const StockBrandSchema = {
 export const StockCategorySchema = {
   name: "stock_category",
   cols: {
+    id: getUUIdCol(),
     company_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
@@ -1775,7 +1789,10 @@ export const StockCategorySchema = {
     },
     parent: {
       type: DataTypes.STRING(36),
-      comment: "隸屬於",
+      comment: "隸屬類別ID",
+      set(value) {
+        this.setDataValue("parent", value ? value : null);
+      },
     },
     tree_level: {
       type: DataTypes.INTEGER,
@@ -1787,6 +1804,7 @@ export const StockCategorySchema = {
     tableName: "stock_category",
     comment: "商品類別",
   },
+  hasMany: [getStockCategory_idFK("Stock")],
 };
 
 export const StockCategoryMediaSchema = {

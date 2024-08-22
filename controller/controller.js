@@ -694,6 +694,7 @@ const controllers = [
         getGeneralCreate("StockCategory", {
           imageFieldName: [{ name: "recommended_image" }],
           defaultData: {
+            id: "uuid_placeholder",
             company_id: "none",
           },
         }),
@@ -708,8 +709,25 @@ const controllers = [
             "description",
             "recommended_image",
             "is_recommended",
+            "parent",
           ],
           searchAttribute: ["name"],
+          listAdaptor: async (list, req) => {
+            const { StockCategory } = req.app;
+            return await Promise.all(
+              list.map(async (category) => {
+                const parent_id = category.parent;
+                if (!parent_id) return category;
+
+                const parentData = await StockCategory.findByPk(
+                  category.parent
+                );
+                if (parentData.name) category.setDataValue("parent_name", parentData.name);
+
+                return category;
+              })
+            );
+          },
         }),
       ],
       update: [
@@ -1321,7 +1339,7 @@ const controllers = [
         "MemberContactPerson",
         "Company",
         "Member",
-        "Stock"
+        "Stock",
       ],
     },
     actions: {
