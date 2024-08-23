@@ -769,7 +769,11 @@ export const MemberSchema = {
     tableName: "member",
     comment: "會員",
   },
-  hasMany: [...["MemberContactPerson", "Sale"].map(getMember_idFK)],
+  hasMany: [
+    ...["MemberContactPerson", "MemberContactType", "MemberMeta", "Sale"].map(
+      getMember_idFK
+    ),
+  ],
   belongsTo: [
     {
       targetTable: "User",
@@ -784,6 +788,30 @@ export const MemberSchema = {
     getCompany_idFK(),
     getCountry_idFK(),
   ],
+};
+
+export const MemberMetaSchema = {
+  name: "member_meta",
+  omitName: true,
+  cols: {
+    member_id: {
+      type: DataTypes.STRING(36),
+      comment: "會員ID",
+    },
+    meta_key: {
+      type: DataTypes.STRING(1000),
+      comment: "欄位名稱",
+    },
+    meta_value: {
+      type: DataTypes.TEXT("long"),
+      comment: "欄位值",
+    },
+  },
+  option: {
+    tableName: "member_meta",
+    comment: "會員類別",
+  },
+  belongsTo: [getMember_idFK()],
 };
 
 export const MemberTypeSchema = {
@@ -862,6 +890,7 @@ export const MemberContactTypeSchema = {
     tableName: "member_contact_type",
     comment: "會員聯絡方式",
   },
+  belongsTo: [getMember_idFK()],
 };
 
 export const MemberContactPersonSchema = {

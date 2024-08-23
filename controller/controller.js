@@ -902,7 +902,7 @@ const controllers = [
   {
     path: "member-management",
     schemas: {
-      all: ["Member", "User", "Company", "MemberContactType"],
+      all: ["Member", "User", "Company"],
       read: ["MemberLevel", "MemberRole", "MemberShipping", "Payment"],
     },
     actions: {
@@ -1158,7 +1158,7 @@ const controllers = [
         getGeneralDelete("Member", {
           stopDestroy: true,
           extraHandler: async (member_id, req) => {
-            const { Member, User, Company, MemberContactType } = req.app;
+            const { Member, User, Company } = req.app;
 
             const memberData = await Member.findByPk(member_id);
             const { company_id, user_id } = memberData;
@@ -1170,10 +1170,6 @@ const controllers = [
 
             await Company.destroy({
               where: { id: company_id },
-            });
-
-            await MemberContactType.destroy({
-              where: { member_id },
             });
 
           },

@@ -461,6 +461,7 @@ const routes = [
       createConnectMiddleware([
         "Member",
         "MemberContactType",
+        "MemberMeta",
         "User",
         "Company",
       ]),
@@ -476,6 +477,7 @@ const routes = [
           contact_street,
           contact_address,
           line_id,
+          receive_notice,
         } = req.body;
 
         if (
@@ -501,7 +503,7 @@ const routes = [
         ].reduce((dict, key) => ({ ...dict, [key]: account }), {});
 
         await req.app.sequelize.transaction(async (transaction) => {
-          const { Member, MemberContactType, User, Company } = req.app;
+          const { Member, MemberContactType, MemberMeta, User, Company } = req.app;
 
           const data = {
             ...req.body,
@@ -535,6 +537,16 @@ const routes = [
             },
             { transaction }
           );
+
+          await MemberMeta.create(
+            {
+              member_id,
+              meta_key: "receive_notice",
+              meta_value: !!receive_notice,
+              ..._author,
+            },
+            { transaction }
+          )
 
           const companyData = await Company.create(
             {
