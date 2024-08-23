@@ -453,7 +453,127 @@ const routes = [
       }, "login-back"),
     ],
   },
-  // sign-in
+  // enroll
+  {
+    path: "enroll",
+    method: "post",
+    handlers: [
+      createConnectMiddleware([
+        "Member",
+        "MemberContactType",
+        "User",
+        "Company",
+      ]),
+      serverErrorWrapper(async (req, res) => {
+        if (!req.body.account) return res.response(400, "請輸入帳號");
+        const _author = [
+          "create_id",
+          "create_name",
+          "modify_id",
+          "modify_name",
+        ].reduce((dict, key) => ({ ...dict, [key]: req.body.account }), {});
+
+        await req.app.sequelize.transaction(async (transaction) => {
+          const { Member, MemberContactType, User, Company } = req.app;
+
+          const defalutLevelRole = {
+            member_level_id: "level_E",
+            member_role_id: "normal",
+          };
+
+          const data = {
+            id: "uuid_placeholder",
+            country_id: "none",
+            code: "_holder",
+            company_id: "none",
+            member_type_id: "company",
+            sex_id: "none",
+            shipping_condition_id: "prepaid",
+            status_id: "applying",
+            ...defalutLevelRole,
+            ...req.body,
+            ..._author,
+          };
+
+          const memberData = await Member.create(data, { transaction });
+          const { id: member_id } = memberData;
+
+          const {
+            name,
+            uniform_number,
+            phone,
+            address,
+            company_title: title,
+            account,
+            password,
+            email,
+            line_id,
+          } = req.body;
+
+          await MemberContactType.create({
+            member_id,
+            contact_type_id: "line",
+            im_visible_id: line_id,
+            ..._author,
+          }, { transaction });
+
+          const companyData = await Company.create({
+            id: "uuid_placeholder",
+            name,
+            uniform_number,
+            phone,
+            address,
+            title,
+            ..._author,
+          }, { transaction });
+          const { id: company_id } = companyData;
+
+          const userData = await User.create({
+            name,
+            account,
+            password,
+            company_id,
+            email,
+            ..._author,
+          }, { transaction });
+          const { id: user_id } = userData;
+
+          const date = new Date();
+          const yearStr = `${date.getFullYear()}`;
+          const monthStr = `${date.getMonth() + 1}`.padStart(2, "0");
+          const dateStr = `${date.getDate()}`.padStart(2, "0");
+
+          const codePrefix = `MB${yearStr}${monthStr}${dateStr}`;
+
+          const codeData = await Member.findAll({
+            attributes: ["code"],
+            where: {
+              code: {
+                [Op.like]: `${codePrefix}%`,
+              },
+            },
+          });
+
+          const serialNumber = codeData.reduce((max, item) => {
+            if (!item?.code || typeof item.code !== "string") return max;
+
+            const itemCode = parseInt(item.code.replace(codePrefix, ""));
+            return itemCode > max ? itemCode : max;
+          }, 0);
+          const codePostfix = `${serialNumber + 1}`.padStart(3, "0");
+
+          const code = codePrefix + codePostfix;
+
+          await Member.update(
+            { company_id, user_id, code, uniform_number: null },
+            { where: { id: member_id }, transaction }
+          );
+        });
+
+        res.response(200, "Success enroll member.");
+      }),
+    ],
+  },
 ];
 
 export const registRoutes = (app) => {

@@ -39,7 +39,7 @@ app.use(connectDbMiddleWare);
 logger("Start regist routes...");
 createCRUDRoutes(app);
 registRoutes(app);
-logger("Regist routes finished.");
+logger("Registed routes.");
 
 false &&
   app.post("/logout", async function (req, res) {

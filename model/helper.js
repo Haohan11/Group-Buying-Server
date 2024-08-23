@@ -33,6 +33,7 @@ export const toArray = (target) => (Array.isArray(target) ? target : [target]);
  */
 export const checkArray = (arr) => Array.isArray(arr) && arr.length > 0;
 
+/** Global connection */
 export const connection = {
   sequelize: null,
   async connect() {
@@ -60,6 +61,19 @@ export const connection = {
     return (this.sequelize ??= await this.connect());
   },
 };
+
+/** in development */
+const model = {
+  set(name, schema) {
+    this.hasOwnProperty(name) &&
+      console.log(
+        `${"=".repeat(50)} Overwrite model: ${name}. ${"=".repeat(50)}`
+      );
+
+    return this[name] = schema;
+  },
+};
+/** in development */
 
 /** create sequelize model by "schema structure" and "without sync" */
 export const createSchema = (sequelize, schema) => {

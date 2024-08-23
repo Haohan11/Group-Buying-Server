@@ -254,7 +254,7 @@ await (async () => {
           await Table.drop();
           log(`Creating \`${logName}\`...`, 1);
           await Table.sync();
-          log(`Created \`${logName}\`...`, 1);
+          log(`Created \`${logName}\`.`, 1);
         }
 
         await Table.bulkCreate(data.map((item) => ({ ...item, ...author })));

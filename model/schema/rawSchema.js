@@ -819,6 +819,7 @@ export const MemberPointSchema = {
 
 export const MemberContactTypeSchema = {
   name: "member_contact_type",
+  omitName: true,
   cols: {
     member_id: {
       type: DataTypes.STRING(36),
@@ -955,7 +956,9 @@ export const MemberShippingSchema = {
 
 export const MemberLevelSchema = {
   name: "member_level",
-  cols: {},
+  cols: {
+    id: getUUIdCol(),
+  },
   option: {
     tableName: "member_level",
     comment: "會員等級",
@@ -964,7 +967,9 @@ export const MemberLevelSchema = {
 
 export const MemberRoleSchema = {
   name: "member_role",
-  cols: {},
+  cols: {
+    id: getUUIdCol(),
+  },
   option: {
     tableName: "member_role",
     comment: "會員角色",
