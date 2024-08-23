@@ -13,13 +13,14 @@ const createAuthor = (author) => {
 };
 
 const adminAuthor = createAuthor("admin");
+const allSkip = true;
 
 const insertData = [
   {
     name: "company",
     modelName: "company",
     schemaName: "Company",
-    skip: true,
+    skip: allSkip ?? true,
     data: [{ id: "none", name: "holder for no company" }],
     destroy: false,
   },
@@ -27,7 +28,7 @@ const insertData = [
     name: "user",
     modelName: "user",
     schemaName: "User",
-    skip: true,
+    skip: allSkip ?? true,
     data: [
       {
         user_type: 0,
@@ -43,7 +44,7 @@ const insertData = [
     name: "country",
     modelName: "country",
     schemaName: "Country",
-    skip: true,
+    skip: allSkip ?? true,
     data: [{ id: "none", name: "holder for no country" }],
     destroy: false,
   },
@@ -51,7 +52,7 @@ const insertData = [
     name: "stock_brand",
     modelName: "stock_brand",
     schemaName: "StockBrand",
-    skip: true,
+    skip: allSkip ?? true,
     data: [
       {
         name: "default insert brand",
@@ -64,7 +65,7 @@ const insertData = [
     name: "stock_accounting",
     modelName: "stock_accounting",
     schemaName: "StockAccounting",
-    skip: true,
+    skip: allSkip ?? true,
     data: [
       {
         name: "default insert x",
@@ -83,49 +84,53 @@ const insertData = [
     name: "member_level",
     modelName: "member_level",
     schemaName: "MemberLevel",
-    skip: true,
+    skip: allSkip ?? true,
     data: [
       {
-        name: "di_ur",
+        id: "level_A",
+        name: "A",
       },
       {
-        name: "di_r",
+        id: "level_B",
+        name: "B",
       },
       {
-        name: "di_sr",
+        id: "level_C",
+        name: "C",
       },
       {
-        name: "di_ssr",
+        id: "level_D",
+        name: "D",
+      },
+      {
+        id: "level_E",
+        name: "E",
       },
     ],
-    destroy: false,
+    destroy: true,
   },
   {
     name: "member_role",
     modelName: "member_role",
     schemaName: "MemberRole",
-    skip: true,
+    skip: allSkip ?? true,
     data: [
       {
-        name: "di_vip",
+        id: "normal",
+        name: "一般",
       },
       {
-        name: "di_vip8",
-      },
-      {
-        name: "di_vip666",
-      },
-      {
-        name: "di_vip999",
+        id: "distributor",
+        name: "經銷商",
       },
     ],
-    destroy: false,
+    destroy: true,
   },
   {
     name: "member_shipping",
     modelName: "member_shipping",
     schemaName: "MemberShipping",
-    skip: true,
+    skip: allSkip ?? true,
     data: [
       {
         id: "uuid_placeholder",
@@ -142,7 +147,7 @@ const insertData = [
     name: "payment_method",
     modelName: "payment",
     schemaName: "Payment",
-    skip: true,
+    skip: allSkip ?? true,
     data: [
       {
         id: "uuid_placeholder",
@@ -167,7 +172,7 @@ const insertData = [
     name: "account_method",
     modelName: "account_method",
     schemaName: "AccountMethod",
-    skip: true,
+    skip: allSkip ?? true,
     data: [
       {
         name: "日結",
@@ -189,7 +194,7 @@ const insertData = [
     name: "delivery",
     modelName: "delivery",
     schemaName: "Delivery",
-    skip: false,
+    skip: allSkip ?? true,
     data: [
       {
         id: "board",
@@ -211,7 +216,7 @@ const insertData = [
     name: "county",
     modelName: "county",
     schemaName: "County",
-    skip: true,
+    skip: allSkip ?? true,
     data: [
       {
         id: 1,
