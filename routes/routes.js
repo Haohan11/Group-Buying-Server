@@ -465,77 +465,100 @@ const routes = [
         "Company",
       ]),
       serverErrorWrapper(async (req, res) => {
-        if (!req.body.account) return res.response(400, "請輸入帳號");
+        const {
+          account,
+          password,
+          name,
+          phone,
+          mobile,
+          contact_city,
+          contact_area,
+          contact_street,
+          contact_address,
+          line_id,
+        } = req.body;
+
+        if (
+          ![
+            account,
+            password,
+            name,
+            mobile,
+            contact_city,
+            contact_area,
+            contact_street,
+            contact_address,
+            line_id,
+          ].every(Boolean)
+        )
+          return res.response(400);
+
         const _author = [
           "create_id",
           "create_name",
           "modify_id",
           "modify_name",
-        ].reduce((dict, key) => ({ ...dict, [key]: req.body.account }), {});
+        ].reduce((dict, key) => ({ ...dict, [key]: account }), {});
 
         await req.app.sequelize.transaction(async (transaction) => {
           const { Member, MemberContactType, User, Company } = req.app;
 
-          const defalutLevelRole = {
-            member_level_id: "level_E",
-            member_role_id: "normal",
-          };
-
           const data = {
+            ...req.body,
+            ..._author,
+
             id: "uuid_placeholder",
             country_id: "none",
             code: "_holder",
             company_id: "none",
             member_type_id: "company",
             sex_id: "none",
+
             shipping_condition_id: "prepaid",
             status_id: "applying",
-            ...defalutLevelRole,
-            ...req.body,
-            ..._author,
+            member_level_id: "level_E",
+            member_role_id: "normal",
+
+            email: account,
+            phone: phone || mobile,
           };
 
           const memberData = await Member.create(data, { transaction });
           const { id: member_id } = memberData;
 
-          const {
-            name,
-            uniform_number,
-            phone,
-            address,
-            company_title: title,
-            account,
-            password,
-            email,
-            line_id,
-          } = req.body;
+          await MemberContactType.create(
+            {
+              member_id,
+              contact_type_id: "line",
+              im_visible_id: line_id,
+              ..._author,
+            },
+            { transaction }
+          );
 
-          await MemberContactType.create({
-            member_id,
-            contact_type_id: "line",
-            im_visible_id: line_id,
-            ..._author,
-          }, { transaction });
-
-          const companyData = await Company.create({
-            id: "uuid_placeholder",
-            name,
-            uniform_number,
-            phone,
-            address,
-            title,
-            ..._author,
-          }, { transaction });
+          const companyData = await Company.create(
+            {
+              id: "uuid_placeholder",
+              name: account,
+              phone,
+              address: contact_address,
+              ..._author,
+            },
+            { transaction }
+          );
           const { id: company_id } = companyData;
 
-          const userData = await User.create({
-            name,
-            account,
-            password,
-            company_id,
-            email,
-            ..._author,
-          }, { transaction });
+          const userData = await User.create(
+            {
+              name,
+              account,
+              password,
+              company_id,
+              email: account,
+              ..._author,
+            },
+            { transaction }
+          );
           const { id: user_id } = userData;
 
           const date = new Date();
@@ -565,7 +588,7 @@ const routes = [
           const code = codePrefix + codePostfix;
 
           await Member.update(
-            { company_id, user_id, code, uniform_number: null },
+            { company_id, user_id, code },
             { where: { id: member_id }, transaction }
           );
         });
