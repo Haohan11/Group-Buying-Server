@@ -37,7 +37,8 @@ export const checkJson = (target, onlyCheck = false) => {
   try {
     const result = JSON.parse(target);
     return !!onlyCheck || result;
-  } catch {
+  } catch(error) {
+    console.ins(error);
     return false;
   }
 };

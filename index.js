@@ -41,18 +41,8 @@ createCRUDRoutes(app);
 registRoutes(app);
 logger("Registed routes.");
 
-false &&
-  app.post("/logout", async function (req, res) {
-    try {
-      res.response(200, "登出成功");
-    } catch (error) {
-      console.log(error);
-      res.response(500, { error });
-    }
-  });
-
 app.get("/", (req, res) => {
-  res.response(200, "Hello world");
+  res.response(200, "YouCanBuy App Server.");
 });
 
 app.use("*", notFoundResponse);

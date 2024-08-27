@@ -10,6 +10,8 @@ import {
   toArray,
   serverErrorWrapper,
   getPage,
+  getCurrentTime,
+  createAuthor,
 } from "../model/helper.js";
 
 import {
@@ -18,6 +20,7 @@ import {
 } from "../middleware/middleware.js";
 
 import { createConnectMiddleware } from "../model/schemaHelper.js";
+import multer from "multer";
 
 const routes = [
   // verson
@@ -86,6 +89,7 @@ const routes = [
             if (!memberData || !keyword) return res.response(404);
 
             const personData = await MemberContactPerson.findAll({
+              attributes: ["id", "name", "phone", "contact_address"],
               where: {
                 member_id,
                 name: { [Op.like]: `%${keyword}%` },
@@ -495,15 +499,11 @@ const routes = [
         )
           return res.response(400);
 
-        const _author = [
-          "create_id",
-          "create_name",
-          "modify_id",
-          "modify_name",
-        ].reduce((dict, key) => ({ ...dict, [key]: account }), {});
+        const _author = createAuthor(account);
 
         await req.app.sequelize.transaction(async (transaction) => {
-          const { Member, MemberContactType, MemberMeta, User, Company } = req.app;
+          const { Member, MemberContactType, MemberMeta, User, Company } =
+            req.app;
 
           const data = {
             ...req.body,
@@ -546,7 +546,7 @@ const routes = [
               ..._author,
             },
             { transaction }
-          )
+          );
 
           const companyData = await Company.create(
             {
@@ -606,6 +606,169 @@ const routes = [
         });
 
         res.response(200, "Success enroll member.");
+      }),
+    ],
+  },
+  // sale
+  {
+    path: "sale",
+    method: "post",
+    handlers: [
+      // multer().none(),
+      frontAuthMiddleware,
+      createConnectMiddleware([
+        "Sale",
+        "SaleDetail",
+        "SaleDetailDelivery",
+        "Member",
+        "MemberContactPerson",
+        "Company",
+      ]),
+      serverErrorWrapper(async (req, res) => {
+        const {
+          Sale,
+          SaleDetail,
+          SaleDetailDelivery,
+          Member,
+          MemberContactPerson,
+          Company,
+        } = req.app;
+
+        const member_id = req._user.member_id;
+        const _author = createAuthor(req._user.account);
+
+        const memberData = await Member.findByPk(member_id);
+        if (!memberData) return res.response(400, `Invalid Member.`);
+
+        const { company_id } = memberData;
+        if (!company_id) return res.response(500, `Lose Company.`);
+        const companyData = await Company.findByPk(company_id);
+        if (!companyData) return res.response(500, `Lose Company.`);
+
+        const receiver = req.body.receiver;
+        if (!receiver || !receiver.stockList)
+          return res.response(400, `Invalid Person List.`);
+
+        const member = req.body.member;
+        if (!member) return res.response(400, `Invalid Member.`);
+        await Member.update(
+          { ...member, contact_address: "auto" },
+          {
+            where: {
+              id: member_id,
+            },
+          }
+        );
+
+        const personData = {
+          country_id: "none",
+          member_id,
+          name: receiver.name,
+          name2: receiver.name,
+          contact_city: receiver.contact_city,
+          contact_area: receiver.contact_area,
+          contact_street: receiver.contact_street,
+          contact_address: "auto",
+          email: receiver.email,
+          phone: receiver.phone,
+          ..._author,
+        };
+
+        const isNewPerson = !receiver.id;
+
+        const newPersonData =
+          receiver.save &&
+          isNewPerson &&
+          (await MemberContactPerson.create({
+            id: "uuid_placeholder",
+            ...personData,
+          }));
+
+        !isNewPerson && 
+          (await MemberContactPerson.update(personData, {
+            where: {
+              id: receiver.id,
+            },
+          }));
+
+        // #region | generate sale code with format: SALYYMMDD00001
+        const date = new Date();
+        const yearStr = `${date.getFullYear()}`.slice(-2);
+        const monthStr = `${date.getMonth() + 1}`.padStart(2, "0");
+        const dateStr = `${date.getDate()}`.padStart(2, "0");
+        const codePrefix = `SAL${yearStr}${monthStr}${dateStr}`;
+
+        const codeData = await Sale.findAll({
+          attributes: ["code"],
+          where: {
+            code: {
+              [Op.like]: `${codePrefix}%`,
+            },
+          },
+        });
+
+        const serialNumber = codeData.reduce((max, item) => {
+          if (!item?.code || typeof item.code !== "string") return max;
+
+          const itemCode = parseInt(item.code.replace(codePrefix, ""));
+          return itemCode > max ? itemCode : max;
+        }, 0);
+        const codePostfix = `${serialNumber + 1}`.padStart(5, "0");
+
+        const code = codePrefix + codePostfix;
+        // #endregion | generate sale code end
+
+        const { id: sale_id } = await Sale.create({
+          id: Date.now(),
+          code,
+          company_id,
+          member_id,
+          sale_point_id: "none",
+          sale_type_id: "none",
+          currencies_id: "NT",
+          sale_date: getCurrentTime(),
+          main_receiver_id: newPersonData?.id || receiver.id || null,
+          ..._author,
+        });
+
+        const detailsData = await SaleDetail.bulkCreate(
+          receiver.stockList.reduce(
+            (list, { id, qty, unit_price, price }) =>
+              +qty === 0
+                ? list
+                : list.concat({
+                    id: "uuid_placeholder",
+                    stock_id: id,
+                    qty,
+                    unit_price,
+                    price,
+                    sale_id,
+                    ..._author,
+                  }),
+            []
+          )
+        );
+
+        await SaleDetailDelivery.bulkCreate(
+          detailsData.map((detail) => {
+            return {
+              id: "uuid_placeholder",
+              sale_id,
+              sale_detail_id: detail.id,
+              receiver_id: newPersonData?.id || receiver.id || null,
+              receiver_name: receiver.name,
+              receiver_phone: receiver.phone,
+              receiver_address: [
+                receiver.contact_city,
+                receiver.contact_area,
+                receiver.contact_street,
+              ].join(" "),
+              ..._author,
+            };
+          })
+        );
+
+        res.response(200, `Success create Sale.`);
       }),
     ],
   },

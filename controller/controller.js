@@ -1374,7 +1374,7 @@ const controllers = [
               ? data.person_list.map(JSON.parse)
               : JSON.parse(data.person_list);
 
-            /** generate sale code with format: SALYYMMDD00001 */
+            // #region generate sale code with format: SALYYMMDD00001 
             const date = new Date();
             const yearStr = `${date.getFullYear()}`.slice(-2);
             const monthStr = `${date.getMonth() + 1}`.padStart(2, "0");
@@ -1399,7 +1399,7 @@ const controllers = [
             const codePostfix = `${serialNumber + 1}`.padStart(5, "0");
 
             const code = codePrefix + codePostfix;
-            /** generate sale code end */
+            // #endregion generate sale code end 
 
             const { id: sale_id } = await Sale.create({
               id: Date.now(),
@@ -1419,7 +1419,7 @@ const controllers = [
                   id: person_id,
                   stockList,
                   name: personName,
-                  address: personAddress,
+                  contact_address: personAddress,
                   phone: personPhone,
                   main_receiver,
                 } = person;
@@ -1462,10 +1462,10 @@ const controllers = [
                   MCPGate.option
                 );
 
-                const receiver_id = isNewPerson ? MCPdata.id : person_id;
+                const member_contact_person_id = isNewPerson ? MCPdata.id : person_id;
                 main_receiver &&
                   (await Sale.update(
-                    { main_receiver_id: receiver_id },
+                    { main_receiver_id: member_contact_person_id },
                     { where: { id: sale_id } }
                   ));
 
@@ -1493,7 +1493,7 @@ const controllers = [
                       id: "uuid_placeholder",
                       sale_id,
                       sale_detail_id: detail.id,
-                      receiver_id,
+                      member_contact_person_id,
                       receiver_name: personName,
                       receiver_phone: personPhone,
                       receiver_address: personAddress,
@@ -1603,7 +1603,7 @@ const controllers = [
 
                     const saleDeliveryData = await SaleDetailDelivery.findOne({
                       attributes: [
-                        "receiver_id",
+                        "member_contact_person_id",
                         "receiver_name",
                         "receiver_phone",
                         "receiver_address",
@@ -1614,13 +1614,13 @@ const controllers = [
                       },
                     });
 
-                    if (!saleDeliveryData?.receiver_id) return receiverData;
+                    if (!saleDeliveryData?.member_contact_person_id) return receiverData;
 
                     const {
-                      receiver_id: id,
+                      member_contact_person_id: id,
                       receiver_name: name,
                       receiver_phone: phone,
-                      receiver_address: address,
+                      receiver_address: contact_address,
                     } = saleDeliveryData;
 
                     receiverData.has(id)
@@ -1634,7 +1634,7 @@ const controllers = [
                           id,
                           name,
                           phone,
-                          address,
+                          contact_address,
                           main_receiver: id === main_receiver_id,
                           stockList: [
                             {
@@ -1748,12 +1748,12 @@ const controllers = [
               new Set(
                 (
                   await SaleDetailDelivery.findAll({
-                    attributes: ["receiver_id"],
+                    attributes: ["member_contact_person_id"],
                     where: {
                       sale_id,
                     },
                   })
-                ).map(({ receiver_id }) => receiver_id)
+                ).map(({ member_contact_person_id }) => member_contact_person_id)
               )
             );
 
@@ -1769,7 +1769,7 @@ const controllers = [
                 attributes: ["id", "sale_detail_id"],
                 where: {
                   sale_id,
-                  receiver_id: goDelReceiver,
+                  member_contact_person_id: goDelReceiver,
                 },
               });
 
@@ -1843,10 +1843,10 @@ const controllers = [
                   MCPGate.option
                 );
 
-                const receiver_id = isNewReceiver ? MCPdata.id : person_id;
+                const member_contact_person_id = isNewReceiver ? MCPdata.id : person_id;
                 main_receiver &&
                   (await Sale.update(
-                    { main_receiver_id: receiver_id },
+                    { main_receiver_id: member_contact_person_id },
                     { where: { id: sale_id } }
                   ));
 
@@ -1878,7 +1878,7 @@ const controllers = [
                         id: "uuid_placeholder",
                         sale_id,
                         sale_detail_id: detail.id,
-                        receiver_id,
+                        member_contact_person_id,
                         receiver_name: personName,
                         receiver_phone: personPhone,
                         receiver_address: personAddress,
@@ -1907,7 +1907,7 @@ const controllers = [
                   attributes: ["id", "sale_detail_id"],
                   where: {
                     sale_id,
-                    receiver_id,
+                    member_contact_person_id,
                   },
                 });
 
@@ -1965,7 +1965,7 @@ const controllers = [
                             id: "uuid_placeholder",
                             sale_id,
                             sale_detail_id: newDetail.id,
-                            receiver_id,
+                            member_contact_person_id,
                             receiver_name: personName,
                             receiver_phone: personPhone,
                             receiver_address: personAddress,
@@ -1984,7 +1984,7 @@ const controllers = [
 
                           await SaleDetailDelivery.update(
                             {
-                              receiver_id,
+                              member_contact_person_id,
                               receiver_name: personName,
                               receiver_phone: personPhone,
                               receiver_address: personAddress,

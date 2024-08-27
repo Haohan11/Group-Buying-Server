@@ -129,11 +129,11 @@ const getSaleDetail_idFK = (targetTable = "SaleDetail") => ({
   },
 });
 
-const getReceiver_idFK = (targetTable = "MemberContactPerson") => ({
+const getMemberContactPerson_idFK = (targetTable = "MemberContactPerson") => ({
   targetTable,
   option: {
     foreignKey: {
-      name: "receiver_id",
+      name: "member_contact_person_id",
       type: DataTypes.STRING(36),
       comment: "收貨人ID",
     },
@@ -198,7 +198,7 @@ export const CompanyInvoiceSchema = {
       comment: "電郵",
       validate: {
         isEmail: true,
-      }
+      },
     },
     address: {
       type: DataTypes.TEXT("long"),
@@ -766,6 +766,25 @@ export const MemberSchema = {
     contact_address: {
       type: DataTypes.TEXT("long"),
       comment: "聯絡_地址",
+      set(value) {
+        const contact_city = this.getDataValue("contact_city");
+        const contact_area = this.getDataValue("contact_area");
+        const contact_street = this.getDataValue("contact_street");
+        this.setDataValue(
+          "contact_address",
+          value === "auto"
+            ? [contact_city, contact_area, contact_street].every(
+                (data) => typeof data === "string"
+              )
+              ? [
+                  this.getDataValue("contact_city"),
+                  this.getDataValue("contact_area"),
+                  this.getDataValue("contact_street"),
+                ].join(" ")
+              : null
+            : value
+        );
+      },
     },
   },
   option: {
@@ -925,7 +944,7 @@ export const MemberContactPersonSchema = {
       comment: "電子郵件",
       validate: {
         isEmail: true,
-      }
+      },
     },
     phone: {
       type: DataTypes.STRING(20),
@@ -977,14 +996,33 @@ export const MemberContactPersonSchema = {
     },
     contact_address: {
       type: DataTypes.TEXT("long"),
-      comment: "聯絡地址",
+      comment: "聯絡_地址",
+      set(value) {
+        const contact_city = this.getDataValue("contact_city");
+        const contact_area = this.getDataValue("contact_area");
+        const contact_street = this.getDataValue("contact_street");
+        this.setDataValue(
+          "contact_address",
+          value === "auto"
+            ? [contact_city, contact_area, contact_street].every(
+                (data) => typeof data === "string"
+              )
+              ? [
+                  this.getDataValue("contact_city"),
+                  this.getDataValue("contact_area"),
+                  this.getDataValue("contact_street"),
+                ].join(" ")
+              : null
+            : value
+        );
+      },
     },
   },
   option: {
     tableName: "member_contact_person",
     comment: "供應商-連絡人",
   },
-  hasMany: [getReceiver_idFK("SaleDetailDelivery")],
+  hasMany: [getMemberContactPerson_idFK("SaleDetailDelivery")],
   belongsTo: [getCountry_idFK(), getMember_idFK()],
 };
 
@@ -2367,9 +2405,9 @@ export const SaleDetailDeliverySchema = {
       defaultValue: 0,
       comment: "運送費用",
     },
-    receiver_id: {
-      type: DataTypes.STRING(255),
-      comment: "收件人姓名",
+    member_contact_person_id: {
+      type: DataTypes.STRING(36),
+      comment: "收件人ID",
     },
     receiver_name: {
       type: DataTypes.STRING(255),
@@ -2384,7 +2422,7 @@ export const SaleDetailDeliverySchema = {
       comment: "收件人email",
       validate: {
         isEmail: true,
-      }
+      },
     },
     receiver_zip: {
       type: DataTypes.INTEGER,
@@ -2432,7 +2470,11 @@ export const SaleDetailDeliverySchema = {
     tableName: "sale_detail_delivery",
     comment: "銷售單寄送資訊",
   },
-  belongsTo: [getSale_idFK(), getSaleDetail_idFK(), getReceiver_idFK()],
+  belongsTo: [
+    getSale_idFK(),
+    getSaleDetail_idFK(),
+    getMemberContactPerson_idFK(),
+  ],
 };
 
 export const IndexItemTypeSchema = {
