@@ -196,6 +196,9 @@ export const CompanyInvoiceSchema = {
     email: {
       type: DataTypes.STRING(20),
       comment: "電郵",
+      validate: {
+        isEmail: true,
+      }
     },
     address: {
       type: DataTypes.TEXT("long"),
@@ -917,6 +920,13 @@ export const MemberContactPersonSchema = {
       allowNull: false,
       comment: "簡稱",
     },
+    email: {
+      type: DataTypes.STRING(100),
+      comment: "電子郵件",
+      validate: {
+        isEmail: true,
+      }
+    },
     phone: {
       type: DataTypes.STRING(20),
       comment: "電話",
@@ -940,6 +950,30 @@ export const MemberContactPersonSchema = {
     residential_address: {
       type: DataTypes.TEXT("long"),
       comment: "居住地址",
+    },
+    contact_zip: {
+      type: DataTypes.STRING(10),
+      comment: "聯絡_郵遞區號",
+    },
+    contact_city: {
+      type: DataTypes.STRING(10),
+      comment: "聯絡_縣市",
+    },
+    contact_area: {
+      type: DataTypes.STRING(10),
+      comment: "聯絡_鄉鎮市區",
+    },
+    contact_street: {
+      type: DataTypes.TEXT("long"),
+      comment: "聯絡_街區",
+    },
+    contact_floor: {
+      type: DataTypes.STRING(20),
+      comment: "聯絡_樓",
+    },
+    contact_room: {
+      type: DataTypes.STRING(20),
+      comment: "聯絡_室",
     },
     contact_address: {
       type: DataTypes.TEXT("long"),
@@ -2348,6 +2382,9 @@ export const SaleDetailDeliverySchema = {
     receiver_email: {
       type: DataTypes.STRING(100),
       comment: "收件人email",
+      validate: {
+        isEmail: true,
+      }
     },
     receiver_zip: {
       type: DataTypes.INTEGER,
