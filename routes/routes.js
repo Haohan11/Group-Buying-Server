@@ -735,6 +735,7 @@ const routes = [
           currencies_id: "NT",
           sale_date: getCurrentTime(),
           main_receiver_id: newPersonData?.id || receiver.id || null,
+          description: req.body.description,
           ..._author,
         });
 
@@ -777,6 +778,17 @@ const routes = [
 
         res.response(200, `Success create Sale.`);
       }),
+    ],
+  },
+  // me (check token expire)
+  {
+    path: "me",
+    method: "post",
+    handlers: [
+      frontAuthMiddleware,
+      async (req, res) => {
+       res.response(200, req._user); 
+      }
     ],
   },
 ];
