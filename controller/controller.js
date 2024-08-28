@@ -1521,7 +1521,7 @@ const controllers = [
         backAuthMiddleware,
         addUserMiddleware,
         serverErrorWrapper(async (req, res) => {
-          const { Sale, SaleDetail, SaleDetailDelivery, Stock, Member } =
+          const { Sale, SaleDetail, SaleDetailDelivery, Stock, Member, Payment } =
             req.app;
 
           const total = await Sale.count();
@@ -1682,6 +1682,7 @@ const controllers = [
                   member_id,
                   member_name: memberDict.get(member_id).name,
                   member_code: memberDict.get(member_id).code,
+                  payment: paymentDict.get(memberDict.get(member_id).payment_id).name,
                   sale_date,
                   description,
                   delivery_id: personData.delivery_id,
