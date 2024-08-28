@@ -13,7 +13,7 @@ const createAuthor = (author) => {
 };
 
 const adminAuthor = createAuthor("admin");
-const allSkip = true;
+const allSkip = false;
 
 const insertData = [
   {
