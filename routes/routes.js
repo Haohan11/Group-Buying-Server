@@ -260,7 +260,8 @@ const routes = [
             "Role_Price",
           ]),
           serverErrorWrapper(async (req, res) => {
-            const { Member, Stock, StockCategory, Level_Price, Role_Price } = req.app;
+            const { Member, Stock, StockCategory, Level_Price, Role_Price } =
+              req.app;
             const { keyword, categoryName } = req.query;
 
             const role_fk = "member_role_id";
@@ -312,15 +313,18 @@ const routes = [
                 })),
               }),
               ...(categoryName && {
-                stock_category_id: (await StockCategory.findOne({
-                  attributes: ["id"],
-                  where: {
-                    name: {
-                      [Op.like]: `%${categoryName}%`,
-                    }
-                  }
-                }))?.id || [],
-              })
+                stock_category_id:
+                  (
+                    await StockCategory.findOne({
+                      attributes: ["id"],
+                      where: {
+                        name: {
+                          [Op.like]: `%${categoryName}%`,
+                        },
+                      },
+                    })
+                  )?.id || [],
+              }),
             };
 
             const total = await Stock.count({ where: whereOption });
@@ -364,7 +368,7 @@ const routes = [
                 +levelPriceDict.get(stock.id) || Infinity,
                 +rolePriceDict.get(stock.id) || Infinity
               );
-              lowPrice !== Infinity && stock.setDataValue("price", lowPrice);
+              lowPrice !== Infinity && stock.setDataValue("member_price", lowPrice);
 
               return stock;
             });
@@ -763,7 +767,8 @@ const routes = [
               id: "uuid_placeholder",
               sale_id,
               sale_detail_id: detail.id,
-              member_contact_person_id: newPersonData?.id || receiver.id || null,
+              member_contact_person_id:
+                newPersonData?.id || receiver.id || null,
               receiver_name: receiver.name,
               receiver_phone: receiver.phone,
               receiver_address: [
@@ -787,8 +792,8 @@ const routes = [
     handlers: [
       frontAuthMiddleware,
       async (req, res) => {
-       res.response(200, req._user); 
-      }
+        res.response(200, req._user);
+      },
     ],
   },
 ];
