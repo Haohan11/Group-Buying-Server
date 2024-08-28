@@ -1360,7 +1360,7 @@ const controllers = [
             } = req.app;
             const data = req.body;
 
-            const { member_id } = data;
+            const { member_id, description } = data;
             const memberData = await Member.findByPk(member_id);
             if (!memberData) return res.response(400, `Invalid Member.`);
 
@@ -1406,6 +1406,7 @@ const controllers = [
               code,
               company_id,
               member_id,
+              description,
               sale_point_id: "none",
               sale_type_id: "none",
               currencies_id: "NT",
@@ -1533,6 +1534,7 @@ const controllers = [
               "member_id",
               "sale_date",
               "main_receiver_id",
+              "description",
             ],
             offset: begin,
             limit: size,
@@ -1560,6 +1562,7 @@ const controllers = [
                 member_id,
                 sale_date,
                 main_receiver_id,
+                description,
               }) => {
                 const saleDetailData = await SaleDetail.findAll({
                   attributes: ["id", "stock_id", "qty", "unit_price", "price"],
@@ -1658,6 +1661,7 @@ const controllers = [
                   member_name: memberDict.get(member_id).name,
                   member_code: memberDict.get(member_id).code,
                   sale_date,
+                  description,
                   person_list: new Array(...personData.values()),
                 };
               }
@@ -1683,7 +1687,7 @@ const controllers = [
             } = req.app;
             const data = req.body;
 
-            const { id: sale_id } = data;
+            const { id: sale_id, description } = data;
             if (!sale_id) return res.response(400, `Invalid Sale.`);
             const saleData = await Sale.findByPk(sale_id, {
               attributes: ["member_id", "company_id"],
@@ -1725,6 +1729,7 @@ const controllers = [
                   sale_type_id: "none",
                   currencies_id: "NT",
                   sale_date: getCurrentTime(),
+                  description,
                   ...req._author,
                 },
                 {
