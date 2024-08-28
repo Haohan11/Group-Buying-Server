@@ -197,9 +197,27 @@ const insertData = [
     skip: allSkip ?? true,
     data: [
       {
+        id: "self_car",
+        name: "自取 (車)",
+        code: "self_car",
+        delivery_type_id: "none",
+      },
+      {
+        id: "self",
+        name: "自取",
+        code: "self",
+        delivery_type_id: "none",
+      },
+      {
         id: "board",
         name: "板出",
         code: "board",
+        delivery_type_id: "none",
+      },
+      {
+        id: "home_board",
+        name: "宅配 (板)",
+        code: "home_board",
         delivery_type_id: "none",
       },
       {
