@@ -1171,7 +1171,6 @@ const controllers = [
             await Company.destroy({
               where: { id: company_id },
             });
-
           },
         }),
       ],
@@ -1333,6 +1332,7 @@ const controllers = [
   {
     path: "sale-management",
     schemas: {
+      read: ["Payment"],
       all: [
         "Sale",
         "SaleDetail",
@@ -1360,7 +1360,7 @@ const controllers = [
             } = req.app;
             const data = req.body;
 
-            const { member_id, description } = data;
+            const { member_id, description, delivery_id } = data;
             const memberData = await Member.findByPk(member_id);
             if (!memberData) return res.response(400, `Invalid Member.`);
 
@@ -1374,7 +1374,7 @@ const controllers = [
               ? data.person_list.map(JSON.parse)
               : JSON.parse(data.person_list);
 
-            // #region generate sale code with format: SALYYMMDD00001 
+            // #region generate sale code with format: SALYYMMDD00001
             const date = new Date();
             const yearStr = `${date.getFullYear()}`.slice(-2);
             const monthStr = `${date.getMonth() + 1}`.padStart(2, "0");
@@ -1399,7 +1399,7 @@ const controllers = [
             const codePostfix = `${serialNumber + 1}`.padStart(5, "0");
 
             const code = codePrefix + codePostfix;
-            // #endregion generate sale code end 
+            // #endregion generate sale code end
 
             const { id: sale_id } = await Sale.create({
               id: Date.now(),
@@ -1463,7 +1463,9 @@ const controllers = [
                   MCPGate.option
                 );
 
-                const member_contact_person_id = isNewPerson ? MCPdata.id : person_id;
+                const member_contact_person_id = isNewPerson
+                  ? MCPdata.id
+                  : person_id;
                 main_receiver &&
                   (await Sale.update(
                     { main_receiver_id: member_contact_person_id },
@@ -1498,6 +1500,7 @@ const controllers = [
                       receiver_name: personName,
                       receiver_phone: personPhone,
                       receiver_address: personAddress,
+                      delivery_id,
                       ...req._author,
                     };
                   })
@@ -1541,13 +1544,28 @@ const controllers = [
           });
 
           const memberData = await Member.findAll({
-            attributes: ["id", "code", "name"],
+            attributes: ["id", "code", "name", "payment_id"],
             where: {
               id: {
                 [Op.in]: saleData.map(({ member_id }) => member_id),
               },
             },
           });
+
+          const paymentData = await Payment.findAll({
+            attributes: ["id", "code", "name"],
+            where: {
+              id: {
+                [Op.in]: memberData.map(({ payment_id }) => payment_id),
+              },
+            },
+          });
+
+          const paymentDict = paymentData.reduce(
+            (paymentMap, payment) =>
+              paymentMap.set(payment.id, payment.dataValues),
+            new Map()
+          );
 
           const memberDict = memberData.reduce(
             (memberMap, member) => memberMap.set(member.id, member.dataValues),
@@ -1610,6 +1628,7 @@ const controllers = [
                         "receiver_name",
                         "receiver_phone",
                         "receiver_address",
+                        "delivery_id",
                       ],
                       where: {
                         sale_id,
@@ -1617,15 +1636,18 @@ const controllers = [
                       },
                     });
 
-                    if (!saleDeliveryData?.member_contact_person_id) return receiverData;
+                    if (!saleDeliveryData?.member_contact_person_id)
+                      return receiverData;
 
                     const {
                       member_contact_person_id: id,
                       receiver_name: name,
                       receiver_phone: phone,
                       receiver_address: contact_address,
+                      delivery_id,
                     } = saleDeliveryData;
 
+                    receiverData.delivery_id = delivery_id;
                     receiverData.has(id)
                       ? receiverData.get(id).stockList.push({
                           ...stockDict.get(stock_id),
@@ -1662,6 +1684,7 @@ const controllers = [
                   member_code: memberDict.get(member_id).code,
                   sale_date,
                   description,
+                  delivery_id: personData.delivery_id,
                   person_list: new Array(...personData.values()),
                 };
               }
@@ -1687,7 +1710,7 @@ const controllers = [
             } = req.app;
             const data = req.body;
 
-            const { id: sale_id, description } = data;
+            const { id: sale_id, description, delivery_id } = data;
             if (!sale_id) return res.response(400, `Invalid Sale.`);
             const saleData = await Sale.findByPk(sale_id, {
               attributes: ["member_id", "company_id"],
@@ -1720,28 +1743,28 @@ const controllers = [
               ? data.person_list.map(JSON.parse)
               : [JSON.parse(data.person_list)];
 
-            if (isNewMember) {
-              await Sale.update(
-                {
+            await Sale.update(
+              {
+                ...(isNewMember && {
                   company_id,
                   member_id,
                   sale_point_id: "none",
                   sale_type_id: "none",
                   currencies_id: "NT",
                   sale_date: getCurrentTime(),
-                  description,
-                  ...req._author,
+                }),
+                description,
+                ...req._author,
+              },
+              {
+                where: {
+                  id: sale_id,
                 },
-                {
-                  where: {
-                    id: sale_id,
-                  },
-                }
-              );
+              }
+            );
 
-              await SaleDetailDelivery.destroy({ where: { sale_id } });
-              await SaleDetail.destroy({ where: { sale_id } });
-            }
+            await SaleDetailDelivery.destroy({ where: { sale_id } });
+            await SaleDetail.destroy({ where: { sale_id } });
 
             const personIds = person_list.reduce(
               (newList, { id }) =>
@@ -1758,7 +1781,9 @@ const controllers = [
                       sale_id,
                     },
                   })
-                ).map(({ member_contact_person_id }) => member_contact_person_id)
+                ).map(
+                  ({ member_contact_person_id }) => member_contact_person_id
+                )
               )
             );
 
@@ -1805,7 +1830,7 @@ const controllers = [
                   id: person_id,
                   stockList,
                   name: personName,
-                  address: personAddress,
+                  contact_address: personAddress,
                   phone: personPhone,
                   main_receiver,
                 } = person;
@@ -1848,7 +1873,9 @@ const controllers = [
                   MCPGate.option
                 );
 
-                const member_contact_person_id = isNewReceiver ? MCPdata.id : person_id;
+                const member_contact_person_id = isNewReceiver
+                  ? MCPdata.id
+                  : person_id;
                 main_receiver &&
                   (await Sale.update(
                     { main_receiver_id: member_contact_person_id },
@@ -1887,6 +1914,7 @@ const controllers = [
                         receiver_name: personName,
                         receiver_phone: personPhone,
                         receiver_address: personAddress,
+                        delivery_id,
                         ...req._author,
                       };
                     })
@@ -1974,6 +2002,7 @@ const controllers = [
                             receiver_name: personName,
                             receiver_phone: personPhone,
                             receiver_address: personAddress,
+                            delivery_id,
                             ...req._author,
                           });
                         },
@@ -1993,6 +2022,7 @@ const controllers = [
                               receiver_name: personName,
                               receiver_phone: personPhone,
                               receiver_address: personAddress,
+                              delivery_id,
                               ...req._author,
                             },
                             {
