@@ -2,7 +2,7 @@ import versionText from "../versionText.js";
 
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { Op } from "sequelize";
+import { Op, where } from "sequelize";
 
 import { routesSet } from "../globalVariable.js";
 import {
@@ -255,12 +255,13 @@ const routes = [
           createConnectMiddleware([
             "Member",
             "Stock",
+            "StockCategory",
             "Level_Price",
             "Role_Price",
           ]),
           serverErrorWrapper(async (req, res) => {
-            const { Member, Stock, Level_Price, Role_Price } = req.app;
-            const { keyword } = req.query;
+            const { Member, Stock, StockCategory, Level_Price, Role_Price } = req.app;
+            const { keyword, categoryName } = req.query;
 
             const role_fk = "member_role_id";
             const level_fk = "member_level_id";
@@ -310,6 +311,16 @@ const routes = [
                   [fieldName]: { [Op.like]: `%${keyword}%` },
                 })),
               }),
+              ...(categoryName && {
+                stock_category_id: (await StockCategory.findOne({
+                  attributes: ["id"],
+                  where: {
+                    name: {
+                      [Op.like]: `%${categoryName}%`,
+                    }
+                  }
+                }))?.id || [],
+              })
             };
 
             const total = await Stock.count({ where: whereOption });
@@ -614,7 +625,6 @@ const routes = [
     path: "sale",
     method: "post",
     handlers: [
-      // multer().none(),
       frontAuthMiddleware,
       createConnectMiddleware([
         "Sale",
@@ -671,25 +681,22 @@ const routes = [
           contact_address: "auto",
           email: receiver.email,
           phone: receiver.phone,
+          is_save: receiver.is_save,
           ..._author,
         };
 
         const isNewPerson = !receiver.id;
 
-        const newPersonData =
-          receiver.save &&
-          isNewPerson &&
-          (await MemberContactPerson.create({
-            id: "uuid_placeholder",
-            ...personData,
-          }));
-
-        !isNewPerson && 
-          (await MemberContactPerson.update(personData, {
-            where: {
-              id: receiver.id,
-            },
-          }));
+        const newPersonData = isNewPerson
+          ? await MemberContactPerson.create({
+              id: "uuid_placeholder",
+              ...personData,
+            })
+          : await MemberContactPerson.update(personData, {
+              where: {
+                id: receiver.id,
+              },
+            });
 
         // #region | generate sale code with format: SALYYMMDD00001
         const date = new Date();
@@ -755,7 +762,7 @@ const routes = [
               id: "uuid_placeholder",
               sale_id,
               sale_detail_id: detail.id,
-              receiver_id: newPersonData?.id || receiver.id || null,
+              member_contact_person_id: newPersonData?.id || receiver.id || null,
               receiver_name: receiver.name,
               receiver_phone: receiver.phone,
               receiver_address: [
