@@ -776,11 +776,7 @@ export const MemberSchema = {
             ? [contact_city, contact_area, contact_street].every(
                 (data) => typeof data === "string"
               )
-              ? [
-                  this.getDataValue("contact_city"),
-                  this.getDataValue("contact_area"),
-                  this.getDataValue("contact_street"),
-                ].join(" ")
+              ? [contact_city, contact_area, contact_street].join(" ")
               : null
             : value
         );
@@ -1007,15 +1003,16 @@ export const MemberContactPersonSchema = {
             ? [contact_city, contact_area, contact_street].every(
                 (data) => typeof data === "string"
               )
-              ? [
-                  this.getDataValue("contact_city"),
-                  this.getDataValue("contact_area"),
-                  this.getDataValue("contact_street"),
-                ].join(" ")
+              ? [contact_city, contact_area, contact_street].join(" ")
               : null
             : value
         );
       },
+    },
+    is_save: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+      comment: "是否顯示為儲存",
     },
   },
   option: {
