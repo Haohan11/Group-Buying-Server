@@ -140,6 +140,17 @@ const getMemberContactPerson_idFK = (targetTable = "MemberContactPerson") => ({
   },
 });
 
+const getDelivery_idFK = (targetTable = "Delivery") => ({
+  targetTable,
+  option: {
+    foreignKey: {
+      name: "delivery_id",
+      type: DataTypes.STRING(36),
+      comment: "寄送方式ID",
+    },
+  },
+});
+
 export const CompanySchema = {
   name: "company",
   cols: {
@@ -2471,6 +2482,7 @@ export const SaleDetailDeliverySchema = {
     getSale_idFK(),
     getSaleDetail_idFK(),
     getMemberContactPerson_idFK(),
+    getDelivery_idFK(),
   ],
 };
 
@@ -2571,5 +2583,5 @@ export const DeliverySchema = {
     tableName: "delivery",
     comment: "寄送方式",
   },
-  // belongsTo: [getDelivery_type_idFK()],
+  hasMany: [getDelivery_idFK("SaleDetailDelivery")],
 };
