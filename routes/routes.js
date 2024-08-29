@@ -19,8 +19,9 @@ import {
   backAuthMiddleware,
 } from "../middleware/middleware.js";
 
+import { getGeneralRead } from "../controller/controller.js";
+
 import { createConnectMiddleware } from "../model/schemaHelper.js";
-import multer from "multer";
 
 const routes = [
   // verson
@@ -776,6 +777,7 @@ const routes = [
                 receiver.contact_area,
                 receiver.contact_street,
               ].join(" "),
+              delivery_id: req.body.delivery_id,
               ..._author,
             };
           })
@@ -794,6 +796,19 @@ const routes = [
       async (req, res) => {
         res.response(200, req._user);
       },
+    ],
+  },
+  // delivery
+  {
+    path: "get-delivery",
+    method: "get",
+    handlers: [
+      createConnectMiddleware(["Delivery"]),
+      frontAuthMiddleware,
+      getGeneralRead("Delivery",{
+        queryAttribute: ["id", "code", "name"],
+        searchAttribute: ["name", "code"],
+      }),
     ],
   },
 ];

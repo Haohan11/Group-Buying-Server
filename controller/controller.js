@@ -20,7 +20,7 @@ import {
   serverErrorWrapper,
 } from "../model/helper.js";
 
-const getGeneralCreate = (tableName, option) => {
+export const getGeneralCreate = (tableName, option) => {
   const { imageFieldName, defaultData, extraHandler } = option || {};
 
   return async (req, res) => {
@@ -57,7 +57,7 @@ const getGeneralCreate = (tableName, option) => {
   };
 };
 
-const getGeneralRead = (tableName, option = {}) => {
+export const getGeneralRead = (tableName, option = {}) => {
   const {
     queryAttribute = [],
     searchAttribute = [],
@@ -148,7 +148,7 @@ const getGeneralRead = (tableName, option = {}) => {
   };
 };
 
-const getGeneralUpdate = (tableName, option) => {
+export const getGeneralUpdate = (tableName, option) => {
   const { imageFieldName, defaultData, extraHandler } = option || {};
 
   return async (req, res) => {
@@ -204,7 +204,7 @@ const getGeneralUpdate = (tableName, option) => {
   };
 };
 
-const getGeneralDelete = (tableName, option) => {
+export const getGeneralDelete = (tableName, option) => {
   const { imageFieldName, extraHandler, stopDestroy = false } = option || {};
   return async (req, res) => {
     const Table = req.app[tableName];
@@ -236,7 +236,7 @@ const getGeneralDelete = (tableName, option) => {
   };
 };
 
-const controllers = [
+export const controllers = [
   // stock
   {
     path: "stock-backend",
@@ -1521,8 +1521,14 @@ const controllers = [
         backAuthMiddleware,
         addUserMiddleware,
         serverErrorWrapper(async (req, res) => {
-          const { Sale, SaleDetail, SaleDetailDelivery, Stock, Member, Payment } =
-            req.app;
+          const {
+            Sale,
+            SaleDetail,
+            SaleDetailDelivery,
+            Stock,
+            Member,
+            Payment,
+          } = req.app;
 
           const total = await Sale.count();
           const { size, begin, totalPages } = getPage({
@@ -1647,7 +1653,7 @@ const controllers = [
                       delivery_id,
                     } = saleDeliveryData;
 
-                    receiverData.delivery_id = delivery_id;
+                    receiverData.delivery_id ??= delivery_id;
                     receiverData.has(id)
                       ? receiverData.get(id).stockList.push({
                           ...stockDict.get(stock_id),
@@ -1682,7 +1688,8 @@ const controllers = [
                   member_id,
                   member_name: memberDict.get(member_id).name,
                   member_code: memberDict.get(member_id).code,
-                  payment: paymentDict.get(memberDict.get(member_id).payment_id).name,
+                  payment: paymentDict.get(memberDict.get(member_id).payment_id)
+                    .name,
                   sale_date,
                   description,
                   delivery_id: personData.delivery_id,
@@ -2115,6 +2122,21 @@ const controllers = [
       ],
     },
   },
+  // delivery
+  {
+    path: "delivery",
+    schemas: {
+      read: ["Delivery"],
+    },
+    actions: {
+      read: [
+        backAuthMiddleware,
+        addUserMiddleware,
+        getGeneralRead("Delivery", {
+          queryAttribute: ["id", "code", "name"],
+          searchAttribute: ["name", "code"],
+        }),
+      ],
+    },
+  },
 ];
-
-export { controllers };
