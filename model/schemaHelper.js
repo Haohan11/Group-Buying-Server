@@ -1,12 +1,82 @@
 import Schemas from "../model/schema/schema.js";
+import {
+  createSchema,
+  logger,
+  toArray,
+  connection,
+  modelDict,
+} from "../model/helper.js";
 
-import { createSchema, logger, toArray } from "../model/helper.js";
+const allSchemas = Object.entries(Schemas);
+
+export const settingSequelize = async () => {
+  const sequelize = await connection.get();
+  if (!sequelize) return console.log("Failed to setting Sequelize!");
+
+  const createModel = (schema) => {
+    const { name, cols, option } = schema;
+    return sequelize.define(name, cols, option);
+  };
+
+  try {
+    allSchemas.forEach(([schemaName, schema]) => {
+      const Table = modelDict.setOnce(schemaName, createModel(schema));
+      const { hasOne, belongsTo, hasMany, belongsToMany } = schema;
+
+      // loop all associate method
+      Object.entries({ hasOne, belongsTo, hasMany, belongsToMany }).forEach(
+        ([associName, associate]) => {
+          // check if associate valid
+          if (associate === undefined) return;
+          if (typeof associate !== "object" || associate === null)
+            throw Error(
+              `Association ${associName} in ${schemaName} is invalid.`
+            );
+
+          // loop single associate method
+          toArray(associate).forEach((associate, as_index) => {
+            //check if target valid
+            const { targetTable, option } = associate;
+            if (!targetTable)
+              throw Error(
+                `No associate target table provided at ${schemaName}.${associName}[${as_index}]!`
+              );
+
+            const targetSchema = Schemas[`${targetTable}Schema`];
+            if (!targetSchema)
+              throw Error(`Schema ${targetTable} doesn't exist!`);
+
+            const TargetTable = modelDict.setOnce(
+              targetTable,
+              createModel(targetSchema)
+            );
+
+            // handle junction model (for belongsToMany method)
+            if (option?.through) {
+              const { through } = option;
+              const throughSchema = Schemas[`${through}Schema`];
+              if (throughSchema)
+                option.through = modelDict.setOnce(
+                  through,
+                  createModel(throughSchema)
+                );
+            }
+
+            // build associate but havn't sync to database
+            Table[associName](TargetTable, option);
+          });
+        }
+      );
+    });
+    await sequelize.sync();
+  } catch (error) {
+    console.ins(error);
+  }
+};
 
 export const createConnectMiddleware = (tableNames, syncOption) => {
   if (!Array.isArray(tableNames))
-    throw new Error(
-      "`createConnectMiddleware` only accept array type input."
-    );
+    throw new Error("`createConnectMiddleware` only accept array type input.");
   const schemas = tableNames.map((tableName) => Schemas[`${tableName}Schema`]);
   const noSchemaId = schemas.findIndex((schema) => schema === undefined);
 

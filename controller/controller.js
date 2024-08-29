@@ -18,6 +18,7 @@ import {
   addZeroPadding,
   getCurrentTime,
   serverErrorWrapper,
+  modelDict,
 } from "../model/helper.js";
 
 export const getGeneralCreate = (tableName, option) => {

@@ -73,7 +73,7 @@ export const connection = {
 };
 
 /** in development */
-const model = (() => {
+export const modelDict = (() => {
   const horizonBar = "=".repeat(50);
 
   return {
@@ -83,11 +83,14 @@ const model = (() => {
 
       return (this[name] = schema);
     },
+    setOnce(name, schema) {
+      return this[name] ? this[name] : this.set(name, schema);
+    },
   };
 })();
 /** in development */
 
-/** create sequelize model by "schema structure" and "without sync" */
+/** create sequelize model by "schema structure" and "without" sync */
 export const createSchema = (sequelize, schema) => {
   const { name, cols, option } = schema;
   const table = sequelize.define(name, cols, option);

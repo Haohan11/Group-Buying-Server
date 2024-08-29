@@ -2,7 +2,7 @@ import versionText from "../versionText.js";
 
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { Op, where } from "sequelize";
+import { Op } from "sequelize";
 
 import { routesSet } from "../globalVariable.js";
 import {
@@ -12,6 +12,7 @@ import {
   getPage,
   getCurrentTime,
   createAuthor,
+  modelDict,
 } from "../model/helper.js";
 
 import {
@@ -369,7 +370,8 @@ const routes = [
                 +levelPriceDict.get(stock.id) || Infinity,
                 +rolePriceDict.get(stock.id) || Infinity
               );
-              lowPrice !== Infinity && stock.setDataValue("member_price", lowPrice);
+              lowPrice !== Infinity &&
+                stock.setDataValue("member_price", lowPrice);
 
               return stock;
             });
@@ -805,7 +807,7 @@ const routes = [
     handlers: [
       createConnectMiddleware(["Delivery"]),
       frontAuthMiddleware,
-      getGeneralRead("Delivery",{
+      getGeneralRead("Delivery", {
         queryAttribute: ["id", "code", "name"],
         searchAttribute: ["name", "code"],
       }),

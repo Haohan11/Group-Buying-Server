@@ -6,6 +6,7 @@ import {
   logger,
   overrideLog
 } from "./model/helper.js";
+import { settingSequelize } from "./model/schemaHelper.js";
 
 /** Override console.log */
 overrideLog();
@@ -32,6 +33,8 @@ app.use(express.json());
 
 /** Add custom response method to res.response */
 app.use(responseMiddleware);
+
+// await settingSequelize();
 
 /** Add connection `sequelize` to res.app */ 
 app.use(connectDbMiddleWare);
